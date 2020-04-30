@@ -19,6 +19,7 @@
 #include "bat/ledger/internal/database/database_publisher_info.h"
 #include "bat/ledger/internal/database/database_recurring_tip.h"
 #include "bat/ledger/internal/database/database_server_publisher_info.h"
+#include "bat/ledger/internal/database/database_server_publisher_list.h"
 #include "bat/ledger/internal/database/database_sku_order.h"
 #include "bat/ledger/internal/database/database_sku_transaction.h"
 #include "bat/ledger/internal/database/database_unblinded_token.h"
@@ -47,6 +48,8 @@ DatabaseMigration::DatabaseMigration(bat_ledger::LedgerImpl* ledger) :
   recurring_tip_ = std::make_unique<DatabaseRecurringTip>(ledger_);
   server_publisher_info_ =
       std::make_unique<DatabaseServerPublisherInfo>(ledger_);
+  server_publisher_list_ =
+      std::make_unique<DatabaseServerPublisherList>(ledger_);
   sku_order_ = std::make_unique<DatabaseSKUOrder>(ledger_);
   sku_transaction_ = std::make_unique<DatabaseSKUTransaction>(ledger_);
   unblinded_token_ =
@@ -145,10 +148,13 @@ bool DatabaseMigration::Migrate(
     return false;
   }
 
-  if (!sku_order_->Migrate(transaction, target)) {
+  if (!server_publisher_list_->Migrate(transaction, target)) {
     return false;
   }
 
+  if (!sku_order_->Migrate(transaction, target)) {
+    return false;
+  }
 
   if (!sku_transaction_->Migrate(transaction, target)) {
     return false;

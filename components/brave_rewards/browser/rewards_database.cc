@@ -130,6 +130,8 @@ void RewardsDatabase::RunTransaction(
     return;
   }
 
+  bool vacuum_requested = false;
+
   for (auto const& command : transaction->commands) {
     ledger::DBCommandResponse::Status status;
 
@@ -161,6 +163,11 @@ void RewardsDatabase::RunTransaction(
             transaction->compatible_version);
         break;
       }
+      case ledger::DBCommand::Type::VACUUM: {
+        vacuum_requested = true;
+        status = ledger::DBCommandResponse::Status::RESPONSE_OK;
+        break;
+      }
       default: {
         NOTREACHED();
       }
@@ -175,6 +182,15 @@ void RewardsDatabase::RunTransaction(
 
   if (!committer.Commit()) {
     response->status = ledger::DBCommandResponse::Status::TRANSACTION_ERROR;
+  }
+
+  if (vacuum_requested) {
+    VLOG(8) << "Performing database vacuum";
+    bool result = db_.Execute("VACUUM");
+    if (!result) {
+      LOG(ERROR) << "Error executing VACUUM: " << db_.GetErrorMessage();
+      response->status = ledger::DBCommandResponse::Status::COMMAND_ERROR;
+    }
   }
 }
 

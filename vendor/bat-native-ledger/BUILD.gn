@@ -93,6 +93,7 @@ source_set("headers") {
 proto_library("publishers_proto") {
   sources = [
     "src/bat/ledger/internal/publisher/publisher_list.proto",
+    "src/bat/ledger/internal/publisher/channel_response.proto",
   ]
 }
 
@@ -125,6 +126,8 @@ source_set("ledger") {
     "src/bat/ledger/internal/legacy/bat_state.h",
     "src/bat/ledger/internal/common/bind_util.cc",
     "src/bat/ledger/internal/common/bind_util.h",
+    "src/bat/ledger/internal/common/brotli_helpers.h",
+    "src/bat/ledger/internal/common/brotli_helpers.cc",
     "src/bat/ledger/internal/common/security_helper.cc",
     "src/bat/ledger/internal/common/security_helper.h",
     "src/bat/ledger/internal/common/time_util.cc",
@@ -210,6 +213,8 @@ source_set("ledger") {
     "src/bat/ledger/internal/database/database_server_publisher_info.h",
     "src/bat/ledger/internal/database/database_server_publisher_links.cc",
     "src/bat/ledger/internal/database/database_server_publisher_links.h",
+    "src/bat/ledger/internal/database/database_server_publisher_list.cc",
+    "src/bat/ledger/internal/database/database_server_publisher_list.h",
     "src/bat/ledger/internal/database/database_sku_order.cc",
     "src/bat/ledger/internal/database/database_sku_order.h",
     "src/bat/ledger/internal/database/database_sku_order_items.cc",
@@ -262,10 +267,14 @@ source_set("ledger") {
     "src/bat/ledger/internal/publisher/prefix_util.cc",
     "src/bat/ledger/internal/publisher/publisher.cc",
     "src/bat/ledger/internal/publisher/publisher.h",
+    "src/bat/ledger/internal/publisher/publisher_list_updater.cc",
+    "src/bat/ledger/internal/publisher/publisher_list_updater.h",
     "src/bat/ledger/internal/publisher/publisher_list_reader.cc",
     "src/bat/ledger/internal/publisher/publisher_list_reader.h",
-    "src/bat/ledger/internal/publisher/publisher_server_list.cc",
-    "src/bat/ledger/internal/publisher/publisher_server_list.h",
+    "src/bat/ledger/internal/publisher/publisher_status_helper.cc",
+    "src/bat/ledger/internal/publisher/publisher_status_helper.h",
+    "src/bat/ledger/internal/publisher/server_publisher_fetcher.cc",
+    "src/bat/ledger/internal/publisher/server_publisher_fetcher.h",
     "src/bat/ledger/internal/report/report.cc",
     "src/bat/ledger/internal/report/report.h",
     "src/bat/ledger/internal/request/request_api.cc",
@@ -356,6 +365,7 @@ source_set("ledger") {
     "//base",
     "//crypto",
     "//third_party/boringssl",
+    "//third_party/brotli:dec",
     "//third_party/protobuf:protobuf_lite",
     "//third_party/re2",
     "//url",

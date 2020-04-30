@@ -10,6 +10,7 @@
 #include "bat/ledger/internal/database/database_recurring_tip.h"
 #include "bat/ledger/internal/database/database_util.h"
 #include "bat/ledger/internal/ledger_impl.h"
+#include "bat/ledger/internal/publisher/publisher_status_helper.h"
 
 using std::placeholders::_1;
 
@@ -211,7 +212,7 @@ void DatabaseRecurringTip::GetAllRecords(
 
   const std::string query = base::StringPrintf(
     "SELECT pi.publisher_id, pi.name, pi.url, pi.favIcon, "
-    "rd.amount, rd.added_date, spi.status, pi.provider "
+    "rd.amount, rd.added_date, spi.status, spi.updated_at, pi.provider "
     "FROM %s as rd "
     "INNER JOIN publisher_info AS pi ON rd.publisher_id = pi.publisher_id "
     "LEFT JOIN server_publisher_info AS spi "
@@ -228,6 +229,7 @@ void DatabaseRecurringTip::GetAllRecords(
       ledger::DBCommand::RecordBindingType::STRING_TYPE,
       ledger::DBCommand::RecordBindingType::STRING_TYPE,
       ledger::DBCommand::RecordBindingType::DOUBLE_TYPE,
+      ledger::DBCommand::RecordBindingType::INT64_TYPE,
       ledger::DBCommand::RecordBindingType::INT64_TYPE,
       ledger::DBCommand::RecordBindingType::INT64_TYPE,
       ledger::DBCommand::RecordBindingType::STRING_TYPE
@@ -266,12 +268,18 @@ void DatabaseRecurringTip::OnGetAllRecords(
     info->reconcile_stamp = GetInt64Column(record_pointer, 5);
     info->status = static_cast<ledger::mojom::PublisherStatus>(
         GetInt64Column(record_pointer, 6));
-    info->provider = GetStringColumn(record_pointer, 7);
+    info->status_updated_at = GetInt64Column(record_pointer, 7);
+    info->provider = GetStringColumn(record_pointer, 8);
 
     list.push_back(std::move(info));
   }
 
-  callback(std::move(list));
+  // The publisher status field may be expired. Attempt to refresh
+  // expired publisher status values before executing callback.
+  braveledger_publisher::RefreshPublisherStatus(
+      ledger_,
+      std::move(list),
+      callback);
 }
 
 void DatabaseRecurringTip::DeleteRecord(

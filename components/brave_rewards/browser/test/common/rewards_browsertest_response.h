@@ -6,6 +6,7 @@
 #ifndef BRAVE_COMPONENTS_BRAVE_REWARDS_BROWSER_TEST_COMMON_REWARDS_BROWSERTEST_RESPONSE_H_
 #define BRAVE_COMPONENTS_BRAVE_REWARDS_BROWSER_TEST_COMMON_REWARDS_BROWSERTEST_RESPONSE_H_
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -70,6 +71,7 @@ class RewardsBrowserTestResponse {
   ledger::SKUOrderPtr order_;
   bool verified_wallet_ = false;
   std::string external_balance_ = "0.0";
+  std::map<std::string, std::string> publisher_prefixes_;
 };
 
 }  // namespace rewards_browsertest

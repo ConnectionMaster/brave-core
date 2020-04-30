@@ -7,6 +7,7 @@
 
 #include <utility>
 
+#include "bat/ledger/internal/common/brotli_helpers.h"
 #include "bat/ledger/internal/publisher/prefix_util.h"
 
 namespace braveledger_publisher {
@@ -39,6 +40,17 @@ PublisherListReader::ParseError PublisherListReader::Parse(
   switch (message.compression_type()) {
     case PublisherList::NO_COMPRESSION: {
       uncompressed = std::move(*message.mutable_prefixes());
+      break;
+    }
+    case PublisherList::BROTLI_COMPRESSION: {
+      bool decoded = braveledger_helpers::DecodeBrotliString(
+          message.prefixes(),
+          uncompressed_size,
+          &uncompressed);
+
+      if (!decoded) {
+        return ParseError::UnableToDecompress;
+      }
       break;
     }
     default: {

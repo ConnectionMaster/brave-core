@@ -5,6 +5,8 @@
 
 #include "bat/ledger/internal/common/time_util.h"
 
+#include "brave_base/random.h"
+
 namespace braveledger_time_util {
 
 ledger::ActivityMonth GetCurrentMonth() {
@@ -31,6 +33,25 @@ uint32_t GetYear(const base::Time& time) {
 
 uint64_t GetCurrentTimeStamp() {
   return static_cast<uint64_t>(base::Time::Now().ToDoubleT());
+}
+
+base::TimeDelta GetRandomizedDelay(base::TimeDelta delay) {
+  uint64_t seconds = brave_base::random::Geometric(delay.InSecondsF());
+  return base::TimeDelta::FromSeconds(static_cast<int64_t>(seconds));
+}
+
+base::TimeDelta GetRandomizedDelayWithBackoff(
+    base::TimeDelta delay,
+    base::TimeDelta max_delay,
+    int backoff_count) {
+  for (int i = 0; i < backoff_count; ++i) {
+    delay *= 2;
+    if (delay > max_delay) {
+      delay = max_delay;
+      break;
+    }
+  }
+  return GetRandomizedDelay(delay);
 }
 
 }  // namespace braveledger_time_util

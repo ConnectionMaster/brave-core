@@ -25,11 +25,11 @@
 "https://balance.rewards.brave.software"
 
 #define PUBLISHER_STAGING_SERVER     \
-"https://publishers-staging-distro.basicattentiontoken.org"
+"https://pcdn.bravesoftware.com"
 #define PUBLISHER_PRODUCTION_SERVER  \
-"https://publishers-distro.basicattentiontoken.org"
+"https://pcdn.brave.com"
 #define PUBLISHER_DEVELOPMENT_SERVER  \
-"https://creators-distro.brave.software"
+"https://pcdn.brave.software"
 
 #define PROMOTION_STAGING_SERVER              \
 "https://grant.rewards.bravesoftware.com"

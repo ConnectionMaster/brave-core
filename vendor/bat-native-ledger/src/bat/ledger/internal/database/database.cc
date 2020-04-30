@@ -20,10 +20,12 @@
 #include "bat/ledger/internal/database/database_publisher_info.h"
 #include "bat/ledger/internal/database/database_recurring_tip.h"
 #include "bat/ledger/internal/database/database_server_publisher_info.h"
+#include "bat/ledger/internal/database/database_server_publisher_list.h"
 #include "bat/ledger/internal/database/database_sku_order.h"
 #include "bat/ledger/internal/database/database_sku_transaction.h"
 #include "bat/ledger/internal/database/database_unblinded_token.h"
 #include "bat/ledger/internal/ledger_impl.h"
+#include "bat/ledger/internal/publisher/publisher_list_reader.h"
 
 namespace braveledger_database {
 
@@ -48,6 +50,8 @@ Database::Database(bat_ledger::LedgerImpl* ledger) :
   recurring_tip_ = std::make_unique<DatabaseRecurringTip>(ledger_);
   server_publisher_info_ =
       std::make_unique<DatabaseServerPublisherInfo>(ledger_);
+  server_publisher_list_ =
+      std::make_unique<DatabaseServerPublisherList>(ledger_);
   sku_transaction_ = std::make_unique<DatabaseSKUTransaction>(ledger_);
   sku_order_ = std::make_unique<DatabaseSKUOrder>(ledger_);
   unblinded_token_ =
@@ -455,26 +459,34 @@ void Database::RemoveRecurringTip(
 /**
  * SERVER PUBLISHER INFO
  */
-void Database::ClearServerPublisherList(ledger::ResultCallback callback) {
-  server_publisher_info_->DeleteAll(callback);
+void Database::SearchServerPublisherList(
+    const std::string& publisher_prefix,
+    ledger::SearchServerPublisherListCallback callback) {
+  server_publisher_list_->Search(publisher_prefix, callback);
 }
 
-void Database::InsertServerPublisherList(
-    const std::vector<ledger::ServerPublisherPartial>& list,
+void Database::ResetServerPublisherList(
+    std::unique_ptr<braveledger_publisher::PublisherListReader> reader,
     ledger::ResultCallback callback) {
-  server_publisher_info_->InsertOrUpdatePartialList(list, callback);
+  server_publisher_list_->Reset(std::move(reader), callback);
 }
 
-void Database::InsertPublisherBannerList(
-    const std::vector<ledger::PublisherBanner>& list,
+void Database::InsertServerPublisherInfo(
+    const ledger::ServerPublisherInfo& server_info,
     ledger::ResultCallback callback) {
-  server_publisher_info_->InsertOrUpdateBannerList(list, callback);
+  server_publisher_info_->InsertOrUpdate(server_info, callback);
 }
 
 void Database::GetServerPublisherInfo(
     const std::string& publisher_key,
     ledger::GetServerPublisherInfoCallback callback) {
   server_publisher_info_->GetRecord(publisher_key, callback);
+}
+
+void Database::DeleteExpiredServerPublisherInfo(
+    int64_t max_age_seconds,
+    ledger::ResultCallback callback) {
+  server_publisher_info_->DeleteExpiredRecords(max_age_seconds, callback);
 }
 
 /**

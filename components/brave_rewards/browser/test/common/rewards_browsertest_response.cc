@@ -6,9 +6,14 @@
 #include <utility>
 #include <vector>
 
+#include "base/big_endian.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/strings/string_number_conversions.h"
 #include "base/strings/string_split.h"
+#include "bat/ledger/internal/publisher/channel_response.pb.h"
+#include "bat/ledger/internal/publisher/prefix_util.h"
+#include "bat/ledger/internal/publisher/publisher_list.pb.h"
 #include "bat/ledger/internal/request/request_util.h"
 #include "bat/ledger/internal/static_values.h"
 #include "bat/ledger/internal/uphold/uphold_util.h"
@@ -16,6 +21,99 @@
 #include "brave/components/brave_rewards/browser/test/common/rewards_browsertest_response.h"
 #include "brave/components/brave_rewards/browser/test/common/rewards_browsertest_util.h"
 #include "chrome/test/base/ui_test_utils.h"
+
+namespace {
+
+std::string GetPublisherListResponse(
+    const std::map<std::string, std::string>& prefix_map) {
+  std::string prefixes;
+  for (const auto& pair : prefix_map) {
+    prefixes += pair.first;
+  }
+
+  publishers_pb::PublisherList message;
+  message.set_prefix_size(4);
+  message.set_compression_type(publishers_pb::PublisherList::NO_COMPRESSION);
+  message.set_uncompressed_size(prefixes.size());
+  message.set_prefixes(std::move(prefixes));
+
+  std::string out;
+  message.SerializeToString(&out);
+  return out;
+}
+
+std::string GetPublisherChannelResponse(
+    const std::map<std::string, std::string>& prefix_map,
+    const std::string& prefix,
+    bool use_alternate_publisher_list) {
+  std::string key;
+  for (const auto& pair : prefix_map) {
+    std::string hex = base::ToLowerASCII(
+        base::HexEncode(pair.first.data(), pair.first.size()));
+    if (hex.find(prefix) == 0) {
+      key = pair.second;
+      break;
+    }
+  }
+
+  if (key.empty()) {
+    return "";
+  }
+
+  publishers_pb::ChannelResponseList message;
+  auto* channel = message.add_channel_responses();
+  bool maybe_hide = false;
+
+  channel->set_channel_identifier(key);
+  channel->set_wallet_connected_state(publishers_pb::UPHOLD_ACCOUNT_KYC);
+
+  if (key == "bumpsmack.com") {
+    channel->set_wallet_connected_state(publishers_pb::UPHOLD_ACCOUNT_NO_KYC);
+    channel->set_wallet_address("address1");
+  } else if (key == "duckduckgo.com") {
+    channel->set_wallet_address("address2");
+  } else if (key == "3zsistemi.si") {
+    maybe_hide = true;
+    channel->set_wallet_address("address3");
+  } else if (key == "site1.com") {
+    maybe_hide = true;
+    channel->set_wallet_address("address4");
+  } else if (key == "site2.com") {
+    maybe_hide = true;
+    channel->set_wallet_address("address5");
+  } else if (key == "site3.com") {
+    maybe_hide = true;
+    channel->set_wallet_address("address6");
+  } else if (key == "laurenwags.github.io") {
+    channel->set_wallet_address("address2");
+    auto* banner = channel->mutable_site_banner_details();
+    banner->add_donation_amounts(5);
+    banner->add_donation_amounts(10);
+    banner->add_donation_amounts(20);
+  } else if (key == "kjozwiakstaging.github.io") {
+    maybe_hide = true;
+    channel->set_wallet_address("aa");
+    auto* banner = channel->mutable_site_banner_details();
+    banner->add_donation_amounts(5);
+    banner->add_donation_amounts(50);
+    banner->add_donation_amounts(100);
+  }
+
+  if (maybe_hide && use_alternate_publisher_list) {
+    return "";
+  }
+
+  std::string out;
+  message.SerializeToString(&out);
+
+  // Add padding header
+  uint32_t length = out.length();
+  out.insert(0, 4, ' ');
+  base::WriteBigEndian(&out[0], length);
+  return out;
+}
+
+}  // namespace
 
 namespace rewards_browsertest {
 
@@ -79,6 +177,22 @@ void RewardsBrowserTestResponse::LoadMocks() {
   ASSERT_TRUE(base::ReadFileToString(
       path.AppendASCII("uphold_commit_resp.json"),
       &uphold_commit_resp_));
+
+  std::vector<std::string> publisher_keys {
+      "bumpsmack.com",
+      "duckduckgo.com",
+      "3zsistemi.si",
+      "site1.com",
+      "site2.com",
+      "site3.com",
+      "laurenwags.github.io",
+      "kjozwiakstaging.github.io"
+  };
+
+  for (auto& key : publisher_keys) {
+    std::string prefix = braveledger_publisher::GetHashPrefixRaw(key, 4);
+    publisher_prefixes_[prefix] = key;
+  }
 }
 
 void RewardsBrowserTestResponse::Get(
@@ -160,6 +274,33 @@ void RewardsBrowserTestResponse::Get(
       PREFIX_V1,
       ServerTypes::kPromotion)) {
     *response = captcha_;
+  }
+
+  if (URLMatches(
+      url,
+      "/publishers/prefix-list",
+      "",
+      ServerTypes::kPublisher)) {
+    *response = GetPublisherListResponse(publisher_prefixes_);
+    }
+
+  if (URLMatches(
+      url,
+      "/publishers/prefixes/",
+      "",
+      ServerTypes::kPublisher)) {
+    size_t start = url.rfind('/') + 1;
+    if (start < url.length()) {
+      *response = GetPublisherChannelResponse(
+          publisher_prefixes_,
+          url.substr(start),
+          alternative_publisher_list_);
+    } else {
+      *response = "";
+    }
+    if (response->empty()) {
+      *response_status_code = net::HTTP_NOT_FOUND;
+    }
   }
 
   if (URLMatches(

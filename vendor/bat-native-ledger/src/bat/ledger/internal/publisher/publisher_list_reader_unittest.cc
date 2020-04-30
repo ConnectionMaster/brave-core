@@ -115,4 +115,43 @@ TEST_F(PublisherListReaderTest, InvalidInput) {
       PublisherListReader::ParseError::PrefixesNotSorted);
 }
 
+TEST_F(PublisherListReaderTest, BrotliCompression) {
+  ASSERT_EQ(
+      TestParse([](auto* list) {
+        list->set_uncompressed_size(16);
+        list->set_compression_type(PublisherList::BROTLI_COMPRESSION);
+      }),
+      PublisherListReader::ParseError::UnableToDecompress);
+
+  constexpr char compressed[] = {
+    0x1b, 0x1f, 0x00, 0xf8, 0xc5, 0x1, 0xc7, 0x80, 0xb8,
+    0xbe, 0x44, 0x89, 0x28, 0x10, 0x78, 0x0, 0x20, 0x49,
+    0x49, 0xb2, 0xed, 0x24, 0x69, 0xdb, 0xf9, 0x7f,
+  };
+
+  std::string prefixes(compressed, sizeof(compressed) / sizeof(char));
+
+  PublisherList list;
+  list.set_prefix_size(4);
+  list.set_compression_type(PublisherList::BROTLI_COMPRESSION);
+  list.set_uncompressed_size(32);
+  list.set_prefixes(prefixes);
+
+  std::string serialized;
+  ASSERT_TRUE(list.SerializeToString(&serialized));
+
+  PublisherListReader reader;
+
+  ASSERT_EQ(
+      reader.Parse(serialized),
+      PublisherListReader::ParseError::None);
+
+  std::string uncompressed;
+  for (auto prefix : reader) {
+    uncompressed.append(prefix.data(), prefix.length());
+  }
+
+  ASSERT_EQ(uncompressed, "aaaabbbbccccddddeeeeffffgggghhhh");
+}
+
 }  // namespace braveledger_publisher
