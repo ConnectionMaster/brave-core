@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Provides information regarding onboarding enabled states.
+ * Provides information regarding onboarding.
  */
 public class OnboardingPrefManager {
     private static final String PREF_ONBOARDING = "onboarding";
@@ -41,6 +41,13 @@ public class OnboardingPrefManager {
     public static final int NEW_USER_ONBOARDING = 0;
     public static final int EXISTING_USER_REWARDS_OFF_ONBOARDING = 1;
     public static final int EXISTING_USER_REWARDS_ON_ONBOARDING = 2;
+
+    public static final String ONBOARDING_TYPE = "onboarding_type";
+
+    public static final int ONBOARDING_INVALID_OPTION = -1;
+    public static final int ONBOARDING_ADS = 1;
+    public static final int ONBOARDING_DATA_SAVED = 2;
+    public static final int ONBOARDING_TIME = 3;
 
     private static boolean isOnboardingNotificationShown;
 
@@ -100,7 +107,7 @@ public class OnboardingPrefManager {
     public void setPrefOnboardingSkipCount() {
         SharedPreferences.Editor sharedPreferencesEditor = mSharedPreferences.edit();
         sharedPreferencesEditor.putInt(
-                PREF_ONBOARDING_SKIP_COUNT, getPrefOnboardingSkipCount() + 1);
+            PREF_ONBOARDING_SKIP_COUNT, getPrefOnboardingSkipCount() + 1);
         sharedPreferencesEditor.apply();
     }
 
@@ -114,35 +121,35 @@ public class OnboardingPrefManager {
 
     public boolean showOnboardingForSkip() {
         boolean shouldShow = getPrefNextOnboardingDate() == 0
-                || (getPrefNextOnboardingDate() > 0
-                        && System.currentTimeMillis() > getPrefNextOnboardingDate());
+                             || (getPrefNextOnboardingDate() > 0
+                                 && System.currentTimeMillis() > getPrefNextOnboardingDate());
         return shouldShow;
     }
 
     private boolean shouldShowNewUserOnboarding(Context context) {
         boolean shouldShow = getPrefOnboardingEnabled() && showOnboardingForSkip()
-                && PackageUtils.isFirstInstall(context)
-                && ChromeFeatureList.isEnabled(BraveFeatureList.BRAVE_REWARDS);
+                             && PackageUtils.isFirstInstall(context)
+                             && ChromeFeatureList.isEnabled(BraveFeatureList.BRAVE_REWARDS);
 
         return shouldShow;
     }
 
     private boolean shouldShowExistingUserOnboardingIfRewardsIsSwitchedOff(Context context) {
         boolean shouldShow = getPrefOnboardingEnabled() && showOnboardingForSkip()
-                && isAdsAvailableNewLocale() && !PackageUtils.isFirstInstall(context)
-                && !BraveRewardsPanelPopup.isBraveRewardsEnabled()
-                && !BraveAdsNativeHelper.nativeIsBraveAdsEnabled(Profile.getLastUsedProfile())
-                && ChromeFeatureList.isEnabled(BraveFeatureList.BRAVE_REWARDS);
+                             && isAdsAvailableNewLocale() && !PackageUtils.isFirstInstall(context)
+                             && !BraveRewardsPanelPopup.isBraveRewardsEnabled()
+                             && !BraveAdsNativeHelper.nativeIsBraveAdsEnabled(Profile.getLastUsedProfile())
+                             && ChromeFeatureList.isEnabled(BraveFeatureList.BRAVE_REWARDS);
 
         return shouldShow;
     }
 
     private boolean shouldShowExistingUserOnboardingIfRewardsIsSwitchedOn(Context context) {
         boolean shouldShow = getPrefOnboardingEnabled() && showOnboardingForSkip()
-                && isAdsAvailableNewLocale() && !PackageUtils.isFirstInstall(context)
-                && BraveRewardsPanelPopup.isBraveRewardsEnabled()
-                && !BraveAdsNativeHelper.nativeIsBraveAdsEnabled(Profile.getLastUsedProfile())
-                && ChromeFeatureList.isEnabled(BraveFeatureList.BRAVE_REWARDS);
+                             && isAdsAvailableNewLocale() && !PackageUtils.isFirstInstall(context)
+                             && BraveRewardsPanelPopup.isBraveRewardsEnabled()
+                             && !BraveAdsNativeHelper.nativeIsBraveAdsEnabled(Profile.getLastUsedProfile())
+                             && ChromeFeatureList.isEnabled(BraveFeatureList.BRAVE_REWARDS);
 
         return shouldShow;
     }
@@ -186,14 +193,14 @@ public class OnboardingPrefManager {
     }
 
     public static Map<String, SearchEngineEnum> searchEngineMap =
-            new HashMap<String, SearchEngineEnum>() {
-                {
-                    put(GOOGLE, SearchEngineEnum.GOOGLE);
-                    put(DUCKDUCKGO, SearchEngineEnum.DUCKDUCKGO);
-                    put(DUCKDUCKGOLITE, SearchEngineEnum.DUCKDUCKGOLITE);
-                    put(QWANT, SearchEngineEnum.QWANT);
-                    put(BING, SearchEngineEnum.BING);
-                    put(STARTPAGE, SearchEngineEnum.STARTPAGE);
-                }
-            };
+    new HashMap<String, SearchEngineEnum>() {
+        {
+            put(GOOGLE, SearchEngineEnum.GOOGLE);
+            put(DUCKDUCKGO, SearchEngineEnum.DUCKDUCKGO);
+            put(DUCKDUCKGOLITE, SearchEngineEnum.DUCKDUCKGOLITE);
+            put(QWANT, SearchEngineEnum.QWANT);
+            put(BING, SearchEngineEnum.BING);
+            put(STARTPAGE, SearchEngineEnum.STARTPAGE);
+        }
+    };
 }

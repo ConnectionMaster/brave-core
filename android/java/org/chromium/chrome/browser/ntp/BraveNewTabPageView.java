@@ -58,6 +58,8 @@ import org.chromium.chrome.browser.local_database.TopSiteTable;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.offlinepages.RequestCoordinatorBridge;
 import org.chromium.chrome.browser.offlinepages.DownloadUiActionFlags;
+import org.chromium.chrome.browser.onboarding.OnboardingPrefManager;
+import org.chromium.chrome.browser.onboarding.OnboradingBottomSheetDialogFragment;
 
 public class BraveNewTabPageView extends NewTabPageView {
     private static final String TAG = "BraveNewTabPageView";
@@ -111,6 +113,7 @@ public class BraveNewTabPageView extends NewTabPageView {
         }
         checkAndShowNTPImage(false);
         mNTPBackgroundImagesBridge.addObserver(mNTPBackgroundImageServiceObserver);
+        showOnboarding(OnboardingPrefManager.ONBOARDING_INVALID_OPTION);
     }
 
     @Override
@@ -174,6 +177,30 @@ public class BraveNewTabPageView extends NewTabPageView {
         mAdsBlockedTextView = (TextView) braveStatsView.findViewById(R.id.brave_stats_text_ads);
         mDataSavedTextView = (TextView) braveStatsView.findViewById(R.id.brave_stats_data_saved_text);
         mEstTimeSavedTextView = (TextView) braveStatsView.findViewById(R.id.brave_stats_text_time);
+
+        Linearlayout mAdsLayout = braveStatsView.findViewById(R.id.brave_stats_ads);
+        mAdsLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showOnboarding(OnboardingPrefManager.ONBOARDING_ADS);
+            }
+        });
+
+        Linearlayout mDataSavedLayout = braveStatsView.findViewById(R.id.brave_stats_data_saved);
+        mDataSavedLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showOnboarding(OnboardingPrefManager.ONBOARDING_DATA_SAVED);
+            }
+        });
+
+        Linearlayout mEstTimeSavedLayout = braveStatsView.findViewById(R.id.brave_stats_time);
+        mEstTimeSavedLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showOnboarding(OnboardingPrefManager.ONBOARDING_TIME);
+            }
+        });
     }
 
     @Override
@@ -411,7 +438,7 @@ public class BraveNewTabPageView extends NewTabPageView {
             }
         }
     };
-
+    
     private FetchWallpaperWorkerTask.WallpaperRetrievedCallback wallpaperRetrievedCallback = new FetchWallpaperWorkerTask.WallpaperRetrievedCallback() {
         @Override
         public void bgWallpaperRetrieved(Bitmap bgWallpaper) {
@@ -522,5 +549,16 @@ public class BraveNewTabPageView extends NewTabPageView {
             });
             superReferralSitesLayout.addView(view);
         }
+    }
+
+    private void showOnboarding(int onboradingType) {
+        Bundle bundle = new Bundle();
+        bundle.putInt(OnboardingPrefManager.ONBOARDING_TYPE, ntpType);
+
+        OnboradingBottomSheetDialogFragment onboradingBottomSheetDialogFragment = OnboradingBottomSheetDialogFragment.newInstance();
+        onboradingBottomSheetDialogFragment.setArguments(bundle);
+        onboradingBottomSheetDialogFragment.setNewTabPageListener(newTabPageListener);
+        onboradingBottomSheetDialogFragment.show(mTabImpl.getActivity().getSupportFragmentManager(), "onboarding_bottom_sheet_dialog_fragment");
+        onboradingBottomSheetDialogFragment.setCancelable(false);
     }
 }
