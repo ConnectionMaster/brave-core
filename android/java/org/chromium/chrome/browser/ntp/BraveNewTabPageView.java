@@ -6,6 +6,7 @@
 package org.chromium.chrome.browser.ntp;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -178,7 +179,7 @@ public class BraveNewTabPageView extends NewTabPageView {
         mDataSavedTextView = (TextView) braveStatsView.findViewById(R.id.brave_stats_data_saved_text);
         mEstTimeSavedTextView = (TextView) braveStatsView.findViewById(R.id.brave_stats_text_time);
 
-        Linearlayout mAdsLayout = braveStatsView.findViewById(R.id.brave_stats_ads);
+        LinearLayout mAdsLayout = braveStatsView.findViewById(R.id.brave_stats_ads);
         mAdsLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -186,7 +187,7 @@ public class BraveNewTabPageView extends NewTabPageView {
             }
         });
 
-        Linearlayout mDataSavedLayout = braveStatsView.findViewById(R.id.brave_stats_data_saved);
+        LinearLayout mDataSavedLayout = braveStatsView.findViewById(R.id.brave_stats_data_saved);
         mDataSavedLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -194,7 +195,7 @@ public class BraveNewTabPageView extends NewTabPageView {
             }
         });
 
-        Linearlayout mEstTimeSavedLayout = braveStatsView.findViewById(R.id.brave_stats_time);
+        LinearLayout mEstTimeSavedLayout = braveStatsView.findViewById(R.id.brave_stats_time);
         mEstTimeSavedLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -389,6 +390,38 @@ public class BraveNewTabPageView extends NewTabPageView {
             mNTPBackgroundImagesBridge.getTopSites();
     }
 
+    private TabObserver mTabObserver = new EmptyTabObserver() {
+        @Override
+        public void onInteractabilityChanged(Tab tab, boolean interactable) {
+            // Force a layout update if the tab is now in the foreground.
+            if (interactable) {
+                if (sponsoredTab == null)
+                    initilizeSponsoredTab();
+                if (!sponsoredTab.isMoreTabs()) {
+                    checkAndShowNTPImage(false);
+                }
+            } else {
+                if (!isFromBottomSheet) {
+                    mNewTabPageLayout.setBackgroundResource(0);
+                    if (imageDrawable != null && imageDrawable.getBitmap() != null && !imageDrawable.getBitmap().isRecycled()) {
+                        imageDrawable.getBitmap().recycle();
+                    }
+                }
+            }
+        }
+    };
+
+    private void showOnboarding(int onboradingType) {
+        Bundle bundle = new Bundle();
+        bundle.putInt(OnboardingPrefManager.ONBOARDING_TYPE, onboradingType);
+
+        OnboradingBottomSheetDialogFragment onboradingBottomSheetDialogFragment = OnboradingBottomSheetDialogFragment.newInstance();
+        onboradingBottomSheetDialogFragment.setArguments(bundle);
+        onboradingBottomSheetDialogFragment.setNewTabPageListener(newTabPageListener);
+        onboradingBottomSheetDialogFragment.show(mTabImpl.getActivity().getSupportFragmentManager(), "onboarding_bottom_sheet_dialog_fragment");
+        onboradingBottomSheetDialogFragment.setCancelable(false);
+    }
+
     private NewTabPageListener newTabPageListener = new NewTabPageListener() {
         @Override
         public void updateInteractableFlag(boolean isBottomSheet) {
@@ -549,16 +582,5 @@ public class BraveNewTabPageView extends NewTabPageView {
             });
             superReferralSitesLayout.addView(view);
         }
-    }
-
-    private void showOnboarding(int onboradingType) {
-        Bundle bundle = new Bundle();
-        bundle.putInt(OnboardingPrefManager.ONBOARDING_TYPE, ntpType);
-
-        OnboradingBottomSheetDialogFragment onboradingBottomSheetDialogFragment = OnboradingBottomSheetDialogFragment.newInstance();
-        onboradingBottomSheetDialogFragment.setArguments(bundle);
-        onboradingBottomSheetDialogFragment.setNewTabPageListener(newTabPageListener);
-        onboradingBottomSheetDialogFragment.show(mTabImpl.getActivity().getSupportFragmentManager(), "onboarding_bottom_sheet_dialog_fragment");
-        onboradingBottomSheetDialogFragment.setCancelable(false);
     }
 }
