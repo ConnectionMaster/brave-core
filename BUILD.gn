@@ -109,6 +109,12 @@ if (is_android) {
       "//brave/android/sync/crypto.js",
       "//brave/components/brave_sync/extension/brave-sync-android/bundles/bundle.js",
       "//brave/LICENSE.html",
+      "//brave/android/java/org/chromium/chrome/browser/onboarding/animations/onboarding_ads.json",
+      "//brave/android/java/org/chromium/chrome/browser/onboarding/animations/onboarding_data_saved.json",
+      "//brave/android/java/org/chromium/chrome/browser/onboarding/animations/onboarding_time_saved.json",
+      "//brave/android/java/org/chromium/chrome/browser/onboarding/animations/privacy_protection.json",
+      "//brave/android/java/org/chromium/chrome/browser/onboarding/animations/save_data_and_battery.json",
+      "//brave/android/java/org/chromium/chrome/browser/onboarding/animations/website_loads_faster.json",
     ]
     deps = [
       "//brave:browser_dependencies",
