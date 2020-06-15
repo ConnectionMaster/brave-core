@@ -32,7 +32,6 @@
 #include "brave/components/brave_sync/network_time_helper.h"
 #include "brave/components/ntp_background_images/browser/features.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
-#include "brave/components/p2a/buildflags.h"
 #include "brave/components/p2a/brave_p2a_service.h"
 #include "brave/components/p3a/buildflags.h"
 #include "brave/components/p3a/brave_histogram_rewrite.h"
