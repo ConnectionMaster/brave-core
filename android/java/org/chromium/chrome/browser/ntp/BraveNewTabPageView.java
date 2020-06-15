@@ -26,6 +26,7 @@ import android.text.SpannableStringBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.List;
 import android.view.MenuItem;
+import com.airbnb.lottie.LottieAnimationView;
 
 import org.chromium.base.TraceEvent;
 import org.chromium.chrome.R;
@@ -456,6 +457,35 @@ public class BraveNewTabPageView extends NewTabPageView {
                 }
             } .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
+
+        @Override
+        public void selectedPage(int index) {
+            if (index == 0) {
+                LottieAnimationView mAnimatedView = mNewTabPageLayout.findViewById(R.id.ads_animation);
+                if (mAnimatedView != null) {
+                    mAnimatedView.setVisibility(View.VISIBLE);
+                    mAnimatedView.setAnimation("onboarding_ads.json");
+                    mAnimatedView.playAnimation();
+                    mAnimatedView.loop(false);
+                }
+            } else if (index == 1) {
+                LottieAnimationView mAnimatedView = mNewTabPageLayout.findViewById(R.id.data_animation);
+                if (mAnimatedView != null) {
+                    mAnimatedView.setVisibility(View.VISIBLE);
+                    mAnimatedView.setAnimation("onboarding_data_saved.json");
+                    mAnimatedView.playAnimation();
+                    mAnimatedView.loop(false);
+                }
+            } else if (index == 2) {
+                LottieAnimationView mAnimatedView = mNewTabPageLayout.findViewById(R.id.time_animation);
+                if (mAnimatedView != null) {
+                    mAnimatedView.setVisibility(View.VISIBLE);
+                    mAnimatedView.setAnimation("onboarding_time_saved.json");
+                    mAnimatedView.playAnimation();
+                    mAnimatedView.loop(false);
+                }
+            }
+        }
     };
 
     private NTPBackgroundImagesBridge.NTPBackgroundImageServiceObserver mNTPBackgroundImageServiceObserver = new NTPBackgroundImagesBridge.NTPBackgroundImageServiceObserver() {
@@ -471,7 +501,7 @@ public class BraveNewTabPageView extends NewTabPageView {
             }
         }
     };
-    
+
     private FetchWallpaperWorkerTask.WallpaperRetrievedCallback wallpaperRetrievedCallback = new FetchWallpaperWorkerTask.WallpaperRetrievedCallback() {
         @Override
         public void bgWallpaperRetrieved(Bitmap bgWallpaper) {
