@@ -103,18 +103,6 @@ std::string NativeAdsClient::LoadJsonSchema(const std::string & name) {
   return [bridge_ loadJsonSchema:name];
 }
 
-void NativeAdsClient::SaveBundleState(std::unique_ptr<ads::BundleState> state, ads::ResultCallback callback) {
-  [bridge_ saveBundleState:std::move(state) callback:callback];
-}
-
-void NativeAdsClient::GetCreativeAdNotifications(const std::vector<std::string> & categories, ads::GetCreativeAdNotificationsCallback callback) {
-  [bridge_ getCreativeAdNotifications:categories callback:callback];
-}
-
-void NativeAdsClient::GetAdConversions(ads::GetAdConversionsCallback callback) {
-  [bridge_ getAdConversions:callback];
-}
-
 void NativeAdsClient::Log(const char * file, const int line, const int verbose_level, const std::string & message) {
   [bridge_ log:file line:line verboseLevel:verbose_level message:message];
 }

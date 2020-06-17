@@ -3,15 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "bat/ads/creative_ad_info.h"
+#include "bat/ads/internal/creative_ad_notification_info.h"
 
 namespace ads {
 
-CreativeAdInfo::CreativeAdInfo() = default;
+CreativeAdNotificationInfo::CreativeAdNotificationInfo() = default;
 
-CreativeAdInfo::CreativeAdInfo(
-    const CreativeAdInfo& info) = default;
-
-CreativeAdInfo::~CreativeAdInfo() = default;
+CreativeAdNotificationInfo::~CreativeAdNotificationInfo() = default;
 
 }  // namespace ads

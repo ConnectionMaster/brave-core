@@ -5,6 +5,7 @@
 
 #include "bat/ads/internal/unittest_utils.h"
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -49,7 +50,7 @@ std::string GetPathForRequest(
 }
 
 void MockLoad(
-    AdsClientMock* mock) {
+    const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, Load(_, _))
       .WillByDefault(Invoke([](
           const std::string& name,
@@ -68,7 +69,7 @@ void MockLoad(
 }
 
 void MockSave(
-    AdsClientMock* mock) {
+    const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, Save(_, _, _))
       .WillByDefault(Invoke([](
           const std::string& name,
@@ -79,13 +80,13 @@ void MockSave(
 }
 
 void MockLoadUserModelForLanguage(
-    AdsClientMock* mock) {
+    const std::unique_ptr<AdsClientMock>& mock) {
   const std::vector<std::string> user_model_languages = { "en", "de", "fr" };
-  EXPECT_CALL(*mock, GetUserModelLanguages())
-      .WillRepeatedly(Return(user_model_languages));
+  ON_CALL(*mock, GetUserModelLanguages())
+      .WillByDefault(Return(user_model_languages));
 
-  EXPECT_CALL(*mock, LoadUserModelForLanguage(_, _))
-      .WillRepeatedly(Invoke([](
+  ON_CALL(*mock, LoadUserModelForLanguage(_, _))
+      .WillByDefault(Invoke([](
           const std::string& language,
           LoadCallback callback) {
         base::FilePath path = GetResourcesPath();
@@ -105,9 +106,9 @@ void MockLoadUserModelForLanguage(
 }
 
 void MockLoadJsonSchema(
-    AdsClientMock* mock) {
-  EXPECT_CALL(*mock, LoadJsonSchema(_))
-      .WillRepeatedly(Invoke([](
+    const std::unique_ptr<AdsClientMock>& mock) {
+  ON_CALL(*mock, LoadJsonSchema(_))
+      .WillByDefault(Invoke([](
           const std::string& name) -> std::string {
         base::FilePath path = GetTestPath();
         path = path.AppendASCII(name);
@@ -117,6 +118,33 @@ void MockLoadJsonSchema(
 
         return value;
       }));
+}
+
+void MockRunDBTransaction(
+    const std::unique_ptr<AdsClientMock>& mock,
+    const std::unique_ptr<AdsDatabase>& database) {
+  ON_CALL(*mock, RunDBTransaction(_, _))
+      .WillByDefault(Invoke([&database](
+          DBTransactionPtr transaction,
+          RunDBTransactionCallback callback) {
+        auto response = DBCommandResponse::New();
+
+        if (!database) {
+          response->status = DBCommandResponse::Status::RESPONSE_ERROR;
+        } else {
+          database->RunTransaction(std::move(transaction), response.get());
+        }
+
+        callback(std::move(response));
+      }));
+}
+
+uint64_t DistantPast() {
+  return std::numeric_limits<int64_t>::min();
+}
+
+uint64_t DistantFuture() {
+  return std::numeric_limits<int64_t>::max();
 }
 
 }  // namespace ads

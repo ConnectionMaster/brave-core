@@ -6,14 +6,16 @@
 #ifndef BAT_ADS_INTERNAL_UNITTEST_UTILS_H_
 #define BAT_ADS_INTERNAL_UNITTEST_UTILS_H_
 
-#include <deque>
-#include <string>
+#include <stdint.h>
 
-#include "bat/ads/result.h"
+#include <deque>
+#include <utility>
 
 #include "base/files/file_path.h"
 #include "brave/components/l10n/browser/locale_helper_mock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "bat/ads/ads_database.h"
+#include "bat/ads/result.h"
 
 namespace ads {
 
@@ -22,7 +24,7 @@ class AdsImpl;
 
 template<class T>
 void Initialize(
-    T object) {
+    const T& object) {
   object->Initialize(
       [](const Result result) {
     ASSERT_EQ(Result::SUCCESS, result);
@@ -34,16 +36,24 @@ base::FilePath GetTestPath();
 base::FilePath GetResourcesPath();
 
 void MockLoad(
-    AdsClientMock* mock);
+    const std::unique_ptr<AdsClientMock>& mock);
 
 void MockSave(
-    AdsClientMock* mock);
+    const std::unique_ptr<AdsClientMock>& mock);
 
 void MockLoadUserModelForLanguage(
-    AdsClientMock* mock);
+    const std::unique_ptr<AdsClientMock>& mock);
 
 void MockLoadJsonSchema(
-    AdsClientMock* mock);
+    const std::unique_ptr<AdsClientMock>& mock);
+
+void MockRunDBTransaction(
+    const std::unique_ptr<AdsClientMock>& mock,
+    const std::unique_ptr<AdsDatabase>& database);
+
+uint64_t DistantPast();
+
+uint64_t DistantFuture();
 
 // Checks that |deq1| and |deq2| contain the same number of elements and each
 // element in |deq1| is present in |deq2| and vice-versa (Uses the == operator

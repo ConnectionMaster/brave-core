@@ -12,9 +12,9 @@
 #include "brave/components/l10n/browser/locale_helper_mock.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
-#include "bat/ads/creative_ad_info.h"
 #include "bat/ads/internal/ads_client_mock.h"
 #include "bat/ads/internal/ads_impl.h"
+#include "bat/ads/internal/creative_ad_info.h"
 #include "bat/ads/internal/frequency_capping/frequency_capping_unittest_utils.h"
 #include "bat/ads/internal/unittest_utils.h"
 
@@ -62,12 +62,12 @@ class BatAdsAdsPerHourFrequencyCapTest : public ::testing::Test {
     ON_CALL(*locale_helper_mock_, GetLocale())
         .WillByDefault(Return("en-US"));
 
-    MockLoad(ads_client_mock_.get());
-    MockLoadUserModelForLanguage(ads_client_mock_.get());
-    MockLoadJsonSchema(ads_client_mock_.get());
-    MockSave(ads_client_mock_.get());
+    MockLoad(ads_client_mock_);
+    MockLoadUserModelForLanguage(ads_client_mock_);
+    MockLoadJsonSchema(ads_client_mock_);
+    MockSave(ads_client_mock_);
 
-    Initialize(ads_.get());
+    Initialize(ads_);
   }
 
   void TearDown() override {

@@ -42,7 +42,13 @@ class Bundle {
   std::string GetClientOS();
 
   void SaveState();
-  void OnStateSaved(
+  void OnCreativeAdNotificationsSaved(
+      const std::string& catalog_id,
+      const uint64_t& catalog_version,
+      const uint64_t& catalog_ping,
+      const uint64_t& catalog_last_updated_timestamp_in_seconds,
+      const Result result);
+  void OnAdConversionsSaved(
       const std::string& catalog_id,
       const uint64_t& catalog_version,
       const uint64_t& catalog_ping,

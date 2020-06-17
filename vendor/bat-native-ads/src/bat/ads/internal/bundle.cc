@@ -7,15 +7,15 @@
 #include <map>
 #include <utility>
 
-#include "bat/ads/bundle_state.h"
-
+#include "bat/ads/internal/bundle_state.h"
 #include "bat/ads/internal/bundle.h"
 #include "bat/ads/internal/catalog.h"
+#include "bat/ads/internal/database/tables/ad_conversions_database_table.h"
+#include "bat/ads/internal/database/tables/creative_ad_notifications_database_table.h"
 #include "bat/ads/internal/json_helper.h"
 #include "bat/ads/internal/time_util.h"
 #include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/static_values.h"
-
 #include "base/strings/string_util.h"
 #include "base/strings/string_split.h"
 #include "base/time/time.h"
@@ -48,10 +48,22 @@ bool Bundle::UpdateFromCatalog(
   catalog_last_updated_timestamp_in_seconds_ =
       bundle_state->catalog_last_updated_timestamp_in_seconds;
 
-  auto callback = std::bind(&Bundle::OnStateSaved,
+  auto database_callback = std::bind(&Bundle::OnCreativeAdNotificationsSaved,
       this, catalog_id_, catalog_version_, catalog_ping_,
           catalog_last_updated_timestamp_in_seconds_, _1);
-  ads_->get_ads_client()->SaveBundleState(std::move(bundle_state), callback);
+  database::CreativeAdNotificationsDatabaseTable database_table(ads_);
+  database_table.Save(bundle_state->creative_ad_notifications,
+      database_callback);
+
+  auto ad_conversions_database_callback =
+      std::bind(&Bundle::OnCreativeAdNotificationsSaved, this, catalog_id_,
+          catalog_version_, catalog_ping_,
+              catalog_last_updated_timestamp_in_seconds_, _1);
+  database::AdConversionsDatabaseTable ad_conversions_database_table(ads_);
+  ad_conversions_database_table.PurgeExpiredAdConversions(
+      ad_conversions_database_callback);
+  ad_conversions_database_table.Save(bundle_state->ad_conversions,
+      ad_conversions_database_callback);
 
   return true;
 }
@@ -63,7 +75,10 @@ void Bundle::Reset() {
       this, bundle_state->catalog_id, bundle_state->catalog_version,
           bundle_state->catalog_ping,
               bundle_state->catalog_last_updated_timestamp_in_seconds, _1);
-  ads_->get_ads_client()->SaveBundleState(std::move(bundle_state), callback);
+
+  database::CreativeAdNotificationsDatabaseTable database_table(ads_);
+  database_table.Save(bundle_state->creative_ad_notifications,
+      callback);
 }
 
 std::string Bundle::GetCatalogId() const {
@@ -98,7 +113,7 @@ std::unique_ptr<BundleState> Bundle::GenerateFromCatalog(
     const Catalog& catalog) {
   // TODO(Terry Mancey): Refactor function to use callbacks
 
-  CreativeAdNotificationMap creative_ad_notifications;
+  CreativeAdNotificationList creative_ad_notifications;
   AdConversionList ad_conversions;
 
   // Campaigns
@@ -158,25 +173,14 @@ std::unique_ptr<BundleState> Bundle::GenerateFromCatalog(
             continue;
           }
 
-          if (creative_ad_notifications.find(segment_name) ==
-              creative_ad_notifications.end()) {
-            creative_ad_notifications.insert({segment_name, {}});
-          }
-
           info.category = segment_name;
-          creative_ad_notifications.at(segment_name).push_back(info);
+          creative_ad_notifications.push_back(info);
           entries++;
 
           auto top_level_segment_name = segment_name_hierarchy.front();
           if (top_level_segment_name != segment_name) {
-            if (creative_ad_notifications.find(top_level_segment_name)
-                == creative_ad_notifications.end()) {
-              creative_ad_notifications.insert({top_level_segment_name, {}});
-            }
-
             info.category = top_level_segment_name;
-            creative_ad_notifications.at(top_level_segment_name)
-                .push_back(info);
+            creative_ad_notifications.push_back(info);
             entries++;
           }
         }
@@ -252,21 +256,39 @@ std::string Bundle::GetClientOS() {
   }
 }
 
-void Bundle::OnStateSaved(
+void Bundle::OnCreativeAdNotificationsSaved(
     const std::string& catalog_id,
     const uint64_t& catalog_version,
     const uint64_t& catalog_ping,
     const uint64_t& catalog_last_updated_timestamp_in_seconds,
     const Result result) {
   if (result != SUCCESS) {
-    BLOG(0, "Failed to save bundle state");
+    BLOG(0, "Failed to save creative ad notifications state");
 
     // If the bundle fails to save, we will retry the next time a bundle is
     // downloaded from the Ads Serve
     return;
   }
 
-  BLOG(3, "Successfully saved bundle state");
+  BLOG(3, "Successfully saved creative ad notifications state");
+}
+
+
+void Bundle::OnAdConversionsSaved(
+    const std::string& catalog_id,
+    const uint64_t& catalog_version,
+    const uint64_t& catalog_ping,
+    const uint64_t& catalog_last_updated_timestamp_in_seconds,
+    const Result result) {
+  if (result != SUCCESS) {
+    BLOG(0, "Failed to save ad connversions state");
+
+    // If the bundle fails to save, we will retry the next time a bundle is
+    // downloaded from the Ads Serve
+    return;
+  }
+
+  BLOG(3, "Successfully saved ad conversions state");
 }
 
 void Bundle::OnStateReset(

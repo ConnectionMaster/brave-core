@@ -53,12 +53,12 @@ class BatAdsIsMobileTest : public ::testing::Test {
     ON_CALL(*locale_helper_mock_, GetLocale())
         .WillByDefault(Return("en-US"));
 
-    MockLoad(ads_client_mock_.get());
-    MockLoadUserModelForLanguage(ads_client_mock_.get());
-    MockLoadJsonSchema(ads_client_mock_.get());
-    MockSave(ads_client_mock_.get());
+    MockLoad(ads_client_mock_);
+    MockLoadUserModelForLanguage(ads_client_mock_);
+    MockLoadJsonSchema(ads_client_mock_);
+    MockSave(ads_client_mock_);
 
-    Initialize(ads_.get());
+    Initialize(ads_);
   }
 
   void TearDown() override {

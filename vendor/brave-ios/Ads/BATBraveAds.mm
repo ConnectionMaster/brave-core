@@ -423,31 +423,6 @@ BATClassAdsBridge(BOOL, isDebug, setDebug, _is_debug)
             confirmationType:[NSString stringWithUTF8String:std::string(confirmationType).c_str()]];
 }
 
-- (void)getCreativeAdNotifications:(const std::vector<std::string> &)categories callback:(ads::GetCreativeAdNotificationsCallback)callback
-{
-  if (![self isAdsServiceRunning]) { return; }
-
-  ads::CreativeAdNotificationList found_ads;
-  for (const auto & category : categories) {
-    auto it = bundleState->creative_ad_notifications.find(category);
-    if (it == bundleState->creative_ad_notifications.end()) {
-      continue;
-    }
-
-    found_ads.insert(found_ads.end(), it->second.begin(), it->second.end());
-  }
-
-  callback(ads::Result::SUCCESS, categories, found_ads);
-}
-
-- (void)getAdConversions:(ads::GetAdConversionsCallback)callback
-{
-  // TODO(khickinson): To be implemented
-  if (![self isAdsServiceRunning]) { return; }
-
-  callback(ads::Result::SUCCESS, {});
-}
-
 - (void)setCatalogIssuers:(std::unique_ptr<ads::IssuersInfo>)info
 {
   if (![self isAdsServiceRunning]) { return; }
@@ -574,20 +549,6 @@ BATClassAdsBridge(BOOL, isDebug, setDebug, _is_debug)
 - (void)save:(const std::string &)name value:(const std::string &)value callback:(ads::ResultCallback)callback
 {
   if ([self.commonOps saveContents:value name:name]) {
-    callback(ads::Result::SUCCESS);
-  } else {
-    callback(ads::Result::FAILED);
-  }
-}
-
-- (void)saveBundleState:(std::unique_ptr<ads::BundleState>)state callback:(ads::ResultCallback)callback
-{
-  if (state.get() == nullptr) {
-    callback(ads::Result::FAILED);
-    return;
-  }
-  bundleState.reset(state.release());
-  if ([self.commonOps saveContents:bundleState->ToJson() name:"bundle.json"]) {
     callback(ads::Result::SUCCESS);
   } else {
     callback(ads::Result::FAILED);

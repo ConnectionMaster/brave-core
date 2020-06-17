@@ -11,7 +11,9 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
+#include "base/files/scoped_temp_dir.h"
 #include "base/test/task_environment.h"
 #include "base/time/time.h"
 #include "brave/components/l10n/browser/locale_helper_mock.h"
@@ -19,6 +21,7 @@
 #include "testing/gtest/include/gtest/gtest.h"
 #include "bat/ads/internal/ads_client_mock.h"
 #include "bat/ads/internal/ads_impl.h"
+#include "bat/ads/internal/database/tables/ad_conversions_database_table.h"
 #include "bat/ads/internal/unittest_utils.h"
 
 // npm run test -- brave_unit_tests --filter=BatAds*
@@ -36,7 +39,9 @@ class BatAdsAdConversionsTest : public ::testing::Test {
       : ads_client_mock_(std::make_unique<NiceMock<AdsClientMock>>()),
         ads_(std::make_unique<AdsImpl>(ads_client_mock_.get())),
         locale_helper_mock_(std::make_unique<NiceMock<
-            brave_l10n::LocaleHelperMock>>()) {
+            brave_l10n::LocaleHelperMock>>()),
+        database_table_(std::make_unique<
+            database::AdConversionsDatabaseTable>(ads_.get())) {
     // You can do set-up work for each test here
 
     brave_l10n::LocaleHelper::GetInstance()->set_for_testing(
@@ -57,15 +62,25 @@ class BatAdsAdConversionsTest : public ::testing::Test {
     ON_CALL(*ads_client_mock_, IsEnabled())
         .WillByDefault(Return(true));
 
+    ON_CALL(*ads_client_mock_, ShouldAllowAdConversionTracking())
+        .WillByDefault(Return(true));
+
     ON_CALL(*locale_helper_mock_, GetLocale())
         .WillByDefault(Return("en-US"));
 
-    MockLoad(ads_client_mock_.get());
-    MockLoadUserModelForLanguage(ads_client_mock_.get());
-    MockLoadJsonSchema(ads_client_mock_.get());
-    MockSave(ads_client_mock_.get());
+    MockLoad(ads_client_mock_);
+    MockLoadUserModelForLanguage(ads_client_mock_);
+    MockLoadJsonSchema(ads_client_mock_);
+    MockSave(ads_client_mock_);
 
-    Initialize(ads_.get());
+    ASSERT_TRUE(temp_dir_.CreateUniqueTempDir());
+
+    database_ = std::make_unique<AdsDatabase>(
+        temp_dir_.GetPath().AppendASCII("database"));
+
+    MockRunDBTransaction(ads_client_mock_, database_);
+
+    Initialize(ads_);
   }
 
   void TearDown() override {
@@ -91,6 +106,13 @@ class BatAdsAdConversionsTest : public ::testing::Test {
     return creative_set_history;
   }
 
+  void SaveAdConversions(
+      const AdConversionList& ad_conversions) {
+    database_table_->Save(ad_conversions, [](const Result result) {
+        ASSERT_EQ(Result::SUCCESS, result);
+    });
+  }
+
   void TriggerAdEvent(
       const std::string& creative_set_id,
       const ConfirmationType confirmation_type,
@@ -108,9 +130,13 @@ class BatAdsAdConversionsTest : public ::testing::Test {
 
   base::test::TaskEnvironment task_environment_;
 
+  base::ScopedTempDir temp_dir_;
+
   std::unique_ptr<AdsClientMock> ads_client_mock_;
   std::unique_ptr<AdsImpl> ads_;
   std::unique_ptr<brave_l10n::LocaleHelperMock> locale_helper_mock_;
+  std::unique_ptr<database::AdConversionsDatabaseTable> database_table_;
+  std::unique_ptr<AdsDatabase> database_;
 };
 
 TEST_F(BatAdsAdConversionsTest,
@@ -120,9 +146,6 @@ TEST_F(BatAdsAdConversionsTest,
 
   ON_CALL(*ads_client_mock_, ShouldAllowAdConversionTracking())
       .WillByDefault(Return(false));
-
-  EXPECT_CALL(*ads_client_mock_, GetAdConversions(_))
-      .Times(0);
 
   // Act
   ads_->get_ad_conversions()->Check("https://www.brave.com/signup");
@@ -139,27 +162,13 @@ TEST_F(BatAdsAdConversionsTest,
   // Arrange
   const std::string creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
 
-  ON_CALL(*ads_client_mock_, ShouldAllowAdConversionTracking())
-      .WillByDefault(Return(true));
-
-  ON_CALL(*ads_client_mock_, GetAdConversions(_))
-      .WillByDefault(Invoke([&creative_set_id](
-          GetAdConversionsCallback callback) {
-        AdConversionList ad_conversions;
-
-        AdConversionInfo ad_conversion;
-        ad_conversion.creative_set_id = creative_set_id;
-        ad_conversion.type = "postview";
-        ad_conversion.url_pattern = "https://www.brave.com/*";
-        ad_conversion.observation_window = 3;
-
-        ad_conversions.push_back(ad_conversion);
-
-        callback(Result::SUCCESS, ad_conversions);
-      }));
-
-  EXPECT_CALL(*ads_client_mock_, GetAdConversions(_))
-      .Times(1);
+  AdConversionList ad_conversions;
+  unsigned int foo = 1;
+  ad_conversions.emplace_back(creative_set_id, creative_set_id,
+      creative_set_id, foo, DistantFuture());
+  ad_conversions.emplace_back(creative_set_id, "postview",
+      "https://www.brave.com/*", 3, DistantFuture());
+  SaveAdConversions(ad_conversions);
 
   TriggerAdEvent(creative_set_id, ConfirmationType::kViewed);
 
@@ -178,27 +187,10 @@ TEST_F(BatAdsAdConversionsTest,
   // Arrange
   const std::string creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
 
-  ON_CALL(*ads_client_mock_, ShouldAllowAdConversionTracking())
-      .WillByDefault(Return(true));
-
-  ON_CALL(*ads_client_mock_, GetAdConversions(_))
-      .WillByDefault(Invoke([&creative_set_id](
-          GetAdConversionsCallback callback) {
-        AdConversionList ad_conversions;
-
-        AdConversionInfo ad_conversion;
-        ad_conversion.creative_set_id = creative_set_id;
-        ad_conversion.type = "postclick";
-        ad_conversion.url_pattern = "https://www.brave.com/*";
-        ad_conversion.observation_window = 3;
-
-        ad_conversions.push_back(ad_conversion);
-
-        callback(Result::SUCCESS, ad_conversions);
-      }));
-
-  EXPECT_CALL(*ads_client_mock_, GetAdConversions(_))
-      .Times(1);
+  AdConversionList ad_conversions;
+  ad_conversions.emplace_back(creative_set_id, "postclick",
+      "https://www.brave.com/*", 3, DistantFuture());
+  SaveAdConversions(ad_conversions);
 
   TriggerAdEvent(creative_set_id, ConfirmationType::kClicked);
 
@@ -217,27 +209,10 @@ TEST_F(BatAdsAdConversionsTest,
   // Arrange
   const std::string creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
 
-  ON_CALL(*ads_client_mock_, ShouldAllowAdConversionTracking())
-      .WillByDefault(Return(true));
-
-  ON_CALL(*ads_client_mock_, GetAdConversions(_))
-      .WillByDefault(Invoke([&creative_set_id](
-          GetAdConversionsCallback callback) {
-        AdConversionList ad_conversions;
-
-        AdConversionInfo ad_conversion;
-        ad_conversion.creative_set_id = creative_set_id;
-        ad_conversion.type = "postclick";
-        ad_conversion.url_pattern = "https://www.brave.com/*";
-        ad_conversion.observation_window = 3;
-
-        ad_conversions.push_back(ad_conversion);
-
-        callback(Result::SUCCESS, ad_conversions);
-      }));
-
-  EXPECT_CALL(*ads_client_mock_, GetAdConversions(_))
-      .Times(1);
+  AdConversionList ad_conversions;
+  ad_conversions.emplace_back(creative_set_id, "postclick",
+      "https://www.brave.com/*", 3, DistantFuture());
+  SaveAdConversions(ad_conversions);
 
   TriggerAdEvent(creative_set_id, ConfirmationType::kNone);
   TriggerAdEvent(creative_set_id, ConfirmationType::kDismissed);
@@ -262,27 +237,10 @@ TEST_F(BatAdsAdConversionsTest,
   // Arrange
   const std::string creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
 
-  ON_CALL(*ads_client_mock_, ShouldAllowAdConversionTracking())
-      .WillByDefault(Return(true));
-
-  ON_CALL(*ads_client_mock_, GetAdConversions(_))
-      .WillByDefault(Invoke([&creative_set_id](
-          GetAdConversionsCallback callback) {
-        AdConversionList ad_conversions;
-
-        AdConversionInfo ad_conversion;
-        ad_conversion.creative_set_id = creative_set_id;
-        ad_conversion.type = "postview";
-        ad_conversion.url_pattern = "https://www.brave.com/*";
-        ad_conversion.observation_window = 3;
-
-        ad_conversions.push_back(ad_conversion);
-
-        callback(Result::SUCCESS, ad_conversions);
-      }));
-
-  EXPECT_CALL(*ads_client_mock_, GetAdConversions(_))
-      .Times(2);
+  AdConversionList ad_conversions;
+  ad_conversions.emplace_back(creative_set_id, "postview",
+      "https://www.brave.com/*", 3, DistantFuture());
+  SaveAdConversions(ad_conversions);
 
   TriggerAdEvent(creative_set_id, ConfirmationType::kViewed);
 
@@ -303,27 +261,10 @@ TEST_F(BatAdsAdConversionsTest,
   // Arrange
   const std::string creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
 
-  ON_CALL(*ads_client_mock_, ShouldAllowAdConversionTracking())
-      .WillByDefault(Return(true));
-
-  ON_CALL(*ads_client_mock_, GetAdConversions(_))
-      .WillByDefault(Invoke([&creative_set_id](
-          GetAdConversionsCallback callback) {
-        AdConversionList ad_conversions;
-
-        AdConversionInfo ad_conversion;
-        ad_conversion.creative_set_id = creative_set_id;
-        ad_conversion.type = "postview";
-        ad_conversion.url_pattern = "https://www.brave.com/signup/*";
-        ad_conversion.observation_window = 3;
-
-        ad_conversions.push_back(ad_conversion);
-
-        callback(Result::SUCCESS, ad_conversions);
-      }));
-
-  EXPECT_CALL(*ads_client_mock_, GetAdConversions(_))
-      .Times(1);
+  AdConversionList ad_conversions;
+  ad_conversions.emplace_back(creative_set_id, "postview",
+      "https://www.brave.com/signup/*", 3, DistantFuture());
+  SaveAdConversions(ad_conversions);
 
   TriggerAdEvent(creative_set_id, ConfirmationType::kViewed);
 
@@ -342,27 +283,10 @@ TEST_F(BatAdsAdConversionsTest,
   // Arrange
   const std::string creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
 
-  ON_CALL(*ads_client_mock_, ShouldAllowAdConversionTracking())
-      .WillByDefault(Return(true));
-
-  ON_CALL(*ads_client_mock_, GetAdConversions(_))
-      .WillByDefault(Invoke([&creative_set_id](
-          GetAdConversionsCallback callback) {
-        AdConversionList ad_conversions;
-
-        AdConversionInfo ad_conversion;
-        ad_conversion.creative_set_id = creative_set_id;
-        ad_conversion.type = "postview";
-        ad_conversion.url_pattern = "https://www.brave.com/*";
-        ad_conversion.observation_window = 3;
-
-        ad_conversions.push_back(ad_conversion);
-
-        callback(Result::SUCCESS, ad_conversions);
-      }));
-
-  EXPECT_CALL(*ads_client_mock_, GetAdConversions(_))
-      .Times(1);
+  AdConversionList ad_conversions;
+  ad_conversions.emplace_back(creative_set_id, "postview",
+      "https://www.brave.com/*", 3, DistantFuture());
+  SaveAdConversions(ad_conversions);
 
   const base::Time time = base::Time::Now() - base::TimeDelta::FromHours(71);
   TriggerAdEvent(creative_set_id, ConfirmationType::kViewed, time);
@@ -382,33 +306,61 @@ TEST_F(BatAdsAdConversionsTest,
   // Arrange
   const std::string creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
 
-  ON_CALL(*ads_client_mock_, ShouldAllowAdConversionTracking())
-      .WillByDefault(Return(true));
-
-  ON_CALL(*ads_client_mock_, GetAdConversions(_))
-      .WillByDefault(Invoke([&creative_set_id](
-          GetAdConversionsCallback callback) {
-        AdConversionList ad_conversions;
-
-        AdConversionInfo ad_conversion;
-        ad_conversion.creative_set_id = creative_set_id;
-        ad_conversion.type = "postview";
-        ad_conversion.url_pattern = "https://www.brave.com/*";
-        ad_conversion.observation_window = 3;
-
-        ad_conversions.push_back(ad_conversion);
-
-        callback(Result::SUCCESS, ad_conversions);
-      }));
-
-  EXPECT_CALL(*ads_client_mock_, GetAdConversions(_))
-      .Times(1);
+  AdConversionList ad_conversions;
+  ad_conversions.emplace_back(creative_set_id, "postview",
+      "https://www.brave.com/*", 3, DistantFuture());
+  SaveAdConversions(ad_conversions);
 
   const base::Time time = base::Time::Now() - base::TimeDelta::FromHours(73);
   TriggerAdEvent(creative_set_id, ConfirmationType::kViewed, time);
 
   // Act
   ads_->get_ad_conversions()->Check("https://www.foobar.com/");
+
+  // Assert
+  const std::deque<uint64_t> creative_set_history =
+      GetAdConversionHistoryForCreativeSet(creative_set_id);
+
+  EXPECT_TRUE(creative_set_history.empty());
+}
+
+TEST_F(BatAdsAdConversionsTest,
+    ConvertAdWhenTheAdConversionIsOnTheCuspOfExpiring) {
+  // Arrange
+  const std::string creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+
+  AdConversionList ad_conversions;
+  const base::Time time = base::Time::Now() + base::TimeDelta::FromHours(1);
+  ad_conversions.emplace_back(creative_set_id, "postview",
+      "https://www.brave.com/*", 3, time.ToDoubleT());
+  SaveAdConversions(ad_conversions);
+
+  TriggerAdEvent(creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  ads_->get_ad_conversions()->Check("https://www.brave.com/");
+
+  // Assert
+  const std::deque<uint64_t> creative_set_history =
+      GetAdConversionHistoryForCreativeSet(creative_set_id);
+
+  EXPECT_EQ(1UL, creative_set_history.size());
+}
+
+TEST_F(BatAdsAdConversionsTest,
+    DoNotConvertAdWhenTheAdConversionHasExpired) {
+  // Arrange
+  const std::string creative_set_id = "3519f52c-46a4-4c48-9c2b-c264c0067f04";
+
+  AdConversionList ad_conversions;
+  ad_conversions.emplace_back(creative_set_id, "postview",
+      "https://www.brave.com/*", 3, DistantPast());
+  SaveAdConversions(ad_conversions);
+
+  TriggerAdEvent(creative_set_id, ConfirmationType::kViewed);
+
+  // Act
+  ads_->get_ad_conversions()->Check("https://www.brave.com/");
 
   // Assert
   const std::deque<uint64_t> creative_set_history =
