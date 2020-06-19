@@ -92,8 +92,8 @@ source_set("headers") {
 
 proto_library("publishers_proto") {
   sources = [
-    "src/bat/ledger/internal/publisher/publisher_list.proto",
-    "src/bat/ledger/internal/publisher/channel_response.proto",
+    "src/bat/ledger/internal/publisher/protos/channel_response.proto",
+    "src/bat/ledger/internal/publisher/protos/publisher_prefix_list.proto",
   ]
 }
 
@@ -203,6 +203,8 @@ source_set("ledger") {
     "src/bat/ledger/internal/database/database_promotion_creds.h",
     "src/bat/ledger/internal/database/database_publisher_info.cc",
     "src/bat/ledger/internal/database/database_publisher_info.h",
+    "src/bat/ledger/internal/database/database_publisher_prefix_list.cc",
+    "src/bat/ledger/internal/database/database_publisher_prefix_list.h",
     "src/bat/ledger/internal/database/database_recurring_tip.cc",
     "src/bat/ledger/internal/database/database_recurring_tip.h",
     "src/bat/ledger/internal/database/database_server_publisher_amounts.cc",
@@ -213,8 +215,6 @@ source_set("ledger") {
     "src/bat/ledger/internal/database/database_server_publisher_info.h",
     "src/bat/ledger/internal/database/database_server_publisher_links.cc",
     "src/bat/ledger/internal/database/database_server_publisher_links.h",
-    "src/bat/ledger/internal/database/database_server_publisher_list.cc",
-    "src/bat/ledger/internal/database/database_server_publisher_list.h",
     "src/bat/ledger/internal/database/database_sku_order.cc",
     "src/bat/ledger/internal/database/database_sku_order.h",
     "src/bat/ledger/internal/database/database_sku_order_items.cc",
@@ -263,14 +263,14 @@ source_set("ledger") {
     "src/bat/ledger/internal/legacy/unsigned_tx_properties.h",
     "src/bat/ledger/internal/legacy/wallet_info_properties.cc",
     "src/bat/ledger/internal/legacy/wallet_info_properties.h",
+    "src/bat/ledger/internal/publisher/prefix_list_reader.cc",
+    "src/bat/ledger/internal/publisher/prefix_list_reader.h",
     "src/bat/ledger/internal/publisher/prefix_util.h",
     "src/bat/ledger/internal/publisher/prefix_util.cc",
     "src/bat/ledger/internal/publisher/publisher.cc",
     "src/bat/ledger/internal/publisher/publisher.h",
-    "src/bat/ledger/internal/publisher/publisher_list_updater.cc",
-    "src/bat/ledger/internal/publisher/publisher_list_updater.h",
-    "src/bat/ledger/internal/publisher/publisher_list_reader.cc",
-    "src/bat/ledger/internal/publisher/publisher_list_reader.h",
+    "src/bat/ledger/internal/publisher/publisher_prefix_list_updater.cc",
+    "src/bat/ledger/internal/publisher/publisher_prefix_list_updater.h",
     "src/bat/ledger/internal/publisher/publisher_status_helper.cc",
     "src/bat/ledger/internal/publisher/publisher_status_helper.h",
     "src/bat/ledger/internal/publisher/server_publisher_fetcher.cc",

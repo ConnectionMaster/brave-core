@@ -45,8 +45,6 @@ class DatabaseServerPublisherInfo: public DatabaseTable {
 
   bool CreateTableV28(ledger::DBTransaction* transaction);
 
-  bool CreateIndexV28(ledger::DBTransaction* transaction);
-
   bool MigrateToV28(ledger::DBTransaction* transaction);
 
   void OnGetRecordBanner(

@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "bat/ledger/internal/publisher/publisher_list_updater.h"
+#include "bat/ledger/internal/publisher/publisher_prefix_list_updater.h"
 
 #include <memory>
 #include <utility>
 
 #include "bat/ledger/internal/common/time_util.h"
 #include "bat/ledger/internal/ledger_impl.h"
-#include "bat/ledger/internal/publisher/publisher_list_reader.h"
+#include "bat/ledger/internal/publisher/prefix_list_reader.h"
 #include "bat/ledger/internal/request/request_publisher.h"
 #include "bat/ledger/internal/state/state_keys.h"
 #include "bat/ledger/option_keys.h"
@@ -29,59 +29,58 @@ constexpr int64_t kMaxRetryAfterFailureDelay = 4 * base::Time::kSecondsPerHour;
 
 namespace braveledger_publisher {
 
-PublisherListUpdater::PublisherListUpdater(bat_ledger::LedgerImpl* ledger)
+PublisherPrefixListUpdater::PublisherPrefixListUpdater(
+    bat_ledger::LedgerImpl* ledger)
     : ledger_(ledger) {}
 
-PublisherListUpdater::~PublisherListUpdater() = default;
+PublisherPrefixListUpdater::~PublisherPrefixListUpdater() = default;
 
-void PublisherListUpdater::StartAutoUpdate() {
+void PublisherPrefixListUpdater::StartAutoUpdate(
+    ledger::PublisherPrefixListUpdatedCallback callback) {
+  on_updated_callback_ = callback;
   auto_update_ = true;
   if (!timer_.IsRunning()) {
     StartFetchTimer(FROM_HERE, GetAutoUpdateDelay());
   }
 }
 
-void PublisherListUpdater::StopAutoUpdate() {
+void PublisherPrefixListUpdater::StopAutoUpdate() {
   BLOG(1, "Cancelling publisher prefix list update");
   auto_update_ = false;
   timer_.Stop();
 }
 
-void PublisherListUpdater::SetOnPublisherListUpdatedCallback(
-    OnPublisherListUpdatedCallback callback) {
-  on_updated_callback_ = callback;
-}
-
-void PublisherListUpdater::StartFetchTimer(
+void PublisherPrefixListUpdater::StartFetchTimer(
     const base::Location& posted_from,
     base::TimeDelta delay) {
   BLOG(1, "Scheduling publisher prefix list update in "
       << delay.InSeconds() << " seconds");
   timer_.Start(posted_from, delay, base::BindOnce(
-      &PublisherListUpdater::OnFetchTimerElapsed,
+      &PublisherPrefixListUpdater::OnFetchTimerElapsed,
       base::Unretained(this)));
 }
 
-void PublisherListUpdater::OnFetchTimerElapsed() {
+void PublisherPrefixListUpdater::OnFetchTimerElapsed() {
   BLOG(1, "Fetching publisher prefix list");
-  std::string url = braveledger_request_util::GetPublisherListUrl();
+  std::string url = braveledger_request_util::GetPublisherPrefixListUrl();
   ledger_->LoadURL(
       url, {}, "", "",
       ledger::UrlMethod::GET,
-      std::bind(&PublisherListUpdater::OnFetchCompleted, this, _1));
+      std::bind(&PublisherPrefixListUpdater::OnFetchCompleted, this, _1));
 }
 
-void PublisherListUpdater::OnFetchCompleted(
+void PublisherPrefixListUpdater::OnFetchCompleted(
     const ledger::UrlResponse& response) {
+  BLOG(7, ledger::UrlResponseToString(__func__, response));
   if (response.status_code != net::HTTP_OK || response.body.empty()) {
     BLOG(0, "Invalid server response for publisher prefix list");
     StartFetchTimer(FROM_HERE, GetRetryAfterFailureDelay());
     return;
   }
 
-  auto reader = std::make_unique<PublisherListReader>();
+  auto reader = std::make_unique<PrefixListReader>();
   auto parse_error = reader->Parse(response.body);
-  if (parse_error != PublisherListReader::ParseError::None) {
+  if (parse_error != PrefixListReader::ParseError::kNone) {
     // This could be a problem on the client or the server, but
     // optimistically assume that it is a server issue and retry
     // with back-off.
@@ -91,8 +90,8 @@ void PublisherListUpdater::OnFetchCompleted(
     return;
   }
 
-  if (reader->size() == 0) {
-    BLOG(0, "Publisher prefix list did not contain any values");
+  if (reader->empty()) {
+    BLOG(1, "Publisher prefix list did not contain any values");
     StartFetchTimer(FROM_HERE, GetRetryAfterFailureDelay());
     return;
   }
@@ -100,12 +99,15 @@ void PublisherListUpdater::OnFetchCompleted(
   retry_count_ = 0;
 
   BLOG(1, "Resetting publisher prefix list table");
-  ledger_->ResetServerPublisherList(
+  ledger_->ResetPublisherPrefixList(
       std::move(reader),
-      std::bind(&PublisherListUpdater::OnPublisherListInserted, this, _1));
+      std::bind(&PublisherPrefixListUpdater::OnPublisherListInserted,
+          this,
+          _1));
 }
 
-void PublisherListUpdater::OnPublisherListInserted(ledger::Result result) {
+void PublisherPrefixListUpdater::OnPublisherListInserted(
+    ledger::Result result) {
   // At this point we have received a valid response from the server
   // and we've attempted to insert it into the database. Store the last
   // successful fetch time for calculation of next refresh interval.
@@ -129,7 +131,7 @@ void PublisherListUpdater::OnPublisherListInserted(ledger::Result result) {
   }
 }
 
-base::TimeDelta PublisherListUpdater::GetAutoUpdateDelay() {
+base::TimeDelta PublisherPrefixListUpdater::GetAutoUpdateDelay() {
   uint64_t last_fetch_sec =
       ledger_->GetUint64State(ledger::kStateServerPublisherListStamp);
   uint64_t interval_sec =
@@ -149,7 +151,7 @@ base::TimeDelta PublisherListUpdater::GetAutoUpdateDelay() {
       : fetch_time - now;
 }
 
-base::TimeDelta PublisherListUpdater::GetRetryAfterFailureDelay() {
+base::TimeDelta PublisherPrefixListUpdater::GetRetryAfterFailureDelay() {
   return braveledger_time_util::GetRandomizedDelayWithBackoff(
       base::TimeDelta::FromSeconds(kRetryAfterFailureDelay),
       base::TimeDelta::FromSeconds(kMaxRetryAfterFailureDelay),

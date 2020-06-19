@@ -7,6 +7,7 @@
 
 #include "base/strings/stringprintf.h"
 #include "base/time/time.h"
+#include "bat/ledger/internal/common/time_util.h"
 #include "bat/ledger/internal/database/database_server_publisher_info.h"
 #include "bat/ledger/internal/database/database_util.h"
 #include "bat/ledger/internal/ledger_impl.h"
@@ -65,7 +66,7 @@ bool DatabaseServerPublisherInfo::CreateTableV28(
   const std::string query = base::StringPrintf(
       "CREATE TABLE %s "
       "("
-      "publisher_key LONGVARCHAR PRIMARY KEY NOT NULL UNIQUE,"
+      "publisher_key LONGVARCHAR PRIMARY KEY NOT NULL,"
       "status INTEGER DEFAULT 0 NOT NULL,"
       "address TEXT NOT NULL,"
       "updated_at TIMESTAMP NOT NULL"
@@ -78,12 +79,6 @@ bool DatabaseServerPublisherInfo::CreateTableV28(
   transaction->commands.push_back(std::move(command));
 
   return true;
-}
-
-bool DatabaseServerPublisherInfo::CreateIndexV28(
-    ledger::DBTransaction* transaction) {
-  DCHECK(transaction);
-  return InsertIndex(transaction, kTableName, "publisher_key");
 }
 
 bool DatabaseServerPublisherInfo::Migrate(
@@ -152,10 +147,6 @@ bool DatabaseServerPublisherInfo::MigrateToV28(
     return false;
   }
 
-  if (!CreateIndexV28(transaction)) {
-    return false;
-  }
-
   if (!banner_->Migrate(transaction, 28)) {
     return false;
   }
@@ -196,7 +187,8 @@ void DatabaseServerPublisherInfo::InsertOrUpdate(
   transaction->commands.push_back(std::move(command));
   banner_->InsertOrUpdate(transaction.get(), server_info);
 
-  ledger_->RunDBTransaction(std::move(transaction),
+  ledger_->RunDBTransaction(
+      std::move(transaction),
       std::bind(&OnResultCallback, _1, callback));
 }
 
@@ -293,7 +285,7 @@ void DatabaseServerPublisherInfo::DeleteExpiredRecords(
     int64_t max_age_seconds,
     ledger::ResultCallback callback) {
   int64_t cutoff =
-      static_cast<int64_t>(base::Time::Now().ToDoubleT()) - max_age_seconds;
+      braveledger_time_util::GetCurrentTimeStamp() - max_age_seconds;
 
   auto transaction = ledger::DBTransaction::New();
 

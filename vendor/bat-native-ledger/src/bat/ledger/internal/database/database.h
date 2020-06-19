@@ -19,7 +19,7 @@ class LedgerImpl;
 }
 
 namespace braveledger_publisher {
-class PublisherListReader;
+class PrefixListReader;
 }
 
 namespace braveledger_database {
@@ -36,9 +36,9 @@ class DatabasePendingContribution;
 class DatabaseProcessedPublisher;
 class DatabasePromotion;
 class DatabasePublisherInfo;
+class DatabasePublisherPrefixList;
 class DatabaseRecurringTip;
 class DatabaseServerPublisherInfo;
-class DatabaseServerPublisherList;
 class DatabaseSKUOrder;
 class DatabaseSKUTransaction;
 class DatabaseUnblindedToken;
@@ -316,12 +316,12 @@ class Database {
   /**
    * SERVER PUBLISHER INFO
    */
-  void SearchServerPublisherList(
+  void SearchPublisherPrefixList(
       const std::string& publisher_key,
-      ledger::SearchServerPublisherListCallback callback);
+      ledger::SearchPublisherPrefixListCallback callback);
 
-  void ResetServerPublisherList(
-      std::unique_ptr<braveledger_publisher::PublisherListReader> reader,
+  void ResetPublisherPrefixList(
+      std::unique_ptr<braveledger_publisher::PrefixListReader> reader,
       ledger::ResultCallback callback);
 
   void InsertServerPublisherInfo(
@@ -422,9 +422,9 @@ class Database {
   std::unique_ptr<DatabaseMediaPublisherInfo> media_publisher_info_;
   std::unique_ptr<DatabaseMultiTables> multi_tables_;
   std::unique_ptr<DatabasePublisherInfo> publisher_info_;
+  std::unique_ptr<DatabasePublisherPrefixList> publisher_prefix_list_;
   std::unique_ptr<DatabaseRecurringTip> recurring_tip_;
   std::unique_ptr<DatabaseServerPublisherInfo> server_publisher_info_;
-  std::unique_ptr<DatabaseServerPublisherList> server_publisher_list_;
   std::unique_ptr<DatabaseSKUOrder> sku_order_;
   std::unique_ptr<DatabaseSKUTransaction> sku_transaction_;
   std::unique_ptr<DatabaseUnblindedToken> unblinded_token_;

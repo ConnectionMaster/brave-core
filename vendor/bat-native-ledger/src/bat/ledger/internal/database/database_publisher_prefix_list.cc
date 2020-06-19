@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "bat/ledger/internal/database/database_server_publisher_list.h"
+#include "bat/ledger/internal/database/database_publisher_prefix_list.h"
 
 #include <tuple>
 #include <utility>
@@ -20,27 +20,10 @@ using braveledger_publisher::PrefixIterator;
 
 namespace {
 
-const char kTableName[] = "server_publisher_list";
+const char kTableName[] = "publisher_prefix_list";
 
 constexpr size_t kHashPrefixSize = 4;
 constexpr size_t kMaxInsertRecords = 100'000;
-
-void DropAndCreateTableV28(ledger::DBTransaction* transaction) {
-  DCHECK(transaction);
-
-  if (!braveledger_database::DropTable(transaction, kTableName)) {
-    NOTREACHED();
-  }
-
-  auto command = ledger::DBCommand::New();
-  command->type = ledger::DBCommand::Type::EXECUTE;
-  command->command = base::StringPrintf(
-      "CREATE TABLE %s "
-      "(hash_prefix BLOB PRIMARY KEY NOT NULL)",
-      kTableName);
-
-  transaction->commands.push_back(std::move(command));
-}
 
 std::tuple<PrefixIterator, std::string, size_t> GetPrefixInsertList(
     PrefixIterator begin,
@@ -54,10 +37,13 @@ std::tuple<PrefixIterator, std::string, size_t> GetPrefixInsertList(
        ++count, ++iter) {
     auto prefix = *iter;
     DCHECK(prefix.size() >= kHashPrefixSize);
-    values.append(iter == begin ? "(x'" : "'),(x'");
-    values.append(base::HexEncode(prefix.data(), kHashPrefixSize));
+    std::string hex = base::HexEncode(prefix.data(), kHashPrefixSize);
+    values.append(base::StringPrintf("(x'%s'),", hex.c_str()));
   }
-  values.append("')");
+  // Remove last comma
+  if (!values.empty()) {
+    values.pop_back();
+  }
   return {iter, std::move(values), count};
 }
 
@@ -65,35 +51,57 @@ std::tuple<PrefixIterator, std::string, size_t> GetPrefixInsertList(
 
 namespace braveledger_database {
 
-DatabaseServerPublisherList::DatabaseServerPublisherList(
+DatabasePublisherPrefixList::DatabasePublisherPrefixList(
     bat_ledger::LedgerImpl* ledger)
     : DatabaseTable(ledger) {}
 
-DatabaseServerPublisherList::~DatabaseServerPublisherList() = default;
+DatabasePublisherPrefixList::~DatabasePublisherPrefixList() = default;
 
-bool DatabaseServerPublisherList::Migrate(
+bool DatabasePublisherPrefixList::Migrate(
     ledger::DBTransaction* transaction,
-    int target) {
+    const int target) {
   DCHECK(transaction);
   switch (target) {
     case 28:
-      MigrateToV28(transaction);
-      return true;
+      return MigrateToV28(transaction);
     default:
       return true;
   }
 }
 
-void DatabaseServerPublisherList::MigrateToV28(
+bool DatabasePublisherPrefixList::MigrateToV28(
     ledger::DBTransaction* transaction) {
   DCHECK(transaction);
-  DropAndCreateTableV28(transaction);
+
+  if (!braveledger_database::DropTable(transaction, kTableName)) {
+    return false;
+  }
+
+  if (!CreateTableV28(transaction)) {
+    return false;
+  }
+
   ledger_->ClearState(ledger::kStateServerPublisherListStamp);
+  return true;
 }
 
-void DatabaseServerPublisherList::Search(
+bool DatabasePublisherPrefixList::CreateTableV28(
+    ledger::DBTransaction* transaction) {
+  DCHECK(transaction);
+  auto command = ledger::DBCommand::New();
+  command->type = ledger::DBCommand::Type::EXECUTE;
+  command->command = base::StringPrintf(
+      "CREATE TABLE %s "
+      "(hash_prefix BLOB PRIMARY KEY NOT NULL)",
+      kTableName);
+
+  transaction->commands.push_back(std::move(command));
+  return true;
+}
+
+void DatabasePublisherPrefixList::Search(
     const std::string& publisher_key,
-    ledger::SearchServerPublisherListCallback callback) {
+    ledger::SearchPublisherPrefixListCallback callback) {
   std::string hex = braveledger_publisher::GetHashPrefixInHex(
       publisher_key,
       kHashPrefixSize);
@@ -126,15 +134,15 @@ void DatabaseServerPublisherList::Search(
   });
 }
 
-void DatabaseServerPublisherList::Reset(
-    std::unique_ptr<braveledger_publisher::PublisherListReader> reader,
+void DatabasePublisherPrefixList::Reset(
+    std::unique_ptr<braveledger_publisher::PrefixListReader> reader,
     ledger::ResultCallback callback) {
   if (reader_) {
-    BLOG(0, "Publisher prefix list batch insert in progress");
+    BLOG(1, "Publisher prefix list batch insert in progress");
     callback(ledger::Result::LEDGER_ERROR);
     return;
   }
-  if (reader->size() == 0) {
+  if (reader->empty()) {
     BLOG(0, "Cannot reset with an empty publisher prefix list");
     callback(ledger::Result::LEDGER_ERROR);
     return;
@@ -143,11 +151,10 @@ void DatabaseServerPublisherList::Reset(
   InsertNext(reader_->begin(), callback);
 }
 
-void DatabaseServerPublisherList::InsertNext(
+void DatabasePublisherPrefixList::InsertNext(
     PrefixIterator begin,
     ledger::ResultCallback callback) {
-  DCHECK(reader_);
-  DCHECK(begin != reader_->end());
+  DCHECK(reader_ && begin != reader_->end());
 
   auto transaction = ledger::DBTransaction::New();
 

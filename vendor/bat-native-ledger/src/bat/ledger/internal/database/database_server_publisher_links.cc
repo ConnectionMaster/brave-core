@@ -198,8 +198,7 @@ bool DatabaseServerPublisherLinks::MigrateToV28(
 void DatabaseServerPublisherLinks::InsertOrUpdate(
     ledger::DBTransaction* transaction,
     const ledger::ServerPublisherInfo& server_info) {
-  DCHECK(transaction);
-  DCHECK(!server_info.publisher_key.empty());
+  DCHECK(transaction && !server_info.publisher_key.empty());
 
   if (!server_info.banner || server_info.banner->links.empty()) {
     return;

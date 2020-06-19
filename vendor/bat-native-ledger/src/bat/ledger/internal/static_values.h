@@ -25,11 +25,11 @@
 "https://balance.rewards.brave.software"
 
 #define PUBLISHER_STAGING_SERVER     \
-"https://pcdn.bravesoftware.com"
+"https://rewards-stg.bravesoftware.com"
 #define PUBLISHER_PRODUCTION_SERVER  \
-"https://pcdn.brave.com"
+"https://rewards.brave.com"
 #define PUBLISHER_DEVELOPMENT_SERVER  \
-"https://pcdn.brave.software"
+"https://rewards-stg.bravesoftware.com"
 
 #define PROMOTION_STAGING_SERVER              \
 "https://grant.rewards.bravesoftware.com"
@@ -51,6 +51,13 @@
 "https://api.rewards.brave.com"
 #define API_DEVELOPMENT_SERVER            \
 "https://api.rewards.brave.software"
+
+#define PRIVATE_CDN_STAGING_SERVER     \
+"https://pcdn.bravesoftware.com"
+#define PRIVATE_CDN_PRODUCTION_SERVER  \
+"https://pcdn.brave.com"
+#define PRIVATE_CDN_DEVELOPMENT_SERVER  \
+"https://pcdn.brave.software"
 
 #define PREFIX_V1                       "/v1"
 #define PREFIX_V2                       "/v2"

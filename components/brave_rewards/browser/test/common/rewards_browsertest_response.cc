@@ -11,9 +11,9 @@
 #include "base/files/file_util.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_split.h"
-#include "bat/ledger/internal/publisher/channel_response.pb.h"
 #include "bat/ledger/internal/publisher/prefix_util.h"
-#include "bat/ledger/internal/publisher/publisher_list.pb.h"
+#include "bat/ledger/internal/publisher/protos/channel_response.pb.h"
+#include "bat/ledger/internal/publisher/protos/publisher_prefix_list.pb.h"
 #include "bat/ledger/internal/request/request_util.h"
 #include "bat/ledger/internal/static_values.h"
 #include "bat/ledger/internal/uphold/uphold_util.h"
@@ -24,16 +24,17 @@
 
 namespace {
 
-std::string GetPublisherListResponse(
+std::string GetPublisherPrefixListResponse(
     const std::map<std::string, std::string>& prefix_map) {
   std::string prefixes;
   for (const auto& pair : prefix_map) {
     prefixes += pair.first;
   }
 
-  publishers_pb::PublisherList message;
+  publishers_pb::PublisherPrefixList message;
   message.set_prefix_size(4);
-  message.set_compression_type(publishers_pb::PublisherList::NO_COMPRESSION);
+  message.set_compression_type(
+      publishers_pb::PublisherPrefixList::NO_COMPRESSION);
   message.set_uncompressed_size(prefixes.size());
   message.set_prefixes(std::move(prefixes));
 
@@ -281,14 +282,14 @@ void RewardsBrowserTestResponse::Get(
       "/publishers/prefix-list",
       "",
       ServerTypes::kPublisher)) {
-    *response = GetPublisherListResponse(publisher_prefixes_);
+    *response = GetPublisherPrefixListResponse(publisher_prefixes_);
     }
 
   if (URLMatches(
       url,
       "/publishers/prefixes/",
       "",
-      ServerTypes::kPublisher)) {
+      ServerTypes::kPrivateCdn)) {
     size_t start = url.rfind('/') + 1;
     if (start < url.length()) {
       *response = GetPublisherChannelResponse(

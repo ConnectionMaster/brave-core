@@ -57,7 +57,7 @@ void RefreshNext(std::shared_ptr<RefreshTaskInfo> task_info) {
 
   // Look for publisher key in hash index.
   auto& key = task_info->current->first;
-  task_info->ledger->SearchServerPublisherList(key, [task_info](bool exists) {
+  task_info->ledger->SearchPublisherPrefixList(key, [task_info](bool exists) {
     // If the publisher key does not exist in the hash index look for
     // next expired entry.
     if (!exists) {

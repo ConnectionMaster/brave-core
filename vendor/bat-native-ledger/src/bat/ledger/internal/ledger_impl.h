@@ -37,8 +37,8 @@ class Media;
 }
 
 namespace braveledger_publisher {
+class PrefixListReader;
 class Publisher;
-class PublisherListReader;
 }
 
 namespace braveledger_bat_state {
@@ -421,12 +421,12 @@ class LedgerImpl : public ledger::Ledger {
 
   bool ShouldFetchServerPublisherInfo(base::Time last_updated_time);
 
-  void SearchServerPublisherList(
+  void SearchPublisherPrefixList(
       const std::string& publisher_key,
-      ledger::SearchServerPublisherListCallback callback);
+      ledger::SearchPublisherPrefixListCallback callback);
 
-  void ResetServerPublisherList(
-      std::unique_ptr<braveledger_publisher::PublisherListReader> reader,
+  void ResetPublisherPrefixList(
+      std::unique_ptr<braveledger_publisher::PrefixListReader> reader,
       ledger::ResultCallback callback);
 
   void InsertServerPublisherInfo(

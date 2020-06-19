@@ -10,7 +10,6 @@
 #include "bat/ledger/internal/database/database_recurring_tip.h"
 #include "bat/ledger/internal/database/database_util.h"
 #include "bat/ledger/internal/ledger_impl.h"
-#include "bat/ledger/internal/publisher/publisher_status_helper.h"
 
 using std::placeholders::_1;
 
@@ -274,12 +273,7 @@ void DatabaseRecurringTip::OnGetAllRecords(
     list.push_back(std::move(info));
   }
 
-  // The publisher status field may be expired. Attempt to refresh
-  // expired publisher status values before executing callback.
-  braveledger_publisher::RefreshPublisherStatus(
-      ledger_,
-      std::move(list),
-      callback);
+  callback(std::move(list));
 }
 
 void DatabaseRecurringTip::DeleteRecord(

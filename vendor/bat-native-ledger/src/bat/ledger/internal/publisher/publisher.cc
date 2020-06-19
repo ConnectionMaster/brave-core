@@ -15,7 +15,7 @@
 #include "bat/ledger/internal/ledger_impl.h"
 #include "bat/ledger/internal/publisher/prefix_util.h"
 #include "bat/ledger/internal/publisher/publisher.h"
-#include "bat/ledger/internal/publisher/publisher_list_updater.h"
+#include "bat/ledger/internal/publisher/publisher_prefix_list_updater.h"
 #include "bat/ledger/internal/publisher/server_publisher_fetcher.h"
 #include "bat/ledger/internal/static_values.h"
 #include "bat/ledger/internal/state/state_util.h"
@@ -27,12 +27,10 @@ namespace braveledger_publisher {
 
 Publisher::Publisher(bat_ledger::LedgerImpl* ledger):
     ledger_(ledger),
-    publisher_list_updater_(
-        std::make_unique<PublisherListUpdater>(ledger)),
+    prefix_list_updater_(
+        std::make_unique<PublisherPrefixListUpdater>(ledger)),
     server_publisher_fetcher_(
         std::make_unique<ServerPublisherFetcher>(ledger)) {
-  publisher_list_updater_->SetOnPublisherListUpdatedCallback(
-      std::bind(&Publisher::OnPublisherListUpdated, this));
 }
 
 Publisher::~Publisher() {
@@ -77,9 +75,10 @@ void Publisher::RefreshPublisher(
 
 void Publisher::SetPublisherServerListTimer(const bool rewards_enabled) {
   if (rewards_enabled) {
-    publisher_list_updater_->StartAutoUpdate();
+    prefix_list_updater_->StartAutoUpdate(
+        std::bind(&Publisher::OnPublisherPrefixListUpdated, this));
   } else {
-    publisher_list_updater_->StopAutoUpdate();
+    prefix_list_updater_->StopAutoUpdate();
   }
 }
 
@@ -143,7 +142,7 @@ void Publisher::SaveVisit(
   auto on_server_info = std::bind(&Publisher::OnSaveVisitServerPublisher,
       this, _1, publisher_key, visit_data, duration, window_id, callback);
 
-  ledger_->SearchServerPublisherList(
+  ledger_->SearchPublisherPrefixList(
       publisher_key,
       [this, publisher_key, on_server_info](bool publisher_exists) {
         if (publisher_exists) {
@@ -715,7 +714,7 @@ void Publisher::OnGetPublisherBannerPublisher(
   callback(std::move(new_banner));
 }
 
-void Publisher::OnPublisherListUpdated() {
+void Publisher::OnPublisherPrefixListUpdated() {
   // Attempt to reprocess any contributions for previously
   // unverified publishers that are now verified.
   ledger_->ContributeUnverifiedPublishers();

@@ -3,63 +3,63 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "bat/ledger/internal/publisher/publisher_list_reader.h"
+#include "bat/ledger/internal/publisher/prefix_list_reader.h"
 
 #include <utility>
 
 #include "bat/ledger/internal/common/brotli_helpers.h"
 #include "bat/ledger/internal/publisher/prefix_util.h"
+#include "bat/ledger/internal/publisher/protos/publisher_prefix_list.pb.h"
 
 namespace braveledger_publisher {
 
-PublisherListReader::PublisherListReader()
-    : prefix_size_(kMinPrefixSize) {}
+PrefixListReader::PrefixListReader() : prefix_size_(kMinPrefixSize) {}
 
-PublisherListReader::~PublisherListReader() = default;
+PrefixListReader::~PrefixListReader() = default;
 
-PublisherListReader::ParseError PublisherListReader::Parse(
+PrefixListReader::ParseError PrefixListReader::Parse(
     const std::string& contents) {
-  using publishers_pb::PublisherList;
+  using publishers_pb::PublisherPrefixList;
 
-  PublisherList message;
+  PublisherPrefixList message;
   if (!message.ParseFromString(contents)) {
-    return ParseError::InvalidProtobufMessage;
+    return ParseError::kInvalidProtobufMessage;
   }
 
   const size_t prefix_size = message.prefix_size();
   if (prefix_size < kMinPrefixSize || prefix_size > kMaxPrefixSize) {
-    return ParseError::InvalidPrefixSize;
+    return ParseError::kInvalidPrefixSize;
   }
 
   const size_t uncompressed_size = message.uncompressed_size();
   if (uncompressed_size == 0) {
-    return ParseError::InvalidUncompressedSize;
+    return ParseError::kInvalidUncompressedSize;
   }
 
   std::string uncompressed;
   switch (message.compression_type()) {
-    case PublisherList::NO_COMPRESSION: {
+    case PublisherPrefixList::NO_COMPRESSION: {
       uncompressed = std::move(*message.mutable_prefixes());
       break;
     }
-    case PublisherList::BROTLI_COMPRESSION: {
+    case PublisherPrefixList::BROTLI_COMPRESSION: {
       bool decoded = braveledger_helpers::DecodeBrotliString(
           message.prefixes(),
           uncompressed_size,
           &uncompressed);
 
       if (!decoded) {
-        return ParseError::UnableToDecompress;
+        return ParseError::kUnableToDecompress;
       }
       break;
     }
     default: {
-      return ParseError::UnknownCompressionType;
+      return ParseError::kUnknownCompressionType;
     }
   }
 
   if (uncompressed.size() % prefix_size != 0) {
-    return ParseError::InvalidUncompressedSize;
+    return ParseError::kInvalidUncompressedSize;
   }
 
   prefixes_ = std::move(uncompressed);
@@ -75,13 +75,13 @@ PublisherListReader::ParseError PublisherListReader::Parse(
       }
       if (*iter > *next) {
         prefixes_ = "";
-        return ParseError::PrefixesNotSorted;
+        return ParseError::kPrefixesNotSorted;
       }
       iter = next;
     }
   }
 
-  return ParseError::None;
+  return ParseError::kNone;
 }
 
 }  // namespace braveledger_publisher

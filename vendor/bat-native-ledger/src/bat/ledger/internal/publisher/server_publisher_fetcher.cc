@@ -12,9 +12,10 @@
 #include "base/strings/string_piece.h"
 #include "base/strings/stringprintf.h"
 #include "bat/ledger/internal/common/brotli_helpers.h"
+#include "bat/ledger/internal/common/time_util.h"
 #include "bat/ledger/internal/ledger_impl.h"
-#include "bat/ledger/internal/publisher/channel_response.pb.h"
 #include "bat/ledger/internal/publisher/prefix_util.h"
+#include "bat/ledger/internal/publisher/protos/channel_response.pb.h"
 #include "bat/ledger/internal/request/request_publisher.h"
 #include "bat/ledger/option_keys.h"
 #include "brave_base/random.h"
@@ -87,6 +88,10 @@ ledger::PublisherBannerPtr PublisherBannerFromMessage(
 ledger::ServerPublisherInfoPtr ServerPublisherInfoFromMessage(
     const publishers_pb::ChannelResponseList& message,
     const std::string& expected_key) {
+  if (expected_key.empty()) {
+    return nullptr;
+  }
+
   for (const auto& entry : message.channel_responses()) {
     if (entry.channel_identifier() != expected_key) {
       continue;
@@ -183,6 +188,7 @@ void ServerPublisherFetcher::Fetch(
 void ServerPublisherFetcher::OnFetchCompleted(
     const std::string& publisher_key,
     const ledger::UrlResponse& response) {
+  BLOG(6, ledger::UrlResponseToString(__func__, response));
   auto server_info = ParseResponse(
       publisher_key,
       response.status_code,
@@ -248,7 +254,7 @@ ledger::ServerPublisherInfoPtr ServerPublisherFetcher::ParseResponse(
   return server_info;
 }
 
-bool ServerPublisherFetcher::IsExpired(base::Time last_update_time) {
+bool ServerPublisherFetcher::IsExpired(const base::Time& last_update_time) {
   base::TimeDelta age = base::Time::Now() - last_update_time;
 
   if (age.InSeconds() < 0) {
@@ -288,8 +294,7 @@ ServerPublisherFetcher::GetServerInfoForEmptyResponse(
   auto server_info = ledger::ServerPublisherInfo::New();
   server_info->publisher_key = publisher_key;
   server_info->status = ledger::PublisherStatus::NOT_VERIFIED;
-  server_info->updated_at =
-      static_cast<uint64_t>(base::Time::Now().ToDoubleT());
+  server_info->updated_at = braveledger_time_util::GetCurrentTimeStamp();
   return server_info;
 }
 

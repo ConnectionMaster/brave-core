@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVELEDGER_PUBLISHER_PUBLISHER_LIST_UPDATER_H_
-#define BRAVELEDGER_PUBLISHER_PUBLISHER_LIST_UPDATER_H_
+#ifndef BRAVELEDGER_PUBLISHER_PUBLISHER_PREFIX_LIST_UPDATER_H_
+#define BRAVELEDGER_PUBLISHER_PUBLISHER_PREFIX_LIST_UPDATER_H_
 
 #include <functional>
 #include <map>
@@ -21,27 +21,21 @@ namespace braveledger_publisher {
 
 // Automatically updates the publisher prefix list store on regular
 // intervals.
-class PublisherListUpdater {
+class PublisherPrefixListUpdater {
  public:
-  explicit PublisherListUpdater(bat_ledger::LedgerImpl* ledger);
+  explicit PublisherPrefixListUpdater(bat_ledger::LedgerImpl* ledger);
 
-  PublisherListUpdater(const PublisherListUpdater&) = delete;
-  PublisherListUpdater& operator=(const PublisherListUpdater&) = delete;
+  PublisherPrefixListUpdater(const PublisherPrefixListUpdater&) = delete;
+  PublisherPrefixListUpdater& operator=(
+      const PublisherPrefixListUpdater&) = delete;
 
-  ~PublisherListUpdater();
+  ~PublisherPrefixListUpdater();
 
   // Starts the auto updater
-  void StartAutoUpdate();
+  void StartAutoUpdate(ledger::PublisherPrefixListUpdatedCallback callback);
 
   // Cancels the auto updater
   void StopAutoUpdate();
-
-  using OnPublisherListUpdatedCallback = std::function<void()>;
-
-  // Sets a callback that will be executed after the publisher
-  // list has been updated
-  void SetOnPublisherListUpdatedCallback(
-      OnPublisherListUpdatedCallback callback);
 
  private:
   void StartFetchTimer(
@@ -59,9 +53,9 @@ class PublisherListUpdater {
   base::OneShotTimer timer_;
   bool auto_update_ = false;
   int retry_count_ = 0;
-  OnPublisherListUpdatedCallback on_updated_callback_;
+  ledger::PublisherPrefixListUpdatedCallback on_updated_callback_;
 };
 
 }  // namespace braveledger_publisher
 
-#endif  // BRAVELEDGER_PUBLISHER_PUBLISHER_LIST_UPDATER_H_
+#endif  // BRAVELEDGER_PUBLISHER_PUBLISHER_PREFIX_LIST_UPDATER_H_

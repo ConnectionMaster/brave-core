@@ -10,7 +10,7 @@
 
 namespace braveledger_request_util {
 
-std::string GetPublisherListUrl();
+std::string GetPublisherPrefixListUrl();
 
 std::string GetPublisherInfoUrl(const std::string& hash_prefix);
 

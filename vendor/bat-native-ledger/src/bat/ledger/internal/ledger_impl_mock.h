@@ -15,7 +15,7 @@
 
 #include "bat/ledger/ledger_client.h"
 #include "bat/ledger/internal/ledger_impl.h"
-#include "bat/ledger/internal/publisher/publisher_list_reader.h"
+#include "bat/ledger/internal/publisher/prefix_list_reader.h"
 #include "testing/gmock/include/gmock/gmock.h"
 
 namespace bat_ledger {
@@ -355,11 +355,11 @@ class MockLedgerImpl : public LedgerImpl {
   MOCK_METHOD2(DeleteActivityInfo,
       void(const std::string&, ledger::ResultCallback));
 
-  MOCK_METHOD2(SearchServerPublisherList,
-      void(const std::string&, ledger::SearchServerPublisherListCallback));
+  MOCK_METHOD2(SearchPublisherPrefixList,
+      void(const std::string&, ledger::SearchPublisherPrefixListCallback));
 
   MOCK_METHOD2(ResetServerPublisherList, void(
-      std::unique_ptr<braveledger_publisher::PublisherListReader>,
+      std::unique_ptr<braveledger_publisher::PrefixListReader>,
       ledger::ResultCallback));
 
   MOCK_METHOD2(InsertServerPublisherInfo,

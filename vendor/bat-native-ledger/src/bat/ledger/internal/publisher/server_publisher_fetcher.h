@@ -33,7 +33,7 @@ class ServerPublisherFetcher {
 
   // Returns a value indicating whether a server info record with
   // the specified last update time is expired
-  bool IsExpired(base::Time last_update_time);
+  bool IsExpired(const base::Time& last_update_time);
 
   // Returns a value indicating whether the specified server info
   // is expired

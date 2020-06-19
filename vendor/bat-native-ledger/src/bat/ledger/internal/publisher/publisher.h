@@ -21,7 +21,7 @@ class LedgerImpl;
 
 namespace braveledger_publisher {
 
-class PublisherListUpdater;
+class PublisherPrefixListUpdater;
 class ServerPublisherFetcher;
 
 class Publisher {
@@ -98,7 +98,7 @@ class Publisher {
                                ledger::Result result,
                                ledger::PublisherInfoPtr info);
 
-  void OnPublisherListUpdated();
+  void OnPublisherPrefixListUpdated();
 
   void SaveVisitInternal(
       const ledger::PublisherStatus,
@@ -166,7 +166,7 @@ class Publisher {
   ledger::PublisherStatus ParsePublisherStatus(const std::string& status);
 
   bat_ledger::LedgerImpl* ledger_;  // NOT OWNED
-  std::unique_ptr<PublisherListUpdater> publisher_list_updater_;
+  std::unique_ptr<PublisherPrefixListUpdater> prefix_list_updater_;
   std::unique_ptr<ServerPublisherFetcher> server_publisher_fetcher_;
 
   // For testing purposes

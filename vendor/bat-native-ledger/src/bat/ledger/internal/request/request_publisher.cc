@@ -16,7 +16,7 @@ constexpr char kPrefix[] = "";
 
 namespace braveledger_request_util {
 
-std::string GetPublisherListUrl() {
+std::string GetPublisherPrefixListUrl() {
   return BuildUrl(
       "/publishers/prefix-list",
       kPrefix,
@@ -30,7 +30,7 @@ std::string GetPublisherInfoUrl(const std::string& hash_prefix) {
   return BuildUrl(
       base::StringPrintf("/publishers/prefixes/%s", prefix.c_str()),
       kPrefix,
-      ServerTypes::kPublisher);
+      ServerTypes::kPrivateCdn);
 }
 
 }  // namespace braveledger_request_util

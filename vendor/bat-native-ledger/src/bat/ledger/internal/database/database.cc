@@ -18,14 +18,14 @@
 #include "bat/ledger/internal/database/database_processed_publisher.h"
 #include "bat/ledger/internal/database/database_promotion.h"
 #include "bat/ledger/internal/database/database_publisher_info.h"
+#include "bat/ledger/internal/database/database_publisher_prefix_list.h"
 #include "bat/ledger/internal/database/database_recurring_tip.h"
 #include "bat/ledger/internal/database/database_server_publisher_info.h"
-#include "bat/ledger/internal/database/database_server_publisher_list.h"
 #include "bat/ledger/internal/database/database_sku_order.h"
 #include "bat/ledger/internal/database/database_sku_transaction.h"
 #include "bat/ledger/internal/database/database_unblinded_token.h"
 #include "bat/ledger/internal/ledger_impl.h"
-#include "bat/ledger/internal/publisher/publisher_list_reader.h"
+#include "bat/ledger/internal/publisher/prefix_list_reader.h"
 
 namespace braveledger_database {
 
@@ -47,11 +47,11 @@ Database::Database(bat_ledger::LedgerImpl* ledger) :
   processed_publisher_ = std::make_unique<DatabaseProcessedPublisher>(ledger_);
   promotion_ = std::make_unique<DatabasePromotion>(ledger_);
   publisher_info_ = std::make_unique<DatabasePublisherInfo>(ledger_);
+  publisher_prefix_list_ =
+      std::make_unique<DatabasePublisherPrefixList>(ledger_);
   recurring_tip_ = std::make_unique<DatabaseRecurringTip>(ledger_);
   server_publisher_info_ =
       std::make_unique<DatabaseServerPublisherInfo>(ledger_);
-  server_publisher_list_ =
-      std::make_unique<DatabaseServerPublisherList>(ledger_);
   sku_transaction_ = std::make_unique<DatabaseSKUTransaction>(ledger_);
   sku_order_ = std::make_unique<DatabaseSKUOrder>(ledger_);
   unblinded_token_ =
@@ -459,16 +459,16 @@ void Database::RemoveRecurringTip(
 /**
  * SERVER PUBLISHER INFO
  */
-void Database::SearchServerPublisherList(
+void Database::SearchPublisherPrefixList(
     const std::string& publisher_prefix,
-    ledger::SearchServerPublisherListCallback callback) {
-  server_publisher_list_->Search(publisher_prefix, callback);
+    ledger::SearchPublisherPrefixListCallback callback) {
+  publisher_prefix_list_->Search(publisher_prefix, callback);
 }
 
-void Database::ResetServerPublisherList(
-    std::unique_ptr<braveledger_publisher::PublisherListReader> reader,
+void Database::ResetPublisherPrefixList(
+    std::unique_ptr<braveledger_publisher::PrefixListReader> reader,
     ledger::ResultCallback callback) {
-  server_publisher_list_->Reset(std::move(reader), callback);
+  publisher_prefix_list_->Reset(std::move(reader), callback);
 }
 
 void Database::InsertServerPublisherInfo(
@@ -484,7 +484,7 @@ void Database::GetServerPublisherInfo(
 }
 
 void Database::DeleteExpiredServerPublisherInfo(
-    int64_t max_age_seconds,
+    const int64_t max_age_seconds,
     ledger::ResultCallback callback) {
   server_publisher_info_->DeleteExpiredRecords(max_age_seconds, callback);
 }

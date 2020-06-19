@@ -18,7 +18,8 @@ enum class ServerTypes {
   kPublisher,
   kPromotion,
   kPayments,
-  kAPI
+  kAPI,
+  kPrivateCdn
 };
 
 std::string BuildUrl(
