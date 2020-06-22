@@ -43,6 +43,7 @@ source_set("importer") {
 
   deps = [
     "//components/webdata/common",
+    "//extensions/buildflags",
     "//sql",
   ]
 
