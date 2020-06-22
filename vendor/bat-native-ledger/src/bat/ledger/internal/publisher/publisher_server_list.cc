@@ -10,9 +10,10 @@
 #include "bat/ledger/internal/common/time_util.h"
 #include "bat/ledger/internal/ledger_impl.h"
 #include "bat/ledger/internal/publisher/publisher_server_list.h"
-#include "bat/ledger/internal/state/state_keys.h"
 #include "bat/ledger/internal/request/request_publisher.h"
 #include "bat/ledger/internal/request/request_util.h"
+#include "bat/ledger/internal/response/response_publisher.h"
+#include "bat/ledger/internal/state/state_keys.h"
 #include "bat/ledger/internal/static_values.h"
 #include "bat/ledger/option_keys.h"
 #include "brave_base/random.h"
@@ -101,14 +102,13 @@ void PublisherServerList::OnDownload(
       std::bind(&PublisherServerList::OnParsePublisherList, this, _1, callback);
 #if defined(OS_IOS)
     // Make sure the data is copied into block
-    std::string data = response.body;
     dispatch_queue_global_t global_queue =
       dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     dispatch_async(global_queue, ^{
-      this->ParsePublisherList(data, parse_callback);
+      this->ParsePublisherList(response, parse_callback);
     });
 #else
-    ParsePublisherList(response.body, parse_callback);
+    ParsePublisherList(response, parse_callback);
 #endif
     return;
   }
@@ -203,69 +203,21 @@ uint64_t PublisherServerList::GetTimerTime(
   return start_timer_in;
 }
 
-ledger::PublisherStatus PublisherServerList::ParsePublisherStatus(
-    const std::string& status) {
-  if (status == "publisher_verified") {
-    return ledger::PublisherStatus::CONNECTED;
-  }
-
-  if (status == "wallet_connected") {
-    return ledger::PublisherStatus::VERIFIED;
-  }
-
-  return ledger::PublisherStatus::NOT_VERIFIED;
-}
-
 void PublisherServerList::ParsePublisherList(
-    const std::string& data,
+    const ledger::UrlResponse& response,
     ledger::ResultCallback callback) {
   auto list_publisher =
       std::make_shared<std::vector<ledger::ServerPublisherPartial>>();
   auto list_banner = std::make_shared<std::vector<ledger::PublisherBanner>>();
 
-  base::Optional<base::Value> value = base::JSONReader::Read(data);
-  if (!value || !value->is_list()) {
+  ledger::Result result = braveledger_response_util::ParsePublisherListResponse(
+      response,
+      list_publisher,
+      list_banner);
+  if (result != ledger::Result::LEDGER_OK) {
     BLOG(0, "Data is not correct");
     callback(ledger::Result::LEDGER_ERROR);
     return;
-  }
-
-  list_publisher->reserve(value->GetList().size());
-  list_banner->reserve(value->GetList().size());
-
-  for (auto& item : value->GetList()) {
-    if (!item.is_list()) {
-      continue;
-    }
-
-    const auto& list = item.GetList();
-
-    if (list.size() != 5) {
-      continue;
-    }
-
-    if (!list[0].is_string() || list[0].GetString().empty()  // Publisher key
-        || !list[1].is_string()                              // Status
-        || !list[2].is_bool()                                // Excluded
-        || !list[3].is_string()) {                           // Address
-      continue;
-    }
-
-    list_publisher->emplace_back(
-        list[0].GetString(),
-        ParsePublisherStatus(list[1].GetString()),
-        list[2].GetBool(),
-        list[3].GetString());
-
-    // Banner
-    if (!list[4].is_dict() || list[4].DictEmpty()) {
-      continue;
-    }
-
-    list_banner->push_back(ledger::PublisherBanner());
-    auto& banner = list_banner->back();
-    ParsePublisherBanner(&banner, &list[4]);
-    banner.publisher_key = list[0].GetString();
   }
 
   if (list_publisher->empty()) {
@@ -292,53 +244,6 @@ void PublisherServerList::ParsePublisherList(
       list_publisher,
       list_banner,
       callback);
-}
-
-void PublisherServerList::ParsePublisherBanner(
-    ledger::PublisherBanner* banner,
-    base::Value* dictionary) {
-  DCHECK(dictionary && banner);
-  if (!dictionary->is_dict()) {
-    return;
-  }
-
-  const auto* title = dictionary->FindStringKey("title");
-  if (title) {
-    banner->title = *title;
-  }
-
-  const auto* description = dictionary->FindStringKey("description");
-  if (description) {
-    banner->description = *description;
-  }
-
-  const auto* background = dictionary->FindStringKey("backgroundUrl");
-  if (background && !background->empty()) {
-    banner->background = "chrome://rewards-image/" + *background;
-  }
-
-  const auto* logo = dictionary->FindStringKey("logoUrl");
-  if (logo && !logo->empty()) {
-    banner->logo = "chrome://rewards-image/" + *logo;
-  }
-
-  const auto* amounts = dictionary->FindListKey("donationAmounts");
-  if (amounts) {
-    for (const auto& it : amounts->GetList()) {
-      if (it.is_int()) {
-        banner->amounts.push_back(it.GetInt());
-      }
-    }
-  }
-
-  const auto* links = dictionary->FindDictKey("socialLinks");
-  if (links) {
-    for (const auto& it : links->DictItems()) {
-      if (it.second.is_string()) {
-        banner->links.insert(std::make_pair(it.first, it.second.GetString()));
-      }
-    }
-  }
 }
 
 void PublisherServerList::SaveParsedData(

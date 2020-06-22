@@ -57,15 +57,9 @@ class PublisherServerList {
       bool retry_after_error,
       const uint64_t last_download);
 
-  ledger::PublisherStatus ParsePublisherStatus(const std::string& status);
-
   void ParsePublisherList(
-      const std::string& data,
+      const ledger::UrlResponse& response,
       ledger::ResultCallback callback);
-
-  void ParsePublisherBanner(
-      ledger::PublisherBanner* banner,
-      base::Value* dictionary);
 
   void SaveParsedData(
       const ledger::Result result,

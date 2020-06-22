@@ -15,35 +15,12 @@
 #include "bat/ledger/internal/ledger_impl.h"
 #include "bat/ledger/internal/request/request_promotion.h"
 #include "bat/ledger/internal/request/request_util.h"
+#include "bat/ledger/internal/response/response_promotion.h"
 #include "bat/ledger/internal/state/state_util.h"
-#include "net/http/http_status_code.h"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
-
-namespace {
-
-std::string ParseClaimCredsResponse(const std::string& response) {
-  base::Optional<base::Value> value = base::JSONReader::Read(response);
-  if (!value || !value->is_dict()) {
-    return "";
-  }
-
-  base::DictionaryValue* dictionary = nullptr;
-  if (!value->GetAsDictionary(&dictionary)) {
-    return "";
-  }
-
-  auto* id = dictionary->FindStringKey("claimId");
-  if (!id) {
-    return "";
-  }
-
-  return *id;
-}
-
-}  // namespace
 
 namespace braveledger_credentials {
 
@@ -212,15 +189,13 @@ void CredentialsPromotion::OnClaim(
     ledger::ResultCallback callback) {
   BLOG(6, ledger::UrlResponseToString(__func__, response));
 
-  if (response.status_code != net::HTTP_OK) {
-    callback(ledger::Result::LEDGER_ERROR);
-    return;
-  }
+  std::string claim_id;
+  const ledger::Result result =
+      braveledger_response_util::ParseClaimCredsResponse(
+          response,
+          &claim_id);
 
-  const auto claim_id = ParseClaimCredsResponse(response.body);
-
-  if (claim_id.empty()) {
-    BLOG(0, "Claim id is missing");
+  if (result != ledger::Result::LEDGER_OK) {
     callback(ledger::Result::LEDGER_ERROR);
     return;
   }
@@ -332,28 +307,23 @@ void CredentialsPromotion::OnFetchSignedCreds(
     ledger::ResultCallback callback) {
   BLOG(6, ledger::UrlResponseToString(__func__, response));
 
-  if (response.status_code == net::HTTP_ACCEPTED) {
-    callback(ledger::Result::RETRY);
-    return;
-  }
-
-  if (response.status_code != net::HTTP_OK) {
-    callback(ledger::Result::LEDGER_ERROR);
-    return;
-  }
-
   auto get_callback = std::bind(&CredentialsPromotion::SignedCredsSaved,
       this,
       _1,
       trigger,
       callback);
-  common_->GetSignedCredsFromResponse(trigger, response.body, get_callback);
+  common_->GetSignedCredsFromResponse(trigger, response, get_callback);
 }
 
 void CredentialsPromotion::SignedCredsSaved(
     const ledger::Result result,
     const CredentialsTrigger& trigger,
     ledger::ResultCallback callback) {
+  if (result == ledger::Result::RETRY) {
+    callback(ledger::Result::RETRY);
+    return;
+  }
+
   if (result != ledger::Result::LEDGER_OK) {
     BLOG(0, "Signed creds were not saved");
     callback(ledger::Result::LEDGER_ERROR);
@@ -511,7 +481,7 @@ void CredentialsPromotion::RedeemTokens(
     }
 
     payload = GenerateRedeemTokensPayload(redeem);
-    url = braveledger_request_util::GetReedemTokensUrl();
+    url = braveledger_request_util::GetRedeemTokensUrl();
   }
 
   ledger_->LoadURL(
@@ -530,7 +500,10 @@ void CredentialsPromotion::OnRedeemTokens(
     ledger::ResultCallback callback) {
   BLOG(6, ledger::UrlResponseToString(__func__, response));
 
-  if (response.status_code != net::HTTP_OK) {
+  const ledger::Result result =
+      braveledger_response_util::ParseRedeemTokensResponse(response);
+  if (result != ledger::Result::LEDGER_OK) {
+    BLOG(0, "Failed to parse redeem tokens response");
     callback(ledger::Result::LEDGER_ERROR);
     return;
   }

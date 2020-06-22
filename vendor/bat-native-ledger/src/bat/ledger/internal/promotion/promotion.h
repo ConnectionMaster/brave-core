@@ -58,7 +58,7 @@ class Promotion {
 
   void OnGetAllPromotions(
       ledger::PromotionMap promotions,
-      const std::string& response,
+      const ledger::UrlResponse& response,
       ledger::FetchPromotionCallback callback);
 
   void OnGetAllPromotionsFromDatabase(

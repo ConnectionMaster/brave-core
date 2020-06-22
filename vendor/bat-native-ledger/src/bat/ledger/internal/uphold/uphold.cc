@@ -7,21 +7,21 @@
 
 #include "base/guid.h"
 #include "base/json/json_reader.h"
-#include "base/strings/stringprintf.h"
 #include "base/strings/string_number_conversions.h"
+#include "base/strings/stringprintf.h"
 #include "bat/ledger/global_constants.h"
 #include "bat/ledger/internal/bat_util.h"
 #include "bat/ledger/internal/common/time_util.h"
+#include "bat/ledger/internal/ledger_impl.h"
+#include "bat/ledger/internal/response/response_uphold.h"
 #include "bat/ledger/internal/uphold/uphold.h"
 #include "bat/ledger/internal/uphold/uphold_authorization.h"
 #include "bat/ledger/internal/uphold/uphold_card.h"
-#include "bat/ledger/internal/uphold/uphold_util.h"
-#include "bat/ledger/internal/wallet/wallet_util.h"
 #include "bat/ledger/internal/uphold/uphold_transfer.h"
+#include "bat/ledger/internal/uphold/uphold_util.h"
 #include "bat/ledger/internal/uphold/uphold_wallet.h"
-#include "bat/ledger/internal/ledger_impl.h"
+#include "bat/ledger/internal/wallet/wallet_util.h"
 #include "brave_base/random.h"
-#include "net/http/http_status_code.h"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -164,41 +164,25 @@ void Uphold::OnFetchBalance(
     const ledger::UrlResponse& response) {
   BLOG(6, ledger::UrlResponseToString(__func__, response));
 
-  if (response.status_code == net::HTTP_UNAUTHORIZED ||
-      response.status_code == net::HTTP_NOT_FOUND ||
-      response.status_code == net::HTTP_FORBIDDEN) {
+  double available = 0.0;
+  const ledger::Result result =
+      braveledger_response_util::ParseFetchUpholdBalanceResponse(
+          response,
+          &available);
+  if (result == ledger::Result::EXPIRED_TOKEN) {
+    BLOG(0, "Expired token");
     DisconnectWallet();
     callback(ledger::Result::EXPIRED_TOKEN, 0.0);
     return;
   }
 
-  if (response.status_code != net::HTTP_OK) {
+  if (result != ledger::Result::LEDGER_OK) {
+    BLOG(0, "Couldn't get balance");
     callback(ledger::Result::LEDGER_ERROR, 0.0);
     return;
   }
 
-  base::Optional<base::Value> value = base::JSONReader::Read(response.body);
-  if (!value || !value->is_dict()) {
-    BLOG(0, "Response body is not JSON");
-    callback(ledger::Result::LEDGER_ERROR, 0.0);
-    return;
-  }
-
-  base::DictionaryValue* dictionary = nullptr;
-  if (!value->GetAsDictionary(&dictionary)) {
-    BLOG(0, "Response body is not JSON");
-    callback(ledger::Result::LEDGER_ERROR, 0.0);
-    return;
-  }
-
-  const auto* available = dictionary->FindStringKey("available");
-  if (available) {
-    callback(ledger::Result::LEDGER_OK, std::stod(*available));
-    return;
-  }
-
-  BLOG(0, "Couldn't get balance");
-  callback(ledger::Result::LEDGER_ERROR, 0.0);
+  callback(ledger::Result::LEDGER_OK, available);
 }
 
 void Uphold::TransferFunds(
