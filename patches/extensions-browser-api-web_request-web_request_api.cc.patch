@@ -1,8 +1,8 @@
 diff --git a/extensions/browser/api/web_request/web_request_api.cc b/extensions/browser/api/web_request/web_request_api.cc
-index 360441ec9fa6e87c5d2ff177b29033c16cc084b7..e021791bfb34c747e7747f7e549465d8403d5afb 100644
+index b7d804c359ff4943c81a817e730df9a637d3c2ee..b0bdcf52fd78ad5f7f6f7fa039ca77ce08fb3494 100644
 --- a/extensions/browser/api/web_request/web_request_api.cc
 +++ b/extensions/browser/api/web_request/web_request_api.cc
-@@ -1304,6 +1304,9 @@ ExtensionWebRequestEventRouter::OnAuthRequired(
+@@ -1300,6 +1300,9 @@ ExtensionWebRequestEventRouter::OnAuthRequired(
      const net::AuthChallengeInfo& auth_info,
      AuthCallback callback,
      net::AuthCredentials* credentials) {

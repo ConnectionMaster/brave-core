@@ -30,10 +30,16 @@ const char kCastNoDestinationFoundURL[] =
     "https://support.brave.com/";
 
 const char kChooserBluetoothOverviewURL[] =
-    "https://support.brave.com/";
+    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
+
+const char kChooserHidOverviewUrl[] =
+    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
+
+const char kChooserSerialOverviewUrl[] =
+    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
 
 const char kChooserUsbOverviewURL[] =
-    "https://support.brave.com/";
+    "https://github.com/brave/brave-browser/wiki/Web-API-Permissions";
 
 const char kChromeBetaForumURL[] =
     "https://community.brave.com/c/beta-builds";
@@ -41,54 +47,25 @@ const char kChromeBetaForumURL[] =
 const char kChromeFixUpdateProblems[] =
     "https://support.brave.com/";
 
-const char kChromeReleaseNotesURL[] =
-    "https://brave.com/latest/";
-
 const char kChromeHelpViaKeyboardURL[] =
-#if defined(OS_CHROMEOS)
-#if defined(GOOGLE_CHROME_BUILD)
     "https://support.brave.com/";
-#else
-    "https://support.brave.com/";
-#endif  // defined(GOOGLE_CHROME_BUILD)
-#else
-    "https://support.brave.com/";
-#endif  // defined(OS_CHROMEOS)
 
 const char kChromeHelpViaMenuURL[] =
-#if defined(OS_CHROMEOS)
-#if defined(GOOGLE_CHROME_BUILD)
     "https://support.brave.com/";
-#else
-    "https://support.brave.com/";
-#endif  // defined(GOOGLE_CHROME_BUILD)
-#else
-    "https://support.brave.com/";
-#endif  // defined(OS_CHROMEOS)
 
 const char kChromeHelpViaWebUIURL[] =
     "https://support.brave.com/";
-#if defined(OS_CHROMEOS)
-const char kChromeOsHelpViaWebUIURL[] =
-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
-    "https://support.brave.com/";
-#else
-    "https://support.brave.com/";
-#endif  // BUILDFLAG(GOOGLE_CHROME_BRANDING)
-#endif  // defined(OS_CHROMEOS)
 
 const char kChromeNativeScheme[] = "chrome-native";
 
 const char kChromeSearchLocalNtpHost[] = "local-ntp";
-const char kChromeSearchLocalNtpUrl[] =
-    "chrome-search://local-ntp/local-ntp.html";
 
 const char kChromeSearchMostVisitedHost[] = "most-visited";
 const char kChromeSearchMostVisitedUrl[] = "chrome-search://most-visited/";
 
-const char kChromeSearchLocalNtpBackgroundUrl[] =
-    "chrome-search://local-ntp/background.jpg";
-const char kChromeSearchLocalNtpBackgroundFilename[] = "background.jpg";
+const char kChromeUIUntrustedNewTabPageBackgroundUrl[] =
+    "chrome-untrusted://background.jpg";
+const char kChromeUIUntrustedNewTabPageBackgroundFilename[] = "background.jpg";
 
 const char kChromeSearchRemoteNtpHost[] = "remote-ntp";
 
@@ -98,10 +75,6 @@ const char kChromeUIUntrustedNewTabPageUrl[] =
     "chrome-untrusted://new-tab-page/";
 
 const char kChromiumProjectURL[] = "https://github.com/brave/brave-browser/";
-
-const char kCloudPrintLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360017880792-How-do-I-print-from-Brave-";
 
 const char kCloudPrintCertificateErrorLearnMoreURL[] =
     "https://support.brave.com/hc/en-us/articles/"
@@ -114,8 +87,6 @@ const char kContentSettingsExceptionsLearnMoreURL[] =
 const char kCookiesSettingsHelpCenterURL[] =
     "https://support.brave.com/hc/en-us/articles/"
     "360018205431-How-do-I-change-site-permissions-";
-const char kCpuX86Sse2ObsoleteURL[] =
-    "https://support.brave.com/";
 
 const char kCrashReasonURL[] =
     "https://support.brave.com/hc/en-us/articles/"
@@ -158,9 +129,6 @@ const char kGooglePasswordManagerURL[] = "https://support.brave.com";
 const char kLearnMoreReportingURL[] =
     "https://support.brave.com/hc/en-us/articles/"
     "360017905872-How-do-I-enable-or-disable-automatic-crash-reporting-";
-
-const char kLegacySupervisedUserManagementDisplayURL[] =
-    "https://support.brave.com/";
 
 const char kManagedUiLearnMoreUrl[] = "https://support.brave.com/";
 
@@ -208,6 +176,10 @@ const char kSafeBrowsingHelpCenterURL[] =
 
 const char kSafetyTipHelpCenterURL[] =
     "https://support.brave.com/";
+
+const char kSearchHistoryUrlInClearBrowsingData[] =
+    "https://support.brave.com/";
+
 const char kSeeMoreSecurityTipsURL[] =
     "https://support.brave.com/";
 
@@ -236,11 +208,8 @@ const char kUpgradeHelpCenterBaseURL[] =
 const char kWhoIsMyAdministratorHelpURL[] =
     "https://support.brave.com/";
 
-const char kChromeFlashRoadmapURL[] = "https://support.brave.com/";
-
-#if defined(OS_ANDROID)
-const char kAndroidAppScheme[] = "android-app";
-#endif
+const char kCwsEnhancedSafeBrowsingLearnMoreURL[] =
+    "https://support.brave.com/";
 
 #if defined(OS_ANDROID)
 const char kEnhancedPlaybackNotificationLearnMoreURL[] =
@@ -272,10 +241,6 @@ const char kChromeSyncLearnMoreURL[] =
 #endif  // BUILDFLAG(ENABLE_ONE_CLICK_SIGNIN)
 
 #if BUILDFLAG(ENABLE_PLUGINS)
-const char kBlockedPluginLearnMoreURL[] =
-    "https://support.brave.com/hc/en-us/articles/"
-    "360018163151-How-do-I-manage-Flash-audio-video-";
-
 const char kOutdatedPluginLearnMoreURL[] =
     "https://support.brave.com/hc/en-us/articles/"
     "360018163151-How-do-I-manage-Flash-audio-video-";

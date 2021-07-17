@@ -5,8 +5,8 @@
 
 #include "bat/ads/ad_notification_info.h"
 
-#include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/json_helper.h"
+#include "bat/ads/internal/logging.h"
 
 namespace ads {
 
@@ -14,8 +14,8 @@ struct ConfirmationType;
 
 AdNotificationInfo::AdNotificationInfo() = default;
 
-AdNotificationInfo::AdNotificationInfo(
-    const AdNotificationInfo& info) = default;
+AdNotificationInfo::AdNotificationInfo(const AdNotificationInfo& info) =
+    default;
 
 AdNotificationInfo::~AdNotificationInfo() = default;
 
@@ -24,8 +24,7 @@ bool AdNotificationInfo::IsValid() const {
     return false;
   }
 
-  if (title.empty() ||
-      body.empty()) {
+  if (title.empty() || body.empty()) {
     return false;
   }
 
@@ -38,8 +37,7 @@ std::string AdNotificationInfo::ToJson() const {
   return json;
 }
 
-Result AdNotificationInfo::FromJson(
-    const std::string& json) {
+Result AdNotificationInfo::FromJson(const std::string& json) {
   rapidjson::Document document;
   document.Parse(json.c_str());
 
@@ -68,6 +66,10 @@ Result AdNotificationInfo::FromJson(
     campaign_id = document["campaign_id"].GetString();
   }
 
+  if (document.HasMember("advertiser_id")) {
+    advertiser_id = document["advertiser_id"].GetString();
+  }
+
   if (document.HasMember("segment")) {
     segment = document["segment"].GetString();
   }
@@ -87,9 +89,7 @@ Result AdNotificationInfo::FromJson(
   return SUCCESS;
 }
 
-void SaveToJson(
-    JsonWriter* writer,
-    const AdNotificationInfo& info) {
+void SaveToJson(JsonWriter* writer, const AdNotificationInfo& info) {
   writer->StartObject();
 
   writer->String("type");
@@ -107,6 +107,9 @@ void SaveToJson(
 
   writer->String("campaign_id");
   writer->String(info.campaign_id.c_str());
+
+  writer->String("advertiser_id");
+  writer->String(info.advertiser_id.c_str());
 
   writer->String("segment");
   writer->String(info.segment.c_str());

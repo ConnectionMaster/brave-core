@@ -394,7 +394,7 @@
                     "type": "number"
                   },
                   "excluded": {
-                    "type": "number"
+                    "type": "boolean"
                   },
                   "url": {
                     "type": "string"
@@ -438,7 +438,7 @@
                     "description": "publisher attention score"
                   },
                   "excluded": {
-                    "type": "number",
+                    "type": "boolean",
                     "description": "is site excluded from auto contribute"
                   },
                   "provider": {
@@ -839,23 +839,6 @@
         ]
       },
       {
-        "name": "getAdsEstimatedEarnings",
-        "type": "function",
-        "description": "Gets estimated ads earnings for the current month",
-        "parameters": [
-          {
-            "type": "function",
-            "name": "callback",
-            "parameters": [
-              {
-                "name": "amount",
-                "type": "number"
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "getACEnabled",
         "type": "function",
         "description": "Gets whether auto contribute is enabled",
@@ -1080,10 +1063,6 @@
         "description": "Get external wallet for provided wallet type",
         "parameters": [
           {
-            "name": "type",
-            "type": "string"
-          },
-          {
             "type": "function",
             "name": "callback",
             "parameters": [
@@ -1096,8 +1075,8 @@
                 "type": "object",
                 "optional": true,
                 "properties": {
-                  "token": {
-                    "type": "any"
+                  "type": {
+                    "type": "string"
                   },
                   "address": {
                     "type": "any"
@@ -1133,25 +1112,39 @@
         "name": "disconnectWallet",
         "type": "function",
         "description": "Disconnect wallet",
-        "parameters": [
-          {
-            "name": "type",
-            "type": "string"
-          }
-        ]
+        "parameters": []
       },
       {
-        "name": "onlyAnonWallet",
+        "name": "getAdsAccountStatement",
         "type": "function",
-        "description": "Get information if we should only allow anonymous wallet",
+        "description": "Get ads account statement",
         "parameters": [
           {
             "type": "function",
             "name": "callback",
             "parameters": [
               {
-                "name": "only",
+                "name": "success",
                 "type": "boolean"
+              },
+              {
+                "name": "adsAccountStatement",
+                "type": "object",
+                "optional": true,
+                "properties": {
+                  "nextPaymentDate": {
+                    "type": "number"
+                  },
+                  "adsReceivedThisMonth": {
+                    "type": "integer"
+                  },
+                  "earningsThisMonth": {
+                    "type": "number"
+                  },
+                  "earningsLastMonth": {
+                    "type": "number"
+                  }
+                }
               }
             ]
           }
@@ -1209,15 +1202,10 @@
         ]
       },
       {
-        "name": "saveOnboardingResult",
+        "name": "enableRewards",
         "type": "function",
-        "description": "Saves the rewards user onboarding result.",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "result"
-          }
-        ]
+        "description": "Enables rewards for the current profile.",
+        "parameters": []
       },
       {
         "name": "getPrefs",

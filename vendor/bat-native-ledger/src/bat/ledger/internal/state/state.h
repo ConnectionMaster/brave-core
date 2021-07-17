@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVELEDGER_BAT_STATE_STATE_H_
-#define BRAVELEDGER_BAT_STATE_STATE_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_STATE_STATE_H_
+#define BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_STATE_STATE_H_
 
 #include <memory>
 #include <string>
@@ -105,6 +105,8 @@ class State {
 
   void SetPromotionLastFetchStamp(const uint64_t stamp);
 
+  void ResetWalletType();
+
   uint64_t GetPromotionLastFetchStamp();
 
   void SetAnonTransferChecked(const bool checked);
@@ -119,4 +121,4 @@ class State {
 }  // namespace state
 }  // namespace ledger
 
-#endif  // BRAVELEDGER_BAT_STATE_STATE_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_STATE_STATE_H_

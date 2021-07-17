@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as React from 'react'
-const clipboardCopy = require('clipboard-copy')
 
 import createWidget from '../widget/index'
 import { StyledTitleTab } from '../widgetTitleTab'
@@ -25,7 +24,6 @@ import {
   ListItem,
   ListIcon,
   ListImg,
-  ListLabel,
   AssetIconWrapper,
   AssetIcon,
   SearchInput,
@@ -84,6 +82,9 @@ import {
 } from '../exchangeWidget/shared-assets'
 import GeminiLogo from './assets/gemini-logo'
 import { CaratLeftIcon, CaratDownIcon } from 'brave-ui/components/icons'
+
+import * as S from '../../../widgets/shared/styles'
+import IconAsset from '../../../widgets/shared/iconAsset'
 
 // Utils
 import geminiData from './data'
@@ -298,7 +299,7 @@ class Gemini extends React.PureComponent<Props, State> {
 
   copyToClipboard = async (address: string) => {
     try {
-      await clipboardCopy(address)
+      await navigator.clipboard.writeText(address)
     } catch (e) {
       console.log(`Could not copy address ${e.toString()}`)
     }
@@ -500,23 +501,20 @@ class Gemini extends React.PureComponent<Props, State> {
         {geminiData.currencies.map((asset: string) => {
           const assetAccountBalance = accountBalances[asset] || '0'
           const assetBalance = this.formatCryptoBalance(assetAccountBalance)
-
           return (
-            <ListItem key={`list-${asset}`}>
-              <ListInfo isAsset={true} position={'left'}>
-                <ListIcon>
-                  {this.renderIconAsset(asset.toLowerCase())}
-                </ListIcon>
-                <ListLabel>
-                  {geminiData.currencyNames[asset]}
-                </ListLabel>
-              </ListInfo>
-              <ListInfo position={'right'}>
-                <Balance isSummary={false} hideBalance={hideBalance}>
-                  {assetBalance} {asset}
-                </Balance>
-              </ListInfo>
-            </ListItem>
+            <S.ListItem key={`list-${asset}`} isFlex={true} $p={10}>
+              <S.FlexItem $mr={10} $w={25} $h={25}>
+                <IconAsset iconKey={asset.toLowerCase()} />
+              </S.FlexItem>
+              <S.FlexItem>
+                <S.Text>{geminiData.currencyNames[asset]}</S.Text>
+              </S.FlexItem>
+              <S.FlexItem textAlign='right' flex={1}>
+                <S.Balance hideBalance={hideBalance}>
+                  <S.Text lineHeight={1.15}>{assetBalance} {asset}</S.Text>
+                </S.Balance>
+              </S.FlexItem>
+            </S.ListItem>
           )
         })}
       </>
@@ -849,10 +847,10 @@ class Gemini extends React.PureComponent<Props, State> {
             className={'asset-dropdown'}
             onClick={this.handleTradeAssetChange}
           >
+            <DropdownIcon>
+              <IconAsset iconKey={currentTradeAsset.toLowerCase()} size={15} />
+            </DropdownIcon>
             <AssetDropdownLabel>
-              <DropdownIcon>
-                {this.renderSmallIconAsset(currentTradeAsset.toLowerCase())}
-              </DropdownIcon>
               {currentTradeAsset}
             </AssetDropdownLabel>
             <CaratDropdown>
@@ -874,7 +872,7 @@ class Gemini extends React.PureComponent<Props, State> {
                       onClick={this.setCurrentTradeAsset.bind(this, asset)}
                     >
                       <DropdownIcon>
-                        {this.renderSmallIconAsset(asset.toLowerCase())}
+                        <IconAsset iconKey={asset.toLowerCase()} size={15} />
                       </DropdownIcon>
                       {asset}
                     </AssetItem>
@@ -908,7 +906,7 @@ class Gemini extends React.PureComponent<Props, State> {
               />
             </BackArrow>
             <DetailIconWrapper>
-              {this.renderIconAsset(currentDepositAsset.toLowerCase(), true)}
+              <IconAsset iconKey={currentDepositAsset.toLowerCase()} />
             </DetailIconWrapper>
           </DetailIcons>
           <AssetTicker>
@@ -993,17 +991,22 @@ class Gemini extends React.PureComponent<Props, State> {
           }
 
           return (
-            <ListItem
+            <S.ListItem
               key={`list-${asset}`}
+              isFlex={true}
+              justify='flex-start'
+              $p={10}
               onClick={this.setCurrentDepositAsset.bind(this, asset)}
             >
-              <ListIcon>
-                {this.renderIconAsset(asset.toLowerCase())}
-              </ListIcon>
-              <ListLabel clickable={true}>
-                {`${asset} (${cleanName})`}
-              </ListLabel>
-            </ListItem>
+              <S.FlexItem $mr={10} $w={25} $h={25}>
+                <IconAsset iconKey={lowerAsset} />
+              </S.FlexItem>
+              <S.FlexItem>
+                <S.Text $fontSize={12}>
+                  {`${asset} (${cleanName})`}
+                </S.Text>
+              </S.FlexItem>
+            </S.ListItem>
           )
         })}
       </>

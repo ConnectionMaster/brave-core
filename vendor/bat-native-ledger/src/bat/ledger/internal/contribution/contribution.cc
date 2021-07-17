@@ -19,6 +19,7 @@
 #include "bat/ledger/internal/ledger_impl.h"
 #include "bat/ledger/internal/publisher/publisher_status_helper.h"
 #include "bat/ledger/internal/wallet/wallet_balance.h"
+#include "bat/ledger/option_keys.h"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -74,6 +75,8 @@ Contribution::~Contribution() = default;
 
 void Contribution::Initialize() {
   ledger_->uphold()->Initialize();
+  ledger_->bitflyer()->Initialize();
+  ledger_->gemini()->Initialize();
 
   CheckContributionQueue();
   CheckNotCompletedContributions();
@@ -322,6 +325,14 @@ void Contribution::CreateNewEntry(
     return;
   }
 
+  if (wallet_type == constant::kWalletBitflyer &&
+      queue->type == type::RewardsType::AUTO_CONTRIBUTE) {
+    BLOG(1, "AC is not supported for bitFlyer wallets");
+    CreateNewEntry(GetNextProcessor(wallet_type), std::move(balance),
+                   std::move(queue));
+    return;
+  }
+
   const std::string contribution_id = base::GenerateGUID();
 
   auto contribution = type::ContributionInfo::New();
@@ -346,8 +357,9 @@ void Contribution::CreateNewEntry(
     queue->amount = 0;
   }
 
-  BLOG(1, "Creating contribution(" << wallet_type << ") for " <<
-      contribution->amount << " type " << queue->type);
+  BLOG(1, "Creating contribution for wallet type "
+              << wallet_type << " (amount: " << contribution->amount
+              << ", type: " << queue->type << ")");
 
   type::ContributionPublisherList publisher_list;
   for (const auto& item : queue_publishers) {
@@ -411,7 +423,9 @@ void Contribution::OnEntrySaved(
       contribution_id);
 
     sku_->AnonUserFunds(contribution_id, wallet_type, result_callback);
-  } else if (wallet_type == constant::kWalletUphold) {
+  } else if (wallet_type == constant::kWalletUphold ||
+             wallet_type == constant::kWalletBitflyer ||
+             wallet_type == constant::kWalletGemini) {
     auto result_callback = std::bind(&Contribution::Result,
         this,
         _1,
@@ -509,6 +523,17 @@ void Contribution::TransferFunds(
         transaction.amount,
         destination,
         callback);
+    return;
+  }
+
+  if (wallet_type == constant::kWalletBitflyer) {
+    ledger_->bitflyer()->TransferFunds(transaction.amount, destination,
+                                       callback);
+    return;
+  }
+
+  if (wallet_type == constant::kWalletGemini) {
+    ledger_->gemini()->TransferFunds(transaction.amount, destination, callback);
     return;
   }
 
@@ -614,9 +639,7 @@ void Contribution::OnResult(
     return;
   }
 
-  ledger_->contribution()->ContributionCompleted(
-      result,
-      std::move(contribution));
+  ContributionCompleted(result, std::move(contribution));
 }
 
 void Contribution::SetRetryTimer(
@@ -659,9 +682,8 @@ void Contribution::SetRetryCounter(type::ContributionInfoPtr contribution) {
   if (contribution->retry_count == 3 &&
       contribution->step != type::ContributionStep::STEP_PREPARE) {
     BLOG(0, "Contribution failed after 3 retries");
-    ledger_->contribution()->ContributionCompleted(
-        type::Result::TOO_MANY_RESULTS,
-        std::move(contribution));
+    ContributionCompleted(type::Result::TOO_MANY_RESULTS,
+                          std::move(contribution));
     return;
   }
 
@@ -708,9 +730,8 @@ void Contribution::Retry(
   if ((*shared_contribution)->type == type::RewardsType::AUTO_CONTRIBUTE &&
       !ledger_->state()->GetAutoContributeEnabled()) {
     BLOG(1, "AC is disabled, completing contribution");
-    ledger_->contribution()->ContributionCompleted(
-        type::Result::AC_OFF,
-        std::move(*shared_contribution));
+    ContributionCompleted(type::Result::AC_OFF,
+                          std::move(*shared_contribution));
     return;
   }
 
@@ -730,7 +751,9 @@ void Contribution::Retry(
           result_callback);
       return;
     }
-    case type::ContributionProcessor::UPHOLD: {
+    case type::ContributionProcessor::UPHOLD:
+    case type::ContributionProcessor::BITFLYER:
+    case type::ContributionProcessor::GEMINI: {
       if ((*shared_contribution)->type ==
           type::RewardsType::AUTO_CONTRIBUTE) {
         sku_->Retry((*shared_contribution)->Clone(), result_callback);

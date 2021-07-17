@@ -9,6 +9,7 @@ import android.app.Activity;
 
 import androidx.annotation.Nullable;
 
+import org.chromium.base.supplier.ObservableSupplier;
 import org.chromium.base.supplier.Supplier;
 import org.chromium.chrome.browser.browser_controls.BrowserControlsStateProvider;
 import org.chromium.chrome.browser.compositor.layouts.OverviewModeBehavior;
@@ -17,11 +18,13 @@ import org.chromium.chrome.browser.feed.shared.FeedFeatures;
 import org.chromium.chrome.browser.feed.shared.FeedSurfaceProvider;
 import org.chromium.chrome.browser.lifecycle.ActivityLifecycleDispatcher;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.share.ShareDelegate;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.ui.messages.snackbar.SnackbarManager;
 import org.chromium.chrome.browser.ui.native_page.NativePageHost;
 import org.chromium.components.browser_ui.bottomsheet.BottomSheetController;
+import org.chromium.ui.base.WindowAndroid;
 
 public class BraveNewTabPage extends NewTabPage {
     private NewTabPageLayout mNewTabPageLayout;
@@ -32,10 +35,12 @@ public class BraveNewTabPage extends NewTabPage {
             Supplier<Tab> activityTabProvider, SnackbarManager snackbarManager,
             ActivityLifecycleDispatcher lifecycleDispatcher, TabModelSelector tabModelSelector,
             boolean isTablet, NewTabPageUma uma, boolean isInNightMode,
-            NativePageHost nativePageHost, Tab tab, BottomSheetController bottomSheetController) {
+            NativePageHost nativePageHost, Tab tab, String url,
+            BottomSheetController bottomSheetController,
+            ObservableSupplier<ShareDelegate> shareDelegateSupplier, WindowAndroid windowAndroid) {
         super(activity, browserControlsStateProvider, activityTabProvider, snackbarManager,
                 lifecycleDispatcher, tabModelSelector, isTablet, uma, isInNightMode, nativePageHost,
-                tab, bottomSheetController);
+                tab, url, bottomSheetController, shareDelegateSupplier, windowAndroid);
 
         assert mNewTabPageLayout instanceof BraveNewTabPageLayout;
         if (mNewTabPageLayout instanceof BraveNewTabPageLayout) {
@@ -44,19 +49,23 @@ public class BraveNewTabPage extends NewTabPage {
     }
 
     @Override
-    protected void initializeMainView(Activity activity, Supplier<Tab> tabProvider,
-            SnackbarManager snackbarManager, TabModelSelector tabModelSelector, NewTabPageUma uma,
-            boolean isInNightMode, BottomSheetController bottomSheetController) {
-        super.initializeMainView(activity, tabProvider, snackbarManager, tabModelSelector, uma,
-                isInNightMode, bottomSheetController);
+    protected void initializeMainView(Activity activity, WindowAndroid windowAndroid,
+            SnackbarManager snackbarManager, NewTabPageUma uma, boolean isInNightMode,
+            BottomSheetController bottomSheetController,
+            ObservableSupplier<ShareDelegate> shareDelegateSupplier,
+            TabModelSelector tabModelSelector, String url) {
+        super.initializeMainView(activity, windowAndroid, snackbarManager, uma, isInNightMode,
+                bottomSheetController, shareDelegateSupplier, tabModelSelector, url);
         // Override surface provider
         Profile profile = Profile.fromWebContents(mTab.getWebContents());
 
         assert !FeedFeatures.isFeedEnabled();
         mFeedSurfaceProvider = new BraveFeedSurfaceCoordinator(activity, snackbarManager,
-                tabModelSelector, tabProvider,
-                new SnapScrollHelper(mNewTabPageManager, mNewTabPageLayout), mNewTabPageLayout,
-                null, null, isInNightMode, this, mNewTabPageManager.getNavigationDelegate(),
-                profile, false, bottomSheetController);
+                windowAndroid, new SnapScrollHelper(mNewTabPageManager, mNewTabPageLayout),
+                mNewTabPageLayout, null, isInNightMode, this,
+                mNewTabPageManager.getNavigationDelegate(), profile,
+                /* isPlaceholderShownInitially= */ false, bottomSheetController,
+                shareDelegateSupplier, /* externalScrollableContainerDelegate= */ null,
+                tabModelSelector, NewTabPageUtils.decodeOriginFromNtpUrl(url));
     }
 }

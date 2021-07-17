@@ -10,8 +10,7 @@
 
 namespace ads {
 
-TEST(BatAdsTextClassificationFeaturesTest,
-    TextClassificationEnabled) {
+TEST(BatAdsTextClassificationFeaturesTest, TextClassificationEnabled) {
   // Arrange
 
   // Act
@@ -21,13 +20,22 @@ TEST(BatAdsTextClassificationFeaturesTest,
 }
 
 TEST(BatAdsTextClassificationFeaturesTest,
-    TextClassificationProbabilitiesHistorySize) {
+     TextClassificationProbabilitiesHistorySize) {
   // Arrange
 
   // Act
 
   // Assert
   EXPECT_EQ(5, features::GetTextClassificationProbabilitiesHistorySize());
+}
+
+TEST(BatAdsTextClassificationFeaturesTest, TextClassificationResource) {
+  // Arrange
+
+  // Act
+
+  // Assert
+  EXPECT_EQ(1, features::GetTextClassificationResourceVersion());
 }
 
 }  // namespace ads

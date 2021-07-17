@@ -1,17 +1,17 @@
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/toolbar/top/ToolbarTablet.java b/chrome/android/java/src/org/chromium/chrome/browser/toolbar/top/ToolbarTablet.java
-index 5b7700ea85a2a8985d48372e0915b5a6a06aba54..58fe1ec90f1ec227bb2e2234527075f70dfb038a 100644
+index 99665e621607f9096a2721c9b07c6b778eb4e6c1..9011f11f81c0c234bb41c6ecf94af54d8e8e2c4f 100644
 --- a/chrome/android/java/src/org/chromium/chrome/browser/toolbar/top/ToolbarTablet.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/toolbar/top/ToolbarTablet.java
-@@ -58,7 +58,7 @@ import java.util.Collection;
+@@ -60,7 +60,7 @@ import java.util.Collection;
   * The Toolbar object for Tablet screens.
   */
  @SuppressLint("Instantiatable")
 -public class ToolbarTablet extends ToolbarLayout
 +public class ToolbarTablet extends BraveToolbarLayout
          implements OnClickListener, View.OnLongClickListener, TabCountObserver {
-     // The number of toolbar buttons that can be hidden at small widths (reload, back, forward).
-     public static final int HIDEABLE_BUTTON_COUNT = 3;
-@@ -316,10 +316,12 @@ public class ToolbarTablet extends ToolbarLayout
+     private HomeButton mHomeButton;
+     private ImageButton mBackButton;
+@@ -315,10 +315,12 @@ public class ToolbarTablet extends ToolbarLayout
              DownloadUtils.downloadOfflinePage(getContext(), getToolbarDataProvider().getTab());
              RecordUserAction.record("MobileToolbarDownloadPage");
          }
@@ -24,7 +24,7 @@ index 5b7700ea85a2a8985d48372e0915b5a6a06aba54..58fe1ec90f1ec227bb2e2234527075f7
          String description = null;
          Context context = getContext();
          Resources resources = context.getResources();
-@@ -385,6 +387,7 @@ public class ToolbarTablet extends ToolbarLayout
+@@ -384,6 +386,7 @@ public class ToolbarTablet extends ToolbarLayout
                  textBoxColor, PorterDuff.Mode.SRC_IN);
  
          mLocationBar.updateVisualsForState();

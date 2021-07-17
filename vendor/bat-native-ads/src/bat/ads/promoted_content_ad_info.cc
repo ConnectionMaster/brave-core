@@ -5,8 +5,8 @@
 
 #include "bat/ads/promoted_content_ad_info.h"
 
-#include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/json_helper.h"
+#include "bat/ads/internal/logging.h"
 
 namespace ads {
 
@@ -24,8 +24,7 @@ bool PromotedContentAdInfo::IsValid() const {
     return false;
   }
 
-  if (title.empty() ||
-      description.empty()) {
+  if (title.empty() || description.empty()) {
     return false;
   }
 
@@ -38,8 +37,7 @@ std::string PromotedContentAdInfo::ToJson() const {
   return json;
 }
 
-Result PromotedContentAdInfo::FromJson(
-    const std::string& json) {
+Result PromotedContentAdInfo::FromJson(const std::string& json) {
   rapidjson::Document document;
   document.Parse(json.c_str());
 
@@ -68,6 +66,10 @@ Result PromotedContentAdInfo::FromJson(
     campaign_id = document["campaign_id"].GetString();
   }
 
+  if (document.HasMember("advertiser_id")) {
+    advertiser_id = document["advertiser_id"].GetString();
+  }
+
   if (document.HasMember("segment")) {
     segment = document["segment"].GetString();
   }
@@ -87,9 +89,7 @@ Result PromotedContentAdInfo::FromJson(
   return SUCCESS;
 }
 
-void SaveToJson(
-    JsonWriter* writer,
-    const PromotedContentAdInfo& info) {
+void SaveToJson(JsonWriter* writer, const PromotedContentAdInfo& info) {
   writer->StartObject();
 
   writer->String("type");
@@ -107,6 +107,9 @@ void SaveToJson(
 
   writer->String("campaign_id");
   writer->String(info.campaign_id.c_str());
+
+  writer->String("advertiser_id");
+  writer->String(info.advertiser_id.c_str());
 
   writer->String("segment");
   writer->String(info.segment.c_str());

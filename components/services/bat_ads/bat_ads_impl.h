@@ -6,17 +6,18 @@
 #ifndef BRAVE_COMPONENTS_SERVICES_BAT_ADS_BAT_ADS_IMPL_H_
 #define BRAVE_COMPONENTS_SERVICES_BAT_ADS_BAT_ADS_IMPL_H_
 
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "base/memory/weak_ptr.h"
+#include "bat/ads/ads.h"
+#include "bat/ads/public/interfaces/ads.mojom.h"
+#include "bat/ads/statement_info.h"
 #include "brave/components/services/bat_ads/public/interfaces/bat_ads.mojom.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
-#include "bat/ads/ads.h"
-#include "bat/ads/statement_info.h"
 
 namespace ads {
 class Ads;
@@ -46,14 +47,19 @@ class BatAdsImpl :
   void ChangeLocale(
       const std::string& locale) override;
 
-  void OnAdsSubdivisionTargetingCodeHasChanged() override;
+  void OnPrefChanged(const std::string& path) override;
 
-  void OnPageLoaded(
-      const int32_t tab_id,
-      const std::vector<std::string>& redirect_chain,
-      const std::string& content) override;
+  void OnHtmlLoaded(const int32_t tab_id,
+                    const std::vector<std::string>& redirect_chain,
+                    const std::string& html) override;
 
-  void OnUnIdle() override;
+  void OnTextLoaded(const int32_t tab_id,
+                    const std::vector<std::string>& redirect_chain,
+                    const std::string& text) override;
+
+  void OnUserGesture(const int32_t page_transition_type) override;
+
+  void OnUnIdle(const int idle_time, const bool was_locked) override;
   void OnIdle() override;
 
   void OnForeground() override;
@@ -90,6 +96,17 @@ class BatAdsImpl :
       const std::string& creative_instance_id,
       const ads::PromotedContentAdEventType event_type) override;
 
+  void GetInlineContentAd(const std::string& dimensions,
+                          GetInlineContentAdCallback callback) override;
+
+  void OnInlineContentAdEvent(
+      const std::string& uuid,
+      const std::string& creative_instance_id,
+      const ads::InlineContentAdEventType event_type) override;
+
+  void PurgeOrphanedAdEventsForType(
+      const ads::mojom::BraveAdsAdType ad_type) override;
+
   void RemoveAllHistory(
       RemoveAllHistoryCallback callback) override;
 
@@ -104,8 +121,7 @@ class BatAdsImpl :
       const uint64_t to_timestamp,
       GetAdsHistoryCallback callback) override;
 
-  void GetStatement(
-      GetStatementCallback callback) override;
+  void GetAccountStatement(GetAccountStatementCallback callback) override;
 
   void ToggleAdThumbUp(
       const std::string& creative_instance_id,
@@ -136,8 +152,7 @@ class BatAdsImpl :
       const bool flagged,
       ToggleFlagAdCallback callback) override;
 
-  void OnUserModelUpdated(
-      const std::string& id) override;
+  void OnResourceComponentUpdated(const std::string& id) override;
 
  private:
   // Workaround to pass base::OnceCallback into std::bind
@@ -170,14 +185,20 @@ class BatAdsImpl :
       CallbackHolder<ShutdownCallback>* holder,
       const int32_t result);
 
+  static void OnGetInlineContentAd(
+      CallbackHolder<GetInlineContentAdCallback>* holder,
+      const bool success,
+      const std::string& dimensions,
+      const ads::InlineContentAdInfo& ad);
+
   static void OnRemoveAllHistory(
       CallbackHolder<RemoveAllHistoryCallback>* holder,
       const int32_t result);
 
-  static void OnGetStatement(
-    CallbackHolder<GetStatementCallback>* holder,
-    const bool success,
-    const ads::StatementInfo& statement);
+  static void OnGetAccountStatement(
+      CallbackHolder<GetAccountStatementCallback>* holder,
+      const bool success,
+      const ads::StatementInfo& statement);
 
   std::unique_ptr<BatAdsClientMojoBridge> bat_ads_client_mojo_proxy_;
   std::unique_ptr<ads::Ads> ads_;

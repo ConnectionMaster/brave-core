@@ -51,18 +51,6 @@
     "message": "Tarkat tiedot",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Saldosi",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "BAT-pisteet",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "voidaan käyttää Brave-palkinnoissa antamaan kannatusmaksuja suosikkisisällöntuottajillesi. BAT-pisteitä ei voi vaihtaa BATiin.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "päällä",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Lunastetut tunnuslahjoitukset",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Pistestipendit lunastettu",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Ansaitset mainoksilla",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Ole hyvä ja tee Brave-lompakostasi varmuuskopio.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Lue lisää",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Laiteraja saavutettu",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Lompakkoasi ei voida vahvistaa, sillä olet saavuttanut sallitun vahvistettujen laitteiden ylärajan.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Brave Rewards -tilisi odottaa talletusta",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Ota Ads käyttöön",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Ilmainen tunnuslahjoitus",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Ilmaispistestipendi",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Olet ansainnut mainospalkinnon!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Lompakko vahvistettu",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Siirry Uphold-tiliini",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Siirry $provider$ -tiliini",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Katkaise yhteys Brave-palkintoihin",
@@ -573,17 +567,9 @@
     "message": "Poletti",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "pistettä",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Token-tuet",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Pistestipendit",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Hei, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Tarvitset vähintään 25 BAT luodaksesi Uphold-tilin. Yritä myöhemmin uudelleen.\nJos olet jos vahvistanut Uphold-tilisi, jatka kirjautumiseen.",
-    "description": "Text for login button"
+    "message": "Tarvitset vähintään $amount$ BAT luodaksesi Uphold-tilin. Jos olet jos vahvistanut Uphold-tilisi, jatka kirjautumiseen.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Yhdistetty",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Huomio: siirtosi näkyvät Uphold-palvelulle, kun vahvistat. He näkevät esimerkiksi vastaanottajan ja tippiesi määrän.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Huomio: $provider$ näkee maksusuorituksesi valtuuttamisen jälkeen; he näkevät esimerkiksi tippiesi vastaanottajan sekä niiden suuruuden.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Ansaitse maksutunnuksia & osoita anteliaisuutta",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Ansaitse maksutunnuksia katsomalla tietosuojaasi kunnioittavia mainoksia sekä tukemalla suosikkisivustojasi ja -kehittäjiäsi automaattisesti.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Kuinka usein tahdot nähdä mainoksia?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(mainoksia per tunti)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Kuinka paljon kuukausitukea olisit valmis antamaan suosikkikehittäjillesi?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(mainosansioistasi)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Milloin saat palkintosi",
+    "message": "Milloin saat palkintosi?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Maksutunnuksia voidaan käyttää kehittäjien tukemiseen. Voit ostaa digitaalista sisältöä ynnä muuta sisältöä kauppiaiden tullessa mukaan.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Lopuksi voimme määrittää perusasetuksesi",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Voit muuttaa tämän myöhemmin.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Jee, valmista tuli!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Brave Rewardien avulla voit tehdä verkosta turvallisemman paikan muille. Se vasta onkin upeaa!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Vahvista lompakkosi",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Jos haluat nostaa mainosten katsomisesta ansaittuja poletteja, tulee sinun vahvistaa lompakkosi.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Tee se myöhemmin",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Vahvista lompakkoni",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "bitFlyer-lompakko on palvelu, jota hallinnoi bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Kun vahvistat lompakkosi ja linkität sen bitFlyer-tiliin, voit helpommin tallentaa ja hallita Brave Rewardsin kautta ansaitsemiasi poletteja",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Lue lisää$link_end$ siitä, miten voit linkittää Brave-selaimesi bitFlyer-tiliisi.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

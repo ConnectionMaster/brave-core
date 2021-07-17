@@ -10,20 +10,16 @@
 #include <utility>
 #include <vector>
 
-#include "brave/components/brave_rewards/browser/rewards_service.h"
+#include "base/memory/weak_ptr.h"
+#include "bat/ledger/mojom_structs.h"
 #include "brave/browser/brave_rewards/rewards_service_factory.h"
+#include "brave/browser/ui/webui/brave_webui_source.h"
+#include "brave/components/brave_rewards/browser/rewards_service.h"
 #include "brave/components/brave_rewards/resources/grit/brave_rewards_internals_generated_map.h"
+#include "brave/components/brave_rewards/resources/grit/brave_rewards_resources.h"
 #include "chrome/browser/profiles/profile.h"
 #include "content/public/browser/web_ui.h"
 #include "content/public/browser/web_ui_message_handler.h"
-#include "bat/ledger/mojom_structs.h"
-
-#if defined(BRAVE_CHROMIUM_BUILD)
-#include "brave/components/brave_rewards/resources/grit/brave_rewards_resources.h"
-#else
-#include "components/grit/components_resources.h"
-#include "components/grit/components_scaled_resources.h"
-#endif
 
 namespace {
 
@@ -56,10 +52,9 @@ class RewardsInternalsDOMHandler : public content::WebUIMessageHandler {
   void OnGetFulllLog(const std::string& log);
   void ClearLog(const base::ListValue* args);
   void OnClearLog(const bool success);
-  void GetUpholdWallet(const base::ListValue* args);
-  void OnGetUpholdWallet(
-      const ledger::type::Result result,
-      ledger::type::UpholdWalletPtr wallet);
+  void GetExternalWallet(const base::ListValue* args);
+  void OnGetExternalWallet(const ledger::type::Result result,
+                           ledger::type::ExternalWalletPtr wallet);
   void GetEventLogs(const base::ListValue* args);
   void OnGetEventLogs(ledger::type::EventLogs logs);
 
@@ -113,9 +108,8 @@ void RewardsInternalsDOMHandler::RegisterMessages() {
           base::Unretained(this)));
   web_ui()->RegisterMessageCallback(
       "brave_rewards_internals.getExternalWallet",
-      base::BindRepeating(
-          &RewardsInternalsDOMHandler::GetUpholdWallet,
-          base::Unretained(this)));
+      base::BindRepeating(&RewardsInternalsDOMHandler::GetExternalWallet,
+                          base::Unretained(this)));
   web_ui()->RegisterMessageCallback(
       "brave_rewards_internals.getEventLogs",
       base::BindRepeating(
@@ -339,20 +333,20 @@ void RewardsInternalsDOMHandler::OnClearLog(const bool success) {
       base::Value(""));
 }
 
-void RewardsInternalsDOMHandler::GetUpholdWallet(const base::ListValue* args) {
+void RewardsInternalsDOMHandler::GetExternalWallet(
+    const base::ListValue* args) {
   if (!rewards_service_) {
     return;
   }
 
-  rewards_service_->GetUpholdWallet(
-      base::BindOnce(
-          &RewardsInternalsDOMHandler::OnGetUpholdWallet,
-          weak_ptr_factory_.GetWeakPtr()));
+  rewards_service_->GetExternalWallet(
+      base::BindOnce(&RewardsInternalsDOMHandler::OnGetExternalWallet,
+                     weak_ptr_factory_.GetWeakPtr()));
 }
 
-void RewardsInternalsDOMHandler::OnGetUpholdWallet(
+void RewardsInternalsDOMHandler::OnGetExternalWallet(
     const ledger::type::Result result,
-    ledger::type::UpholdWalletPtr wallet) {
+    ledger::type::ExternalWalletPtr wallet) {
   if (!web_ui()->CanCallJavascript()) {
     return;
   }
@@ -409,16 +403,15 @@ void RewardsInternalsDOMHandler::OnGetEventLogs(ledger::type::EventLogs logs) {
 
 BraveRewardsInternalsUI::BraveRewardsInternalsUI(content::WebUI* web_ui,
                                                  const std::string& name)
-    : BasicUI(web_ui,
-              name,
-              kBraveRewardsInternalsGenerated,
-              kBraveRewardsInternalsGeneratedSize,
-              IDR_BRAVE_REWARDS_INTERNALS_HTML) {
+    : WebUIController(web_ui) {
+  CreateAndAddWebUIDataSource(web_ui, name, kBraveRewardsInternalsGenerated,
+                              kBraveRewardsInternalsGeneratedSize,
+                              IDR_BRAVE_REWARDS_INTERNALS_HTML);
+
   auto handler_owner = std::make_unique<RewardsInternalsDOMHandler>();
   RewardsInternalsDOMHandler* handler = handler_owner.get();
   web_ui->AddMessageHandler(std::move(handler_owner));
   handler->Init();
 }
 
-BraveRewardsInternalsUI::~BraveRewardsInternalsUI() {
-}
+BraveRewardsInternalsUI::~BraveRewardsInternalsUI() = default;

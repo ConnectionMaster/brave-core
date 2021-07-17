@@ -1,28 +1,20 @@
 diff --git a/chrome/common/BUILD.gn b/chrome/common/BUILD.gn
-index 4d104f4a9d4da9388c3ef4f7fbb618c00b4c0298..972cecd40c348e5e319e228daa4bd4ec12f7d298 100644
+index 195f082ff6d37c19e37d18170909126c0a8fc47b..4003c4e1ada82097969f7a78eaefc36ed826f06a 100644
 --- a/chrome/common/BUILD.gn
 +++ b/chrome/common/BUILD.gn
-@@ -61,6 +61,7 @@ source_set("channel_info") {
-     "channel_info.h",
-   ]
-   deps = [ "//build:branding_buildflags" ]
-+  if (brave_chromium_build) { deps += [ "//brave/common:channel_info" ] }
-   public_deps = [
-     "//base",
-     "//components/version_info",
-@@ -143,6 +144,7 @@ static_library("common") {
-   ]
+@@ -85,6 +85,7 @@ source_set("channel_info") {
+   } else if (is_posix) {
+     sources += [ "channel_info_posix.cc" ]
+   }
++  public_deps += [ "//brave/common:channel_info" ]
+ }
  
-   public_deps = [
-+    "//brave/common",
-     ":available_offline_content_mojom",
-     ":buildflags",
-     ":channel_info",
-@@ -540,6 +542,7 @@ static_library("non_code_constants") {
+ source_set("ini_parser") {
+@@ -545,6 +546,7 @@ static_library("non_code_constants") {
      "//printing/buildflags",
      "//ui/base:buildflags",
    ]
-+  if (brave_chromium_build) { configs += [ "//brave/common:constants_configs" ] }
++  configs += [ "//brave/common:constants_configs" ]
  }
  
  component("chrome_features") {

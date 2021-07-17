@@ -11,23 +11,17 @@
 
 namespace ads {
 
-Statement::Statement(
-    AdRewards* ad_rewards)
-    : ad_rewards_(ad_rewards) {
+Statement::Statement(AdRewards* ad_rewards) : ad_rewards_(ad_rewards) {
   DCHECK(ad_rewards_);
 }
 
 Statement::~Statement() = default;
 
-StatementInfo Statement::Get(
-    const int64_t from_timestamp,
-    const int64_t to_timestamp) const {
+StatementInfo Statement::Get(const int64_t from_timestamp,
+                             const int64_t to_timestamp) const {
   DCHECK(to_timestamp >= from_timestamp);
 
   StatementInfo statement;
-
-  statement.estimated_pending_rewards =
-      ad_rewards_->GetEstimatedPendingRewards();
 
   statement.next_payment_date = ad_rewards_->GetNextPaymentDate();
 
@@ -37,7 +31,7 @@ StatementInfo Statement::Get(
 
   statement.earnings_last_month = GetEarningsForLastMonth();
 
-  statement.transactions =
+  statement.cleared_transactions =
       transactions::GetCleared(from_timestamp, to_timestamp);
 
   statement.uncleared_transactions = transactions::GetUncleared();
@@ -61,6 +55,8 @@ double Statement::GetEarningsForLastMonth() const {
     exploded.month = 12;
     exploded.year--;
   }
+
+  exploded.day_of_month = 1;
 
   base::Time last_month;
   const bool success = base::Time::FromUTCExploded(exploded, &last_month);

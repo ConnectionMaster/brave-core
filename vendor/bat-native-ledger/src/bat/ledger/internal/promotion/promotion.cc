@@ -14,12 +14,13 @@
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "bat/ledger/internal/common/time_util.h"
+#include "bat/ledger/internal/constants.h"
 #include "bat/ledger/internal/credentials/credentials_util.h"
 #include "bat/ledger/internal/ledger_impl.h"
 #include "bat/ledger/internal/legacy/wallet_info_properties.h"
 #include "bat/ledger/internal/promotion/promotion_transfer.h"
 #include "bat/ledger/internal/promotion/promotion_util.h"
-#include "bat/ledger/internal/constants.h"
+#include "bat/ledger/option_keys.h"
 
 #include "wrapper.hpp"  // NOLINT
 
@@ -73,13 +74,12 @@ void HandleExpiredPromotions(
 
 }  // namespace
 
-Promotion::Promotion(LedgerImpl* ledger) :
-    attestation_(std::make_unique<ledger::attestation::AttestationImpl>
-        (ledger)),
-    transfer_(std::make_unique<PromotionTransfer>(ledger)),
-    promotion_server_(
-        std::make_unique<endpoint::PromotionServer>(ledger)),
-    ledger_(ledger) {
+Promotion::Promotion(LedgerImpl* ledger)
+    : attestation_(
+          std::make_unique<ledger::attestation::AttestationImpl>(ledger)),
+      transfer_(std::make_unique<PromotionTransfer>(ledger)),
+      promotion_server_(std::make_unique<endpoint::PromotionServer>(ledger)),
+      ledger_(ledger) {
   DCHECK(ledger_);
   credentials_ = credential::CredentialsFactory::Create(
       ledger_,
@@ -193,7 +193,10 @@ void Promotion::OnGetAllPromotions(
     if (it != promotions.end()) {
       const auto status = it->second->status;
       promotions.erase(item->id);
-      if (status != type::PromotionStatus::ACTIVE) {
+      // Skip any promotions that are in the database and have been processed
+      // in some way.
+      if (status != type::PromotionStatus::ACTIVE &&
+          status != type::PromotionStatus::OVER) {
         continue;
       }
     }
@@ -224,7 +227,7 @@ void Promotion::OnGetAllPromotions(
   // but are not available on the server anymore
   for (const auto& promotion : promotions) {
     if (promotion.second->status != type::PromotionStatus::ACTIVE) {
-      break;
+      continue;
     }
 
     bool found =
@@ -757,7 +760,7 @@ void Promotion::ErrorCredsStatusSaved(const type::Result result) {
   ledger_->database()->GetAllPromotions(retry_callback);
 }
 
-void Promotion::TransferTokens(ledger::ResultCallback callback) {
+void Promotion::TransferTokens(ledger::PostSuggestionsClaimCallback callback) {
   transfer_->Start(callback);
 }
 
@@ -772,6 +775,11 @@ void Promotion::OnLastCheckTimerElapsed() {
 void Promotion::GetTransferableAmount(
     ledger::GetTransferableAmountCallback callback) {
   transfer_->GetAmount(callback);
+}
+
+void Promotion::GetDrainStatus(const std::string& drain_id,
+                               ledger::GetDrainCallback callback) {
+  promotion_server_->get_drain()->Request(drain_id, callback);
 }
 
 }  // namespace promotion

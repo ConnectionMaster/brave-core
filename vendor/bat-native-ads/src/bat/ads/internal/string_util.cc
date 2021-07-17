@@ -5,9 +5,6 @@
 
 #include "bat/ads/internal/string_util.h"
 
-#include <iomanip>
-#include <sstream>
-
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
@@ -17,9 +14,7 @@ namespace ads {
 
 namespace {
 
-std::string Strip(
-    const std::string& value,
-    const std::string& pattern) {
+std::string Strip(const std::string& value, const std::string& pattern) {
   DCHECK(!pattern.empty());
 
   if (value.empty()) {
@@ -30,7 +25,7 @@ std::string Strip(
 
   RE2::GlobalReplace(&stripped_value, pattern, " ");
 
-  base::string16 stripped_value_string16 = base::UTF8ToUTF16(stripped_value);
+  std::u16string stripped_value_string16 = base::UTF8ToUTF16(stripped_value);
 
   stripped_value_string16 =
       base::CollapseWhitespace(stripped_value_string16, true);
@@ -40,26 +35,28 @@ std::string Strip(
 
 }  // namespace
 
-std::string StripNonAlphaCharacters(
-    const std::string& value) {
+std::string StripNonAlphaCharacters(const std::string& value) {
   const std::string escaped_characters =
       RE2::QuoteMeta("!\"#$%&'()*+,-./:<=>?@\\[]^_`{|}~");
 
-  const std::string pattern = base::StringPrintf("[[:cntrl:]]|"
+  const std::string pattern = base::StringPrintf(
+      "[[:cntrl:]]|"
       "\\\\(t|n|v|f|r)|[\\t\\n\\v\\f\\r]|\\\\x[[:xdigit:]][[:xdigit:]]|"
-          "[%s]|\\S*\\d+\\S*", escaped_characters.c_str());
+      "[%s]|\\S*\\d+\\S*",
+      escaped_characters.c_str());
 
   return Strip(value, pattern);
 }
 
-std::string StripNonAlphaNumericCharacters(
-    const std::string& value) {
+std::string StripNonAlphaNumericCharacters(const std::string& value) {
   const std::string escaped_characters =
       RE2::QuoteMeta("!\"#$%&'()*+,-./:<=>?@\\[]^_`{|}~");
 
-  const std::string pattern = base::StringPrintf("[[:cntrl:]]|"
+  const std::string pattern = base::StringPrintf(
+      "[[:cntrl:]]|"
       "\\\\(t|n|v|f|r)|[\\t\\n\\v\\f\\r]|\\\\x[[:xdigit:]][[:xdigit:]]|"
-          "[%s]", escaped_characters.c_str());
+      "[%s]",
+      escaped_characters.c_str());
 
   return Strip(value, pattern);
 }

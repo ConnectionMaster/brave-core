@@ -51,18 +51,6 @@
     "message": "التفاصيل",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "رصيدك",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "نقاط BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "يمكن استخدام ذلك في مكافآت Brave لدعم منشئي المحتوى المفضل لديك. لا يمكن استبدال نقاط الرموز الأساسية للاهتمام بالرموز الأساسية للاهتمام.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "على",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "تم جمع المكافأة المالية التي منحت لك",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "تم تحصيل منحة النقاط",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "أرباح من الإعلانات",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "يرجى عمل نسخة احتياطية عن محفظة Brave الخاصة بك.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "مزيد من المعلومات",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "تم بلوغ الحد الأقصى المخصص للجهاز الواحد",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "لا يمكن التحقق من محفظتك لأنك بلغت الحد الأقصى المسموح به لعمليات التحقق للجهاز الواحد.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "ينتظر حساب Brave Rewards الخاص بك إيداعًا.",
@@ -411,10 +407,6 @@
     "message": "صيغة BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "تشغيل الإعلانات",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "الحصول على أموال مجانًا",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "منحة نقاط مجانية",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "لقد ربحتَ مكافأة إعلانات!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "تمَّ التحقق من المحفظة",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "الانتقال إلى حساب Uphold الخاص بي",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "انتقل إلى حساب $provider$ الخاص بي",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "قطع الاتصال بـ Brave Rewards",
@@ -573,17 +567,9 @@
     "message": "عملة رمزية",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "النقاط",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "منح العملة الرمزية",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "منح النقاط",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "مرحباً، $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "يجب أن يكون لديك عدد 25 عملة BAT كحد أدنى لإنشاء حساب Uphold. يُرجى المحاولة مرة أخرى في وقت لاحق.\n  إذا كان لديك بالفعل حساب Uphold قد تم التحقق منه، فتابع تسجيل الدخول.",
-    "description": "Text for login button"
+    "message": "يجب أن يكون لديك $amount$من البات على الأقل لإنشاء حساب Uphold. إذا قمت بالفعل بمصادقة حساب Uphold؛ فتابع لتسجيل الدخول.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "متصل",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "ملاحظة: ستكون معاملاتك مرئية لـ Uphold بمجرد منح الإذن؛ على سبيل المثال، سيتمكنون من رؤية المرسل إليه ومبالغ الإكراميات التي تدفعها.",
-    "description": "Displayed in login modal for uphold"
+    "message": "ملاحظة: ستكون معاملاتك ظاهرة لـ $provider$ بمجرد أن تقوم بالتفويض؛ على سبيل المثال، سيتمكنون من معرفة المستلم وقيمة عمولاتك.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "اكسب العملات الرمزية وأعطها مرة أخرى",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "اربح العملات الرمزية من خلال عرض الإعلانات التي تحترم الخصوصية ودعم مواقعك المفضلة ومنشئي المحتوى تلقائياً.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "كم مرة تريد مشاهدة الإعلانات؟",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(إعلانات في الساعة) ",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "ما مقدار الدعم الشهري الذي تريد تقديمه لمنشئي المحتوى المفضلين لديك؟",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(من أرباح إعلاناتك)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "متى تحصل على المكافآت",
+    "message": "متى تحصل على المكافآت؟",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "يمكن استخدام العملات الرمزية بخلاف دعم المنشئين. يمكنك شراء محتوى رقمي وسلع أخرى عندما يأتي التجار على متن السفينة.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "أخيراً، دعنا نجهزك على الإعدادات الأساسية",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "يمكنك تغيير هذا لاحقاً.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "مرحى، أنت جاهز تماماً!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "باستخدام Brave Rewards، فأنت تساعد في جعل الويب مكاناً أفضل للجميع. وهذا رائع!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "تحقق من محفظتك",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "من أجل سحب الرموز المميزة التي تربحها مقابل عرض الإعلانات، ستحتاج إلى التحقق من محفظتك.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "القيام بذلك لاحقًا",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "التحقق من محفظتي",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "محفظة bitFlyer هي خدمة تديرها شركة bitFlyer، Inc",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "من خلال التحقق من محفظتك وربطها بحساب bitFlyer، ستتمكن من تخزين الرموز المميزة التي اكتسبتها من خلال مكآفات Brave وإدارتها بسهولة أكبر",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$اعرف المزيد$link_end$ عن كيفية الربط بين متصفح Brave الخاص بك وحسابك على bitFlyer.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

@@ -17,8 +17,7 @@ const char kAdsWereDisabled[] = "brave.brave_ads.were_disabled";
 const char kHasAdsP3AState[] = "brave.brave_ads.has_p3a_state";
 
 // Prefix for preference names pertaining to p2a weekly metrics
-const char kP2AStoragePrefNamePrefix[] =
-    "brave.weekly_storage.";
+const char kP2AStoragePrefNamePrefix[] = "brave.weekly_storage.";
 
 // Stores whether we should show the My First Ad notification
 const char kShouldShowMyFirstAdNotification[] =
@@ -31,10 +30,16 @@ const char kSupportedCountryCodesSchemaVersion[] =
     "brave.brave_ads.supported_regions_schema_version_number";
 const int kSupportedCountryCodesSchemaVersionNumber = 9;
 
+// Stores the ad notifications last screen position
+const char kAdNotificationLastScreenPositionX[] =
+    "brave.brave_ads.ad_notification.last_screen_position_x";
+const char kAdNotificationLastScreenPositionY[] =
+    "brave.brave_ads.ad_notification.last_screen_position_y";
+
 // Stores the preferences version number
 const char kVersion[] = "brave.brave_ads.prefs.version";
 
-const int kCurrentVersionNumber = 9;
+const int kCurrentVersionNumber = 10;
 
 }  // namespace prefs
 

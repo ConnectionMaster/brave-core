@@ -1,0 +1,12 @@
+diff --git a/components/sync/engine/model_type_worker.h b/components/sync/engine/model_type_worker.h
+index a2ee15b2842a30437519196547bc67a161434ea7..a596d1b562a06dec774f3dfcdb2322df0f42c5ab 100644
+--- a/components/sync/engine/model_type_worker.h
++++ b/components/sync/engine/model_type_worker.h
+@@ -156,6 +156,7 @@ class ModelTypeWorker : public UpdateHandler,
+ 
+   bool IsEncryptionEnabledForTest() const { return encryption_enabled_; }
+ 
++ BRAVE_MODEL_TYPE_WORKER_H_
+  private:
+   struct UnknownEncryptionKeyInfo {
+     // Not increased if the cryptographer knows it's in a pending state

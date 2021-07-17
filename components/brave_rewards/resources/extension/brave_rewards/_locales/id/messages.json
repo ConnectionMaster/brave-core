@@ -51,18 +51,6 @@
     "message": "Rincian",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Saldo Anda",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Poin BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "dapat digunakan di Brave Rewards untuk memberi kontribusi kepada kreator konten favorit Anda. BAT Points tidak dapat ditukarkan dengan BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "di",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Hibah Token Diklaim",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Hibah Poin Telah Diambil",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Pendapatan dari Iklan",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Harap buat cadangan dompet Brave Anda.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Pelajari Selengkapnya",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Batas Peranti Tercapai",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Dompet Anda tidak dapat diverifikasi karena Anda telah mencapai batas maksimal perangkat terverifikasi.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Akun Brave Rewards Anda menunggu deposit.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Nyalakan Iklan",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Hibah Token Gratis",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Hibah Poin Gratis",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Anda memperoleh Reward Iklan!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Dompet Terverifikasi",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Ke akun Uphold saya",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Masuk ke akun $provider$ saya",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Putuskan dari Brave Reward",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "poin",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Hibah Token",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Hibah Poin",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Halo, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Anda harus memiliki minimal 25 BAT untuk membuat akun Uphold. Silakan coba lagi nanti. \nJika Anda sudah memiliki akun Uphold yang diverifikasi, lanjutkan untuk login.",
-    "description": "Text for login button"
+    "message": "Anda harus memiliki minimal $amount$ BAT untuk membuat akun Uphold. Jika Anda telah memiliki akun Uphold yang terverifikasi, lanjutkan untuk login.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Tersambung",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Catatan: Transaksi Anda akan terlihat untuk Dijalankan setelah Anda mengotorisasi; misalnya, mereka akan dapat melihat penerima dan jumlah tip Anda.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Catatan: transaksi Anda akan terlihat oleh $provider$ setelah Anda mengotorisasi; yakni, mereka akan dapat melihat penerima dan jumlah tip Anda.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Dapatkan Token & Berikan Balik\n",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Dapatkan token dengan melihat iklan yang menghormati privasi dan dukung situs dan pembuat konten favorit Anda secara otomatis.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Seberapa sering Anda ingin melihat iklan?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(iklan per jam)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Berapa besar dukungan bulanan yang ingin Anda berikan kepada pembuat konten favorit Anda?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(dari penghasilan iklan Anda)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Kapan Anda menerima imbalan",
+    "message": "Kapan Anda menerima imbalan?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Token dapat digunakan selain untuk mendukung kreator. Anda dapat membeli konten digital dan barang-barang lainnya di merchant.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Terakhir, mari kita siapkan setelan dasar",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Anda bisa mengubahnya nanti.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Cihuy, Anda kini siap!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Dengan menggunakan Brave Rewards Anda membantu menjadikan web tempat yang lebih baik bagi semua orang. Dan itu keren!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Verifikasikan dompet Anda",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Agar dapat menarik token yang Anda dapatkan dari menonton iklan, Anda perlu memverifikasi dompet Anda.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Lakukan nanti",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Verifikasi dompet saya",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Dompet bitFlyer adalah layanan yang dikelola oleh bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Dengan memverifikasi dompet Anda dan menautkannya ke akun bitFlyer, Anda akan dapat dengan lebih mudah menyimpan dan mengelola token yang telah Anda dapatkan melalui program Brave Rewards.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Pelajari lebih lanjut$link_end$ tentang cara menautkan peramban Brave Anda dengan akun bitFlyer Anda.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

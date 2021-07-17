@@ -3,23 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_FEATURES_FEATURES_H_
-#define BAT_ADS_INTERNAL_FEATURES_FEATURES_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_FEATURES_FEATURES_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_FEATURES_FEATURES_H_
 
-#include "base/optional.h"
+#include <string>
+
+#include "base/metrics/field_trial.h"
+#include "third_party/abseil-cpp/absl/types/optional.h"
 
 namespace ads {
 namespace features {
 
-bool HasActiveStudy();
-
-base::Optional<std::string> GetStudy();
-
-base::Optional<std::string> GetGroup();
+base::FieldTrial::ActiveGroups GetStudies();
 
 void Log();
 
 }  // namespace features
 }  // namespace ads
 
-#endif  // BAT_ADS_INTERNAL_FEATURES_FEATURES_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_FEATURES_FEATURES_H_

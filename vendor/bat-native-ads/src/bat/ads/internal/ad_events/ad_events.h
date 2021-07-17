@@ -3,33 +3,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_AD_EVENTS_AD_EVENTS_H_
-#define BAT_ADS_INTERNAL_AD_EVENTS_AD_EVENTS_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_AD_EVENTS_AD_EVENTS_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_AD_EVENTS_AD_EVENTS_H_
 
+#include <cstdint>
+#include <deque>
 #include <functional>
 
+#include "bat/ads/public/interfaces/ads.mojom.h"
 #include "bat/ads/result.h"
 
 namespace ads {
 
 using AdEventCallback = std::function<void(const Result)>;
 
+class AdType;
 class ConfirmationType;
 struct AdEventInfo;
 struct AdInfo;
 
-void LogAdEvent(
-    const AdInfo& ad,
-    const ConfirmationType& confirmation_type,
-    AdEventCallback callback);
+void LogAdEvent(const AdInfo& ad,
+                const ConfirmationType& confirmation_type,
+                AdEventCallback callback);
 
-void LogAdEvent(
-    const AdEventInfo& ad_event,
-    AdEventCallback callback);
+void LogAdEvent(const AdEventInfo& ad_event, AdEventCallback callback);
 
-void PurgeExpiredAdEvents(
-    AdEventCallback callback);
+void PurgeExpiredAdEvents(AdEventCallback callback);
+void PurgeOrphanedAdEvents(const mojom::BraveAdsAdType ad_type,
+                           AdEventCallback callback);
+
+void RebuildAdEventsFromDatabase();
+
+void RecordAdEvent(const AdEventInfo& ad_event);
+
+std::deque<uint64_t> GetAdEvents(const AdType& ad_type,
+                                 const ConfirmationType& confirmation_type);
 
 }  // namespace ads
 
-#endif  // BAT_ADS_INTERNAL_AD_EVENTS_AD_EVENTS_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_AD_EVENTS_AD_EVENTS_H_

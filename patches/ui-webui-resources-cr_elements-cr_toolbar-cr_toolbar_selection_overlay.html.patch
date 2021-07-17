@@ -1,12 +1,9 @@
 diff --git a/ui/webui/resources/cr_elements/cr_toolbar/cr_toolbar_selection_overlay.html b/ui/webui/resources/cr_elements/cr_toolbar/cr_toolbar_selection_overlay.html
-index 28243f0a16f655219d18ef2f780a74d343fdd395..88b1bc1563f91134f210a6bdefe900d8f9903bfe 100644
+index 2cd069ff2f489f8662cc9ca30008e6bbd3fab539..e284948ec7aff079f266579b7c6d5c88876c54c9 100644
 --- a/ui/webui/resources/cr_elements/cr_toolbar/cr_toolbar_selection_overlay.html
 +++ b/ui/webui/resources/cr_elements/cr_toolbar/cr_toolbar_selection_overlay.html
-@@ -7,6 +7,7 @@
- 
- <dom-module id="cr-toolbar-selection-overlay">
-   <template>
-+    <link rel="import" type="css" href="chrome://brave-resources/br_elements/br_toolbar/br_toolbar_selection_overlay_overrides.css">
+@@ -1,3 +1,4 @@
++<link rel="import" type="css" href="chrome://brave-resources/br_elements/br_toolbar/br_toolbar_selection_overlay_overrides.css">
      <style>
        :host {
          background-color: white;

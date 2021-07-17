@@ -16,8 +16,7 @@ namespace {
 
 const char kEmptyCatalog[] = "empty_catalog.json";
 
-const char kCatalogWithSingleCampaign[] =
-    "catalog_with_single_campaign.json";
+const char kCatalogWithSingleCampaign[] = "catalog_with_single_campaign.json";
 
 const char kCatalogWithMultipleCampaigns[] =
     "catalog_with_multiple_campaigns.json";
@@ -119,6 +118,27 @@ class BatAdsCatalogTest : public UnitTestBase {
     catalog_creative_promoted_content_ads.push_back(
         catalog_creative_promoted_content_ad);
 
+    // Creative Inline Content Ads
+    CatalogCreativeInlineContentAdList catalog_creative_inline_content_ads;
+
+    CatalogCreativeInlineContentAdInfo catalog_creative_inline_content_ad;
+    catalog_creative_inline_content_ad.creative_instance_id =
+        "30db5f7b-dba3-48a3-b299-c9bd9c67da65";
+    CatalogTypeInfo catalog_type_inline_content_ad_type;
+    catalog_type_inline_content_ad_type.code = "inline_content_all_v1";
+    catalog_type_inline_content_ad_type.name = "inline_content";
+    catalog_type_inline_content_ad_type.platform = "all";
+    catalog_type_inline_content_ad_type.version = 1;
+    catalog_creative_promoted_content_ad.type =
+        catalog_type_inline_content_ad_type;
+    catalog_creative_inline_content_ad.payload.title = "Inline Content 1";
+    catalog_creative_inline_content_ad.payload.description =
+        "Test Inline Content Ad Campaign 1";
+    catalog_creative_inline_content_ad.payload.target_url =
+        "https://brave.com/1/inline_content_ad";
+    catalog_creative_inline_content_ads.push_back(
+        catalog_creative_inline_content_ad);
+
     // Conversions
     ConversionList conversions;
 
@@ -137,11 +157,16 @@ class BatAdsCatalogTest : public UnitTestBase {
     catalog_creative_set.creative_set_id =
         "340c927f-696e-4060-9933-3eafc56c3f31";
     catalog_creative_set.per_day = 5;
+    catalog_creative_set.per_week = 6;
+    catalog_creative_set.per_month = 7;
+    catalog_creative_set.split_test_group = "GroupB";
     catalog_creative_set.total_max = 100;
     catalog_creative_set.segments = catalog_segments;
     catalog_creative_set.oses = catalog_oses;
     catalog_creative_set.creative_ad_notifications =
         catalog_creative_ad_notifications;
+    catalog_creative_set.creative_inline_content_ads =
+        catalog_creative_inline_content_ads;
     catalog_creative_set.creative_new_tab_page_ads =
         catalog_creative_new_tab_page_ads;
     catalog_creative_set.creative_promoted_content_ads =
@@ -273,6 +298,27 @@ class BatAdsCatalogTest : public UnitTestBase {
     catalog_creative_promoted_content_ads.push_back(
         catalog_creative_promoted_content_ad);
 
+    // Creative Inline Content Ads
+    CatalogCreativeInlineContentAdList catalog_creative_inline_content_ads;
+
+    CatalogCreativeInlineContentAdInfo catalog_creative_inline_content_ad;
+    catalog_creative_inline_content_ad.creative_instance_id =
+        "de54add5-ba76-469d-891f-b4d9f8e09b3d";
+    CatalogTypeInfo catalog_type_inline_content_ad_type;
+    catalog_type_inline_content_ad_type.code = "inline_content_all_v1";
+    catalog_type_inline_content_ad_type.name = "inline_content";
+    catalog_type_inline_content_ad_type.platform = "all";
+    catalog_type_inline_content_ad_type.version = 1;
+    catalog_creative_promoted_content_ad.type =
+        catalog_type_inline_content_ad_type;
+    catalog_creative_inline_content_ad.payload.title = "Inline Content 2";
+    catalog_creative_inline_content_ad.payload.description =
+        "Test Inline Content Ad Campaign 2";
+    catalog_creative_inline_content_ad.payload.target_url =
+        "https://brave.com/2/inline_content_ad";
+    catalog_creative_inline_content_ads.push_back(
+        catalog_creative_inline_content_ad);
+
     // Conversions
     ConversionList conversions;
 
@@ -281,6 +327,7 @@ class BatAdsCatalogTest : public UnitTestBase {
     conversion.type = "postclick";
     conversion.url_pattern = "https://www.brave.com/2/*";
     conversion.observation_window = 7;
+    conversion.advertiser_public_key = "";
     conversion.expiry_timestamp = 4103049599;
     conversions.push_back(conversion);
 
@@ -291,6 +338,8 @@ class BatAdsCatalogTest : public UnitTestBase {
     catalog_creative_set.creative_set_id =
         "741cd2ba-3100-45f2-be1e-acedd24e0067";
     catalog_creative_set.per_day = 10;
+    catalog_creative_set.per_week = 11;
+    catalog_creative_set.per_month = 12;
     catalog_creative_set.total_max = 1000;
     catalog_creative_set.segments = catalog_segments;
     catalog_creative_set.oses = catalog_oses;
@@ -337,10 +386,9 @@ class BatAdsCatalogTest : public UnitTestBase {
   }
 };
 
-TEST_F(BatAdsCatalogTest,
-    ParseCatalog) {
+TEST_F(BatAdsCatalogTest, ParseCatalog) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kCatalogWithMultipleCampaigns);
   ASSERT_TRUE(opt_value.has_value());
 
@@ -354,10 +402,9 @@ TEST_F(BatAdsCatalogTest,
   EXPECT_TRUE(success);
 }
 
-TEST_F(BatAdsCatalogTest,
-    ParseEmptyCatalog) {
+TEST_F(BatAdsCatalogTest, ParseEmptyCatalog) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kEmptyCatalog);
   ASSERT_TRUE(opt_value.has_value());
 
@@ -371,8 +418,7 @@ TEST_F(BatAdsCatalogTest,
   EXPECT_TRUE(success);
 }
 
-TEST_F(BatAdsCatalogTest,
-    InvalidCatalog) {
+TEST_F(BatAdsCatalogTest, InvalidCatalog) {
   // Arrange
 
   // Act
@@ -383,10 +429,9 @@ TEST_F(BatAdsCatalogTest,
   EXPECT_FALSE(success);
 }
 
-TEST_F(BatAdsCatalogTest,
-    HasChanged) {
+TEST_F(BatAdsCatalogTest, HasChanged) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kCatalogWithMultipleCampaigns);
   ASSERT_TRUE(opt_value.has_value());
 
@@ -403,10 +448,9 @@ TEST_F(BatAdsCatalogTest,
   EXPECT_TRUE(has_changed);
 }
 
-TEST_F(BatAdsCatalogTest,
-    HasNotChanged) {
+TEST_F(BatAdsCatalogTest, HasNotChanged) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kCatalogWithMultipleCampaigns);
   ASSERT_TRUE(opt_value.has_value());
 
@@ -423,10 +467,9 @@ TEST_F(BatAdsCatalogTest,
   EXPECT_FALSE(has_changed);
 }
 
-TEST_F(BatAdsCatalogTest,
-    GetId) {
+TEST_F(BatAdsCatalogTest, GetId) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kCatalogWithMultipleCampaigns);
   ASSERT_TRUE(opt_value.has_value());
 
@@ -442,10 +485,9 @@ TEST_F(BatAdsCatalogTest,
   EXPECT_EQ("29e5c8bc0ba319069980bb390d8e8f9b58c05a20", id);
 }
 
-TEST_F(BatAdsCatalogTest,
-    GetVersion) {
+TEST_F(BatAdsCatalogTest, GetVersion) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kCatalogWithMultipleCampaigns);
   ASSERT_TRUE(opt_value.has_value());
 
@@ -458,13 +500,12 @@ TEST_F(BatAdsCatalogTest,
   const int version = catalog.GetVersion();
 
   // Assert
-  EXPECT_EQ(6, version);
+  EXPECT_EQ(8, version);
 }
 
-TEST_F(BatAdsCatalogTest,
-    GetPing) {
+TEST_F(BatAdsCatalogTest, GetPing) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kCatalogWithMultipleCampaigns);
   ASSERT_TRUE(opt_value.has_value());
 
@@ -480,10 +521,9 @@ TEST_F(BatAdsCatalogTest,
   EXPECT_EQ(7200, ping);
 }
 
-TEST_F(BatAdsCatalogTest,
-    GetIssuers) {
+TEST_F(BatAdsCatalogTest, GetIssuers) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kCatalogWithMultipleCampaigns);
   ASSERT_TRUE(opt_value.has_value());
 
@@ -514,10 +554,9 @@ TEST_F(BatAdsCatalogTest,
   EXPECT_EQ(expected_catalog_issuers, catalog_issuers);
 }
 
-TEST_F(BatAdsCatalogTest,
-    GetCampaign) {
+TEST_F(BatAdsCatalogTest, GetCampaign) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kCatalogWithSingleCampaign);
   ASSERT_TRUE(opt_value.has_value());
 
@@ -537,10 +576,9 @@ TEST_F(BatAdsCatalogTest,
   EXPECT_EQ(expected_catalog_campaigns, catalog_campaigns);
 }
 
-TEST_F(BatAdsCatalogTest,
-    GetCampaigns) {
+TEST_F(BatAdsCatalogTest, GetCampaigns) {
   // Arrange
-  const base::Optional<std::string> opt_value =
+  const absl::optional<std::string> opt_value =
       ReadFileFromTestPathToString(kCatalogWithMultipleCampaigns);
   ASSERT_TRUE(opt_value.has_value());
 

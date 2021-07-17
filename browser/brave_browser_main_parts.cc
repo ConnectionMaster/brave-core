@@ -5,8 +5,11 @@
 
 #include "brave/browser/brave_browser_main_parts.h"
 
+#include <utility>
+
 #include "base/command_line.h"
 #include "brave/browser/browsing_data/brave_clear_browsing_data.h"
+#include "brave/browser/ethereum_remote_client/buildflags/buildflags.h"
 #include "brave/common/brave_constants.h"
 #include "brave/common/pref_names.h"
 #include "brave/components/brave_sync/buildflags/buildflags.h"
@@ -16,6 +19,7 @@
 #include "components/prefs/pref_service.h"
 #include "components/sync/driver/sync_driver_switches.h"
 #include "content/public/browser/render_frame_host.h"
+#include "extensions/buildflags/buildflags.h"
 #include "media/base/media_switches.h"
 
 #if BUILDFLAG(ENABLE_TOR)
@@ -23,6 +27,7 @@
 #include "base/files/file_util.h"
 #include "brave/components/tor/tor_constants.h"
 #include "chrome/browser/browser_process_impl.h"
+#include "chrome/browser/profiles/profile_attributes_init_params.h"
 #include "chrome/browser/profiles/profile_attributes_storage.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/profiles/profile_metrics.h"
@@ -34,7 +39,7 @@
 #include "brave/browser/infobars/crypto_wallets_infobar_delegate.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_finder.h"
-#include "chrome/browser/infobars/infobar_service.h"
+#include "components/infobars/content/content_infobar_manager.h"
 #include "content/public/browser/web_contents.h"
 #endif
 
@@ -44,9 +49,15 @@
 
 #if BUILDFLAG(ENABLE_BRAVE_SYNC) && !defined(OS_ANDROID)
 #include "brave/browser/infobars/sync_v2_migrate_infobar_delegate.h"
+#include "chrome/browser/sync/profile_sync_service_factory.h"
 #include "components/sync/driver/sync_service.h"
 #include "components/sync/driver/sync_user_settings.h"
-#include "chrome/browser/sync/profile_sync_service_factory.h"
+#endif
+
+#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED) && BUILDFLAG(ENABLE_EXTENSIONS)
+#include "brave/browser/extensions/brave_component_loader.h"
+#include "chrome/browser/extensions/extension_service.h"
+#include "extensions/browser/extension_system.h"
 #endif
 
 void BraveBrowserMainParts::PostBrowserStart() {
@@ -63,14 +74,14 @@ void BraveBrowserMainParts::PostBrowserStart() {
     // because we will hit DCHECK(!GetProfileAttributesWithPath(...))  in
     // ProfileInfoCache::DeleteProfileFromCache when we trying to delete it
     // without this being added into the storage first.
-    ProfileAttributesEntry* entry = nullptr;
     ProfileAttributesStorage& storage =
         profile_manager->GetProfileAttributesStorage();
-    if (!storage.GetProfileAttributesWithPath(tor_legacy_path, &entry)) {
-      storage.AddProfile(tor_legacy_path, base::string16(), std::string(),
-                         base::string16(),
-                         /* is_consented_primary_account*/ false, 0,
-                         std::string(), EmptyAccountId());
+    ProfileAttributesEntry* entry =
+        storage.GetProfileAttributesWithPath(tor_legacy_path);
+    if (!entry) {
+      ProfileAttributesInitParams params;
+      params.profile_path = tor_legacy_path;
+      storage.AddProfile(std::move(params));
     }
 
     profile_manager->MaybeScheduleProfileForDeletion(
@@ -98,20 +109,22 @@ void BraveBrowserMainParts::PostBrowserStart() {
     active_web_contents = browser->tab_strip_model()->GetActiveWebContents();
 
     if (active_web_contents) {
-      InfoBarService* infobar_service =
-          InfoBarService::FromWebContents(active_web_contents);
+      infobars::ContentInfoBarManager* infobar_manager =
+          infobars::ContentInfoBarManager::FromWebContents(active_web_contents);
 
-      if (infobar_service) {
+      if (infobar_manager) {
         BraveConfirmP3AInfoBarDelegate::Create(
-            infobar_service, g_browser_process->local_state());
+            infobar_manager, g_browser_process->local_state());
 #if BUILDFLAG(ENABLE_BRAVE_SYNC)
-      auto* sync_service = ProfileSyncServiceFactory::IsSyncAllowed(profile())
-             ? ProfileSyncServiceFactory::GetForProfile(profile())
-             : nullptr;
-      const bool is_v2_user = sync_service &&
-          sync_service->GetUserSettings()->IsFirstSetupComplete();
-      SyncV2MigrateInfoBarDelegate::Create(infobar_service, is_v2_user,
-          profile(), browser);
+        auto* sync_service =
+            ProfileSyncServiceFactory::IsSyncAllowed(profile())
+                ? ProfileSyncServiceFactory::GetForProfile(profile())
+                : nullptr;
+        const bool is_v2_user =
+            sync_service &&
+            sync_service->GetUserSettings()->IsFirstSetupComplete();
+        SyncV2MigrateInfoBarDelegate::Create(infobar_manager, is_v2_user,
+                                             profile(), browser);
 #endif  // BUILDFLAG(ENABLE_BRAVE_SYNC)
       }
     }
@@ -130,7 +143,7 @@ void BraveBrowserMainParts::PreProfileInit() {
   if (!base::FeatureList::IsEnabled(brave_sync::features::kBraveSync)) {
     // Disable sync temporarily
     if (!command_line->HasSwitch(switches::kDisableSync))
-        command_line->AppendSwitch(switches::kDisableSync);
+      command_line->AppendSwitch(switches::kDisableSync);
   } else {
     // Relaunch after flag changes will still have the switch
     // when switching from disabled to enabled
@@ -147,6 +160,16 @@ void BraveBrowserMainParts::PostProfileInit() {
     content::RenderFrameHost::AllowInjectingJavaScript();
     auto* command_line = base::CommandLine::ForCurrentProcess();
     command_line->AppendSwitch(switches::kDisableBackgroundMediaSuspend);
+  }
+#endif
+
+#if BUILDFLAG(ETHEREUM_REMOTE_CLIENT_ENABLED) && BUILDFLAG(ENABLE_EXTENSIONS)
+  extensions::ExtensionService* service =
+      extensions::ExtensionSystem::Get(profile())->extension_service();
+  if (service) {
+    extensions::ComponentLoader* loader = service->component_loader();
+    static_cast<extensions::BraveComponentLoader*>(loader)
+        ->AddEthereumRemoteClientExtensionOnStartup();
   }
 #endif
 }

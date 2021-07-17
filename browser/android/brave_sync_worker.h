@@ -10,7 +10,7 @@
 #include <string>
 
 #include "base/android/jni_weak_ref.h"
-#include "base/scoped_observer.h"
+#include "base/scoped_multi_source_observation.h"
 #include "components/sync/driver/sync_service.h"
 #include "components/sync/driver/sync_service_observer.h"
 
@@ -29,40 +29,27 @@ class BraveSyncWorker : public syncer::SyncServiceObserver {
                   const base::android::JavaRef<jobject>& obj);
   ~BraveSyncWorker() override;
 
-  void Destroy(JNIEnv* env,
-               const base::android::JavaParamRef<jobject>& jcaller);
+  void Destroy(JNIEnv* env);
 
-  base::android::ScopedJavaLocalRef<jstring> GetSyncCodeWords(
-      JNIEnv* env,
-      const base::android::JavaParamRef<jobject>& jcaller);
+  base::android::ScopedJavaLocalRef<jstring> GetSyncCodeWords(JNIEnv* env);
 
   void SaveCodeWords(JNIEnv* env,
-                     const base::android::JavaParamRef<jobject>& jcaller,
                      const base::android::JavaParamRef<jstring>& passphrase);
 
-  void RequestSync(JNIEnv* env,
-                   const base::android::JavaParamRef<jobject>& jcaller);
+  void RequestSync(JNIEnv* env);
 
-  void FinalizeSyncSetup(JNIEnv* env,
-                         const base::android::JavaParamRef<jobject>& jcaller);
+  void FinalizeSyncSetup(JNIEnv* env);
 
-  bool IsFirstSetupComplete(
-      JNIEnv* env,
-      const base::android::JavaParamRef<jobject>& jcaller);
+  bool IsFirstSetupComplete(JNIEnv* env);
 
-  void ResetSync(JNIEnv* env,
-                 const base::android::JavaParamRef<jobject>& jcaller);
+  void ResetSync(JNIEnv* env);
 
-  bool GetSyncV1WasEnabled(JNIEnv* env,
-                           const base::android::JavaParamRef<jobject>& jcaller);
+  bool GetSyncV1WasEnabled(JNIEnv* env);
 
-  bool GetSyncV2MigrateNoticeDismissed(
-      JNIEnv* env,
-      const base::android::JavaParamRef<jobject>& jcaller);
+  bool GetSyncV2MigrateNoticeDismissed(JNIEnv* env);
 
   void SetSyncV2MigrateNoticeDismissed(
       JNIEnv* env,
-      const base::android::JavaParamRef<jobject>& jcaller,
       bool sync_v2_migration_notice_dismissed);
 
  private:
@@ -70,16 +57,20 @@ class BraveSyncWorker : public syncer::SyncServiceObserver {
   void MarkFirstSetupComplete();
 
   // syncer::SyncServiceObserver implementation.
-  void OnStateChanged(syncer::SyncService* sync) override;
+  void OnStateChanged(syncer::SyncService* service) override;
 
   void OnResetDone();
+
+  void SetEncryptionPassphrase(syncer::SyncService* service);
+  void SetDecryptionPassphrase(syncer::SyncService* service);
 
   JavaObjectWeakGlobalRef weak_java_brave_sync_worker_;
   Profile* profile_ = nullptr;
 
   std::string passphrase_;
 
-  ScopedObserver<syncer::SyncService, syncer::SyncServiceObserver>
+  base::ScopedMultiSourceObservation<syncer::SyncService,
+                                     syncer::SyncServiceObserver>
       sync_service_observer_{this};
   base::WeakPtrFactory<BraveSyncWorker> weak_ptr_factory_{this};
 

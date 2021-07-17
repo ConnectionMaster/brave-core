@@ -1,0 +1,3 @@
+declare_args() {
+  brave_wallet_enabled = true
+}

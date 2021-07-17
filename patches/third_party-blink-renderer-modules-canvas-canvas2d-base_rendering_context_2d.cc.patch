@@ -1,20 +1,20 @@
 diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
-index efc376143b4a1b4d2ba0e36410377947ab35abce..138270b875d3312538f7cc7fff05a4e30789da67 100644
+index aa17d476ab01cf4d8a67e8a4b48babbd8988d623..f582e41da774827ef787ec637956db638e742b3d 100644
 --- a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
 +++ b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
-@@ -1596,6 +1596,7 @@ ImageData* BaseRenderingContext2D::createImageData(
+@@ -2064,6 +2064,7 @@ ImageData* BaseRenderingContext2D::getImageData(
  }
  
- ImageData* BaseRenderingContext2D::getImageData(
+ ImageData* BaseRenderingContext2D::getImageDataInternal(
 +    BRAVE_GET_IMAGE_DATA_PARAMS
      int sx,
      int sy,
      int sw,
-@@ -1683,6 +1684,7 @@ ImageData* BaseRenderingContext2D::getImageData(
-     return nullptr;
+@@ -2181,6 +2182,7 @@ ImageData* BaseRenderingContext2D::getImageDataInternal(
+       DCHECK(!bounds.intersect(SkIRect::MakeXYWH(sx, sy, sw, sh)));
+     }
    }
- 
 +  BRAVE_GET_IMAGE_DATA
-   bool may_have_stray_area =
-       IsAccelerated()  // GPU readback may fail silently.
-       || StaticBitmapImage::MayHaveStrayArea(snapshot, image_data_rect);
+ 
+   if (!IsPaint2D()) {
+     int scaled_time = getScaledElapsedTime(

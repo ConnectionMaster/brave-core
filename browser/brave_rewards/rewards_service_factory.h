@@ -8,9 +8,8 @@
 
 #include "base/memory/singleton.h"
 #include "brave/components/brave_rewards/browser/rewards_service.h"
+#include "chrome/browser/profiles/profile_manager_observer.h"
 #include "components/keyed_service/content/browser_context_keyed_service_factory.h"
-#include "content/public/browser/notification_observer.h"
-#include "content/public/browser/notification_registrar.h"
 
 class Profile;
 
@@ -18,8 +17,7 @@ namespace brave_rewards {
 class RewardsService;
 
 // Singleton that owns all RewardsService and associates them with Profiles.
-class RewardsServiceFactory : public BrowserContextKeyedServiceFactory,
-                              public content::NotificationObserver {
+class RewardsServiceFactory : public BrowserContextKeyedServiceFactory {
  public:
   RewardsServiceFactory(const RewardsServiceFactory&) = delete;
   RewardsServiceFactory& operator=(const RewardsServiceFactory&) = delete;
@@ -34,19 +32,12 @@ class RewardsServiceFactory : public BrowserContextKeyedServiceFactory,
   friend struct base::DefaultSingletonTraits<RewardsServiceFactory>;
 
   RewardsServiceFactory();
-  ~RewardsServiceFactory() override;
+  ~RewardsServiceFactory() override = default;
 
   // BrowserContextKeyedServiceFactory:
   KeyedService* BuildServiceInstanceFor(
       content::BrowserContext* context) const override;
   bool ServiceIsNULLWhileTesting() const override;
-
-  // content::NotificationObserver:
-  void Observe(int type,
-               const content::NotificationSource& source,
-               const content::NotificationDetails& details) override;
-
-  content::NotificationRegistrar registrar_;
 };
 
 }  // namespace brave_rewards

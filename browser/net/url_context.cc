@@ -8,8 +8,8 @@
 #include <memory>
 #include <string>
 
+#include "brave/browser/brave_shields/brave_shields_web_contents_observer.h"
 #include "brave/components/brave_shields/browser/brave_shields_util.h"
-#include "brave/components/brave_shields/browser/brave_shields_web_contents_observer.h"
 #include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
 #include "brave/components/brave_webtorrent/browser/webtorrent_util.h"
 #include "brave/components/ipfs/buildflags/buildflags.h"
@@ -20,10 +20,10 @@
 
 #if BUILDFLAG(IPFS_ENABLED)
 #include "brave/components/ipfs/ipfs_constants.h"
-#include "brave/components/ipfs/ipfs_gateway.h"
+#include "brave/components/ipfs/ipfs_utils.h"
 #include "brave/components/ipfs/pref_names.h"
 #include "chrome/common/channel_info.h"
-#include "components/prefs/testing_pref_service.h"
+#include "components/prefs/pref_service.h"
 #include "components/user_prefs/user_prefs.h"
 #endif
 
@@ -38,8 +38,9 @@ std::string GetUploadData(const network::ResourceRequest& request) {
   }
   const auto* elements = request.request_body->elements();
   for (const network::DataElement& element : *elements) {
-    if (element.type() == network::mojom::DataElementType::kBytes) {
-      upload_data.append(element.bytes(), element.length());
+    if (element.type() == network::mojom::DataElementDataView::Tag::kBytes) {
+      const auto& bytes = element.As<network::DataElementBytes>().bytes();
+      upload_data.append(bytes.begin(), bytes.end());
     }
   }
 
@@ -85,8 +86,6 @@ std::shared_ptr<brave::BraveRequestInfo> BraveRequestInfo::MakeCTX(
       true;
 #endif
 
-  ctx->render_frame_id = request.render_frame_id;
-  ctx->render_process_id = render_process_id;
   ctx->frame_tree_node_id = frame_tree_node_id;
 
   // TODO(iefremov): remove tab_url. Change tab_origin from GURL to Origin.
@@ -106,17 +105,32 @@ std::shared_ptr<brave::BraveRequestInfo> BraveRequestInfo::MakeCTX(
   // |AddChannelRequest| provides only old-fashioned |site_for_cookies|.
   // (See |BraveProxyingWebSocket|).
   if (ctx->tab_origin.is_empty()) {
-    ctx->tab_origin = brave_shields::BraveShieldsWebContentsObserver::
-                          GetTabURLFromRenderFrameInfo(ctx->render_process_id,
-                                                       ctx->render_frame_id,
-                                                       ctx->frame_tree_node_id)
-                              .GetOrigin();
+    content::WebContents* contents =
+        content::WebContents::FromFrameTreeNodeId(ctx->frame_tree_node_id);
+    if (contents) {
+      ctx->tab_origin = contents->GetLastCommittedURL().GetOrigin();
+    }
   }
 
   if (old_ctx) {
     ctx->internal_redirect = old_ctx->internal_redirect;
     ctx->redirect_source = old_ctx->redirect_source;
   }
+
+#if BUILDFLAG(IPFS_ENABLED)
+  auto* prefs = user_prefs::UserPrefs::Get(browser_context);
+  ctx->ipfs_gateway_url =
+      ipfs::GetConfiguredBaseGateway(prefs, chrome::GetChannel());
+  ctx->ipfs_auto_fallback = prefs->GetBoolean(kIPFSAutoRedirectGateway);
+
+  // ipfs:// navigations have no tab origin set, but we want it to be the tab
+  // origin of the gateway so that ad-block in particular won't give up early.
+  if (ipfs::IsLocalGatewayConfigured(prefs) && ctx->tab_origin.is_empty() &&
+      ipfs::IsLocalGatewayURL(ctx->initiator_url)) {
+    ctx->tab_url = ctx->initiator_url;
+    ctx->tab_origin = ctx->initiator_url.GetOrigin();
+  }
+#endif
 
   Profile* profile = Profile::FromBrowserContext(browser_context);
   auto* map = HostContentSettingsMapFactory::GetForProfile(profile);
@@ -137,16 +151,6 @@ std::shared_ptr<brave::BraveRequestInfo> BraveRequestInfo::MakeCTX(
   ctx->upload_data = GetUploadData(request);
 
   ctx->browser_context = browser_context;
-#if BUILDFLAG(IPFS_ENABLED)
-  auto* prefs = user_prefs::UserPrefs::Get(browser_context);
-  bool local = static_cast<ipfs::IPFSResolveMethodTypes>(
-                   prefs->GetInteger(kIPFSResolveMethod)) ==
-               ipfs::IPFSResolveMethodTypes::IPFS_LOCAL;
-  ctx->ipfs_gateway_url =
-      local ? ipfs::GetDefaultIPFSLocalGateway(chrome::GetChannel())
-            : ipfs::GetDefaultIPFSGateway(browser_context);
-  ctx->ipfs_auto_fallback = prefs->GetBoolean(kIPFSAutoRedirectGateway);
-#endif
 
   // TODO(fmarier): remove this once the hacky code in
   // brave_proxying_url_loader_factory.cc is refactored. See

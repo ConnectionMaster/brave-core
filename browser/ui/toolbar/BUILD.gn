@@ -24,6 +24,7 @@ source_set("brave_app_menu_unit_test") {
   ]
 
   deps = [
+    "//build:chromeos_buildflags",
     "//chrome/app:command_ids",
     "//chrome/browser/ui:ui",
     "//chrome/test:test_support",
@@ -31,6 +32,7 @@ source_set("brave_app_menu_unit_test") {
     "//components/sessions:test_support",
     "//components/sync_preferences:sync_preferences",
     "//components/sync_sessions:sync_sessions",
+    "//components/tab_groups:tab_groups",
     "//content/test:test_support",
     "//ui/views:test_support",
   ]

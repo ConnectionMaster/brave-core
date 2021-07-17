@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/net/proxy_config_monitor.cc b/chrome/browser/net/proxy_config_monitor.cc
-index dc1ffcfb6230aec8b54351132e8f22194e0f6b41..9fb1e0919f37f0b4cc0800fd2a291c31efe969e9 100644
+index 55cc762b92193ed3f65b4d0b562202869530e1ac..d3cf6c87b3fd96ddb3895081fd49d2e4c1b97ca7 100644
 --- a/chrome/browser/net/proxy_config_monitor.cc
 +++ b/chrome/browser/net/proxy_config_monitor.cc
-@@ -50,6 +50,7 @@ ProxyConfigMonitor::ProxyConfigMonitor(Profile* profile) {
+@@ -51,6 +51,7 @@ ProxyConfigMonitor::ProxyConfigMonitor(Profile* profile) {
              profile->GetPrefs(), g_browser_process->local_state());
    }
  

@@ -1,3 +1,4 @@
+import("//brave/components/decentralized_dns/buildflags/buildflags.gni")
 import("//brave/components/tor/buildflags/buildflags.gni")
 import("//components/gcm_driver/config.gni")
 
@@ -13,8 +14,10 @@ source_set("profiles") {
     "brave_profile_impl.h",
     "brave_profile_manager.cc",
     "brave_profile_manager.h",
-    "profile_util.cc",
-    "profile_util.h",
+    "brave_renderer_updater.cc",
+    "brave_renderer_updater.h",
+    "brave_renderer_updater_factory.cc",
+    "brave_renderer_updater_factory.h",
   ]
 
   if (is_win) {
@@ -24,8 +27,11 @@ source_set("profiles") {
     ]
   }
 
+  public_deps = [ ":util" ]
+
   deps = [
     "//base",
+    "//brave/browser/brave_ads",
     "//brave/browser/gcm_driver",
     "//brave/common",
     "//brave/common:pref_names",
@@ -33,17 +39,46 @@ source_set("profiles") {
     "//brave/components/brave_rewards/browser",
     "//brave/components/brave_sync:prefs",
     "//brave/components/content_settings/core/browser",
-    "//brave/components/ntp_background_images/common",
+    "//brave/components/decentralized_dns/buildflags",
+    "//brave/components/ipfs/buildflags",
     "//brave/components/tor",
     "//brave/content:browser",
     "//chrome/common",
     "//components/gcm_driver:gcm_buildflags",
+    "//components/keyed_service/content",
+    "//components/keyed_service/core",
     "//components/prefs",
     "//components/search_engines",
+    "//components/signin/public/identity_manager",
+    "//mojo/public/cpp/bindings",
     "//ui/base",
   ]
+
+  if (use_gcm_from_platform) {
+    deps += [ "//brave/browser/gcm_driver" ]
+  }
 
   if (enable_tor) {
     deps += [ "//brave/browser/tor" ]
   }
+}
+
+source_set("util") {
+  # Remove when https://github.com/brave/brave-browser/issues/10648 is resolved
+  check_includes = false
+
+  sources = [
+    "profile_util.cc",
+    "profile_util.h",
+  ]
+
+  deps = [
+    "//base",
+    "//brave/common",
+    "//brave/components/ntp_background_images/common",
+    "//brave/components/search_engines",
+    "//brave/components/tor/buildflags",
+    "//components/prefs",
+    "//content/public/browser",
+  ]
 }

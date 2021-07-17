@@ -129,7 +129,7 @@ interface BatLedger {
 
   FetchBalance() => (ledger.mojom.Result result, ledger.mojom.Balance? balance);
 
-  GetUpholdWallet() => (ledger.mojom.Result result, ledger.mojom.UpholdWallet? wallet);
+  GetExternalWallet(string wallet_type) => (ledger.mojom.Result result, ledger.mojom.ExternalWallet? wallet);
 
   ExternalWalletAuthorization(string wallet_type, map<string, string> args) => (ledger.mojom.Result result, map<string, string> args);
 
@@ -227,7 +227,7 @@ interface BatLedgerClient {
 
   ReconcileStampReset();
 
-  RunDBTransaction(ledger_database.mojom.DBTransaction transaction) => (ledger_database.mojom.DBCommandResponse response);
+  RunDBTransaction(ledger.mojom.DBTransaction transaction) => (ledger.mojom.DBCommandResponse response);
 
   GetCreateScript() => (string script, int32 table_version);
 

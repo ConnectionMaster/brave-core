@@ -1,8 +1,8 @@
 diff --git a/content/common/BUILD.gn b/content/common/BUILD.gn
-index b4fd171feb48b08defb8946f7f2fb87c78fca881..d4d2614fae09375fd7d35e61a8bf8d60238d8639 100644
+index e49ee5420a686e6d1c544452b4d202dfc7093236..f52dad852fe415b027bfb50f01b6e68da37ea5ab 100644
 --- a/content/common/BUILD.gn
 +++ b/content/common/BUILD.gn
-@@ -37,6 +37,7 @@ source_set("common") {
+@@ -42,6 +42,7 @@ source_set("common") {
    visibility = [
      "//content/*",
      "//tools/ipc_fuzzer/message_replay:ipc_fuzzer_replay",

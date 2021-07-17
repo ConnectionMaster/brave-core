@@ -7,6 +7,7 @@
 
 #include <vector>
 
+#include "base/feature_list.h"
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/profiles/profile_util.h"
 #include "brave/browser/ui/brave_pages.h"
@@ -14,16 +15,31 @@
 #include "brave/common/pref_names.h"
 #include "brave/components/brave_rewards/browser/buildflags/buildflags.h"
 #include "brave/components/brave_sync/buildflags/buildflags.h"
-#include "brave/components/brave_wallet/buildflags/buildflags.h"
+#include "brave/components/brave_wallet/common/buildflags/buildflags.h"
+#include "brave/components/ipfs/buildflags/buildflags.h"
+#include "brave/components/sidebar/buildflags/buildflags.h"
+#include "brave/components/speedreader/features.h"
 #include "chrome/app/chrome_command_ids.h"
+#include "chrome/browser/browser_process.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
+#include "chrome/common/pref_names.h"
 #include "components/prefs/pref_service.h"
 
 #if BUILDFLAG(ENABLE_BRAVE_SYNC)
 #include "components/sync/driver/sync_driver_switches.h"
+#endif
+
+#if BUILDFLAG(ENABLE_SIDEBAR)
+#include "brave/browser/ui/sidebar/sidebar_utils.h"
+#endif
+
+#if BUILDFLAG(IPFS_ENABLED)
+#include "brave/components/ipfs/ipfs_constants.h"
+#include "brave/components/ipfs/ipfs_utils.h"
+#include "brave/components/ipfs/pref_names.h"
 #endif
 
 namespace {
@@ -122,9 +138,24 @@ void BraveBrowserCommandController::InitBraveCommandState() {
 #if BUILDFLAG(ENABLE_TOR)
   UpdateCommandForTor();
 #endif
-  UpdateCommandEnabled(IDC_ADD_NEW_PROFILE, !is_guest_session);
-  UpdateCommandEnabled(IDC_OPEN_GUEST_PROFILE, !is_guest_session);
-  UpdateCommandEnabled(IDC_TOGGLE_SPEEDREADER, true);
+  UpdateCommandForSidebar();
+  bool add_new_profile_enabled = !is_guest_session;
+  bool open_guest_profile_enabled = !is_guest_session;
+  if (!is_guest_session) {
+    if (PrefService* local_state = g_browser_process->local_state()) {
+      add_new_profile_enabled =
+          local_state->GetBoolean(prefs::kBrowserAddPersonEnabled);
+      open_guest_profile_enabled =
+          local_state->GetBoolean(prefs::kBrowserGuestModeEnabled);
+    }
+  }
+  UpdateCommandEnabled(IDC_ADD_NEW_PROFILE, add_new_profile_enabled);
+  UpdateCommandEnabled(IDC_OPEN_GUEST_PROFILE, open_guest_profile_enabled);
+
+  if (base::FeatureList::IsEnabled(speedreader::kSpeedreaderFeature)) {
+    UpdateCommandEnabled(IDC_SPEEDREADER_ICON_ONCLICK, true);
+    UpdateCommandEnabled(IDC_DISTILL_PAGE, false);
+  }
 }
 
 void BraveBrowserCommandController::UpdateCommandForBraveRewards() {
@@ -149,12 +180,21 @@ void BraveBrowserCommandController::UpdateCommandForTor() {
 }
 #endif
 
+void BraveBrowserCommandController::UpdateCommandForSidebar() {
+#if BUILDFLAG(ENABLE_SIDEBAR)
+  if (sidebar::CanUseSidebar(browser_->profile()))
+    UpdateCommandEnabled(IDC_SIDEBAR_SHOW_OPTION_MENU, true);
+#endif
+}
+
 void BraveBrowserCommandController::UpdateCommandForBraveSync() {
   UpdateCommandEnabled(IDC_SHOW_BRAVE_SYNC, true);
 }
 
 void BraveBrowserCommandController::UpdateCommandForBraveWallet() {
   UpdateCommandEnabled(IDC_SHOW_BRAVE_WALLET, true);
+  UpdateCommandEnabled(IDC_SHOW_BRAVE_WALLET_PANEL, true);
+  UpdateCommandEnabled(IDC_CLOSE_BRAVE_WALLET_PANEL, true);
 }
 
 bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
@@ -211,8 +251,14 @@ bool BraveBrowserCommandController::ExecuteBraveCommandWithDisposition(
     case IDC_OPEN_GUEST_PROFILE:
       brave::OpenGuestProfile();
       break;
-    case IDC_TOGGLE_SPEEDREADER:
-      brave::ToggleSpeedreader(browser_);
+    case IDC_SPEEDREADER_ICON_ONCLICK:
+      brave::MaybeDistillAndShowSpeedreaderBubble(browser_);
+      break;
+    case IDC_SHOW_BRAVE_WALLET_PANEL:
+      brave::ShowWalletBubble(browser_);
+      break;
+    case IDC_CLOSE_BRAVE_WALLET_PANEL:
+      brave::CloseWalletBubble(browser_);
       break;
     default:
       LOG(WARNING) << "Received Unimplemented Command: " << id;

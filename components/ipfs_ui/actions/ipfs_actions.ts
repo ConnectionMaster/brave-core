@@ -10,9 +10,9 @@ import { types } from '../constants/ipfs_types'
 
 export const getConnectedPeers = () => action(types.IPFS_GET_CONNECTED_PEERS)
 
-export const onGetConnectedPeers = (peerCount: number) =>
+export const onGetConnectedPeers = (connectedPeers: IPFS.ConnectedPeers) =>
   action(types.IPFS_ON_GET_CONNECTED_PEERS, {
-    peerCount
+    connectedPeers
   })
 
 export const getAddressesConfig = () => action(types.IPFS_GET_ADDRESSES_CONFIG)
@@ -29,5 +29,35 @@ export const onGetDaemonStatus = (daemonStatus: IPFS.DaemonStatus) =>
     daemonStatus
   })
 
+export const onInstallationProgress = (installationProgress: IPFS.InstallationProgress) =>
+  action(types.IPFS_ON_INSTALLATION_PROGRESS, {
+    installationProgress
+  })
+
+export const getRepoStats = () => action(types.IPFS_GET_REPO_STATS)
+
+export const onGetRepoStats = (repoStats: IPFS.RepoStats) =>
+  action(types.IPFS_ON_GET_REPO_STATS, {
+    repoStats
+  })
+
+export const getNodeInfo = () => action(types.IPFS_GET_NODE_INFO)
+
+export const onGetNodeInfo = (nodeInfo: IPFS.NodeInfo) =>
+  action(types.IPFS_ON_GET_NODE_INFO, {
+    nodeInfo
+  })
+
 export const launchDaemon = () => action(types.IPFS_LAUNCH_DAEMON)
 export const shutdownDaemon = () => action(types.IPFS_SHUTDOWN_DAEMON)
+export const restartDaemon = () => action(types.IPFS_RESTART_DAEMON)
+export const installDaemon = () => action(types.IPFS_INSTALL_DAEMON)
+export const openNodeWebUI = () => action(types.IPFS_OPEN_NODE_WEBUI)
+export const openPeersWebUI = () => action(types.IPFS_OPEN_PEERS_WEBUI)
+
+export const garbageCollection = () => action(types.IPFS_GARBAGE_COLLECTION)
+
+export const onGarbageCollection = (garbageCollectionStatus: IPFS.GarbageCollectionStatus) =>
+  action(types.IPFS_ON_GARBAGE_COLLECTION, {
+    garbageCollectionStatus
+  })

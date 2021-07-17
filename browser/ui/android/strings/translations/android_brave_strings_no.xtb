@@ -2,38 +2,42 @@
 <!DOCTYPE translationbundle>
 <translationbundle lang="no">
 <translation id="7307834434086582547">Slå Brave Shields på eller av</translation>
-<translation id="6303294677342628402">Skjold</translation>
-<translation id="6132506775968708399">Blokker tredjeparts informasjonskapsler</translation>
-<translation id="7835726359440951858">Blokker annonser og sporingskapsler</translation>
 <translation id="3570081523466826008">Oppgrader tilkoblinger til HTTPS</translation>
+<translation id="2278950434998763147">Åpner enkelte nettsteder med en trygg HTTPS-tilkobling i stedet for standard HTTP.</translation>
 <translation id="94154759592465111">Blokker skript</translation>
-<translation id="7458422973722236530">Fingeravtrykkbeskyttelse</translation>
+<translation id="3518266709656143462">Blokkerer Javascript (kan ødelegge nettsteder)</translation>
 <translation id="5709627087332022422">Blokker tredjeparts sporere.</translation>
-<translation id="6754976710186182237">Fingeravtrykksmetoder</translation>
-<translation id="2313532038420432247">HTTPS-oppgraderinger</translation>
-<translation id="7461425058443653485">Blokkerte skript</translation>
 <translation id="6052725679982758334">Blokkering av sosiale medier</translation>
 <translation id="7498695072878479744">Tillat Google-påloggingsknapper på tredjepartsnettsteder</translation>
 <translation id="863171915776379000">Tillat Facebook-innlogginger og innebygde innlegg</translation>
 <translation id="5165042248369837294">Tillatt innebygde tvitringer fra Twitter</translation>
 <translation id="958971637207126733">Tillat LinkedIn-innebygde innlegg</translation>
-<translation id="3834924998750356151">Blokkeringsovervåkning</translation>
-<translation id="1713450908129883784">Individuelle kontroller</translation>
 <translation id="6302422639282249274">Administrer Brave Rewards</translation>
-<translation id="1506061864768559482">Søkemotor</translation>
+<translation id="8877432762827303535">Utsjekking på nett</translation>
+<translation id="6583902294974160967">Støtte</translation>
+<translation id="1799030480311994998">Funksjoner</translation>
+<translation id="5345505584130165588">Brave-skjold og -personvern</translation>
+<translation id="4692623383562244444">Søkemotorer</translation>
 <translation id="1468415711258933398">Standardfane</translation>
 <translation id="3377025655491224618">Inkognitofane</translation>
 <translation id="9148058034647219655">Avslutt</translation>
-<translation id="520895744850022668">HTTPS Overalt</translation>
-<translation id="8710614491157212477">Åpner nettsteder som støttes, ved bruk av HTTPS i stedet for HTTP når det er mulig</translation>
-<translation id="8387201461264842096">Annonseblokkering</translation>
-<translation id="1934885595886623674">Hindrer innlasting av annonser</translation>
+<translation id="4022987104439075738">IPFS-gateway</translation>
+<translation id="2688519859165248360">Tillater navigering til IPFS-ressurser gjennom en IPFS-inngangsport</translation>
+<translation id="7534079972563542000">Ustoppelige domener</translation>
+<translation id="6513892817556267573">Ethereum-navnetjenesten</translation>
+<translation id="3894650624018948468">Løsningsmetode</translation>
+<translation id="2356070529366658676">Spør</translation>
+<translation id="4176463684765177261">Deaktivert</translation>
+<translation id="2218918398178303658">DNS over HTTPS</translation>
+<translation id="1448289340149908413">Ethereum</translation>
 <translation id="5787084571334399599">Hindrer nettleseren i å bruke fingeravtrykk</translation>
 <translation id="7459000603787995422">Lukk faner ved avslutning</translation>
+<translation id="4448697385961650078">Blokker sporere og annonser</translation>
+<translation id="2448893613530489637">Forhindrer sporere og annonser fra å lastes inn og vises på nettsider</translation>
 <translation id="1680858055899097121">Ikke behold faner på tvers av surfeøkter</translation>
-<translation id="6469509880167172749">Send helt privat produktdiagnostikk til Brave automatisk</translation>
-<translation id="7090566321964540749">Denne anonyme infoen lar Brave kun beregne den totale bruken av visse funksjoner.</translation>
-<translation id="347604927162577559">Data\nLagret</translation>
+<translation id="7142548388914389999">Tillat produktanalyse som ivaretar personvern (P3A)</translation>
+<translation id="5469408008145872264">Denne helt anonymiserte informasjonen hjelper Brave med å anslå den samlede bruken av enkelte funksjoner og forbedre denne for deg.</translation>
+<translation id="7977176350719484850">Est. data\nlagret</translation>
 <translation id="9008534313521214777">Beregnet tid\nspart</translation>
 <translation id="6572660632052512096">Skrivebordsmodus</translation>
 <translation id="1340503115760585811">Slå på skrivebordsvisning for nye faner</translation>
@@ -42,12 +46,13 @@
 <translation id="4479934682648362332">Foretrekk skrivebordsversjonen av nettsteder</translation>
 <translation id="1842747674580016420">Videoavspilling i Brave</translation>
 <translation id="5368992950177874750">Hvis dette er på, blir videoer spilt av i Brave i stedet for i den tilhørende appen</translation>
-<translation id="2645380101799517405">Kontroller</translation>
+<translation id="181905442828471321">Globale standarder for Brave-skjold</translation>
+<translation id="2675679258824361492">Andre innstillinger for personvern</translation>
+<translation id="8026334261755873520">Slett nettleserdata</translation>
 <translation id="5965081608816406060">Videoavspilling i bakgrunnen</translation>
 <translation id="6332924730165919598">Hvis du lukker alle fanene, lukkes Brave</translation>
 <translation id="1580125697191336644">Eksperimentell. Gir deg muligheten til å spille av lyd fra video i bakgrunnen mens fanen ikke er aktiv eller enhetens skjerm er avslått. Prøv å bytte til skrivebordmodus hvis denne funksjonen ikke fungerer.</translation>
 <translation id="59174027418879706">Aktivert</translation>
-<translation id="4176463684765177261">Deaktivert</translation>
 <translation id="4150201353443180367">Skjerm</translation>
 <translation id="2433507940547922241">Utseende</translation>
 <translation id="2804710924397009224">Skjul Brave Rewards-ikonet</translation>
@@ -57,24 +62,18 @@
 <translation id="8701563696941209024">START PÅ NYTT NÅ</translation>
 <translation id="834487290629916192">SENERE</translation>
 <translation id="8281886186245836920">Hopp over</translation>
-<translation id="316832010181763471">Søkemotor-onboarding</translation>
 <translation id="986879628471635371">Feilsøking av introduksjonsprogram</translation>
 <translation id="1331593888918588693">Du kan alltid endre valgene dine senere i appinnstillingene.</translation>
-<translation id="7053983685419859001">Blokker</translation>
 <translation id="5806601733251372221">Brave Shields</translation>
-<translation id="2880356288762235261">annonser som krenker personvernet, og sporingskapsler, slik at du kan surfe uten å bli forfulgt på nettet.</translation>
 <translation id="8537217141725709400">Tjen <ph name="TOKEN"/>er</translation>
 <translation id="3333887201479867589">Brave-belønninger</translation>
-<translation id="821707262661492716">for å se annonser som respekterer personvernet.</translation>
 <translation id="4281844954008187215">Brukervilkår</translation>
 <translation id="6871397658902960384">Begynn å surfe</translation>
 <translation id="454386012157232640">Jeg så ingen annonse</translation>
 <translation id="1448877943847791441">Brave viser den første annonsen din om</translation>
 <translation id="6511854390690723657">Dette er din første Brave-annonse. Trykk for å finne ut mer.</translation>
-<translation id="4930714375720679147">Slå på</translation>
-<translation id="2453860139492968684">Fullfør</translation>
 <translation id="3570367516044491911">Angi som standardnettleser</translation>
-<translation id="7493053924837150477">Velg Brave-nettleseren på listen, og trykk på «Alltid»</translation>
+<translation id="19715420010996093">Velg Brave Browser og trykk på 'Alltid'</translation>
 <translation id="3546439402724649282">Brave er allerede angitt som standardnettleser.</translation>
 <translation id="8389661903259423907">Du har allerede angitt en standardnettleser. Du kan endre standardnettleseren i appinnstillingene.</translation>
 <translation id="7091885296442320770">Brave er lynrask</translation>
@@ -110,29 +109,15 @@
 <translation id="8220228041552340594">OKTOBER</translation>
 <translation id="8280223431922155812">NOVEMBER</translation>
 <translation id="4254029385847607686">DESEMBER</translation>
-<translation id="1916285746997567466">Gjør deg klar til å oppleve
-det neste internettet.</translation>
-<translation id="3540580927110899945">Nå kan du tjene <ph name="TOKEN"/>er for å
-se på annonser som respekterer personvernet.</translation>
-<translation id="1327938628925645979">BLI MED I REWARDS</translation>
-<translation id="5567439033041178034">FINN UT MER</translation>
 <translation id="3780605330121608425">Lommeboken din</translation>
-<translation id="8845154268466251503">BAT</translation>
 <translation id="7837083325641186736"><ph name="VALUE"/></translation>
 <translation id="3826081199286264109">USD</translation>
-<translation id="2104073734684466851">Tilskudd</translation>
 <translation id="1165667598801520610">Legg til midler</translation>
 <translation id="8428213095426709021">Innstillinger</translation>
-<translation id="2012723204723845092">Velkommen tilbake!</translation>
-<translation id="7669994301500276741">Bli belønnet for å surfe.</translation>
-<translation id="8203529727745387785">Tjen ved å se på annonser som respekterer
-personvernet, og gi fortjenesten videre for å støtte
-innholdsskaperne du elsker.</translation>
-<translation id="5148719990624240755">SLÅ PÅ BRAVE REWARDS</translation>
 <translation id="8772672608371898774">Brave-verifisert utgiver</translation>
 <translation id="1397683270551078781">Ikke verifisert ennå</translation>
-<translation id="5727208111992260840">Denne skaperen har enda ikke registrert seg for å motta bidrag fra Brave-brukere.
-        Eventuelt tips du sender blir i lommeboken din frem til vedkommende bekrefter det.</translation>
+<translation id="880893465294676334">Denne Brave-verifiserte skaperen har ennå ikke konfigurert kontoen sin til å kunne motta bidrag fra Brave-brukere.
+  Eventuell driks du sender, forblir i lommeboken din inntil de har gjennomført denne prosessen.</translation>
 <translation id="8918760045046434238">Send tips …</translation>
 <translation id="1978261665418056203">Ingen aktiviterer denne måneden enda …</translation>
 <translation id="9182287025588539628">Engangstips</translation>
@@ -145,9 +130,8 @@ innholdsskaperne du elsker.</translation>
 <translation id="13853865024308201">Gjør krav på</translation>
 <translation id="7335371657242627509">Inkluder i auto-bidrag</translation>
 <translation id="5463954686005964104">Gi tips til denne siden hver måned</translation>
-<translation id="7530570094705720669">Opprett lommebok</translation>
 <translation id="937392350501765664"><ph name="MONTH"/> <ph name="YEAR"/></translation>
-<translation id="4751553692764711651">Du har bidratt med <ph name="BAT_VALUE"/>  <ph name="BAT_TEXT"/>.</translation>
+<translation id="4781696154289395607">Du har bidratt med <ph name="BAT_VALUE"/> BAT.</translation>
 <translation id="7997676409547731821">Den planlagte månedlige betalingen din for autobidrag og månedlig tips kunne ikke fullføres på grunn av utilstrekkelige midler. Vi prøver igjen om 30 dager.</translation>
 <translation id="5306913077198665897">Det var problemer med å behandle tipsen din. Prøv på nytt.</translation>
 <translation id="2429828319207652823">Det oppstod et problem under behandlingen av bidraget ditt.</translation>
@@ -161,21 +145,16 @@ innholdsskaperne du elsker.</translation>
 <translation id="1713542052890184975">Sikkerhetskopier Brave-lommeboken din.</translation>
 <translation id="2323069945529668668">Oisann!</translation>
 <translation id="7510166204621526816">Brave-serveren svarer ikke. Vi vil rette opp i dette så raskt som mulig.</translation>
-<translation id="7117228822971127758">Prøv igjen senere</translation>
-<translation id="3068742524072211213">utløper <ph name="DATE"/></translation>
-<translation id="4292832015778676417">opptjent fra annonser</translation>
 <translation id="683765328936486920">på YouTube</translation>
 <translation id="8969049974285901797">på Twitch</translation>
-<translation id="4376933248999950592">Du har tildelt <ph name="BAT_VALUE"/> <ph name="BAT_TEXT"/> til skapere som ikke har
+<translation id="3692362746128814480">Du har tildelt <ph name="BAT_VALUE"/> BAT til skapere som ikke har
 registrert seg for å motta bidrag ennå. Nettleseren din kommer til å fortsette å prøve å bidra
 helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</translation>
 <translation id="3101693828171454453">ikke nok <ph name="TOKEN"/>er</translation>
 <translation id="6940273954212603510">vennligst</translation>
 <translation id="1036277985068412734">legg til midler</translation>
 <translation id="3492491948683276944">angi månedlig tips</translation>
-<translation id="4162066325465825185">Vi beklager, men det ser ut til at Brave Rewards ikke er tilgjengelig på enheten din</translation>
 <translation id="8038539967102225446">Brave Ads er her!</translation>
-<translation id="8985635554450124959">Synkronisering kunne ikke konfigureres</translation>
 <translation id="222883304157347087">(denne enheten)</translation>
 <translation id="4157741509680155021">ENHETER PÅ SYNKRONISERINGSKJEDEN</translation>
 <translation id="279635009973773843">LASTER INN ENHETER …</translation>
@@ -224,10 +203,11 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="6810078320346589989">Opprett et bokmerke</translation>
 <translation id="3396347744975515056">Brave Sync er oppgradert og må konfigureres</translation>
 <translation id="7473245612074035141">Begynn konfigurering</translation>
-<translation id="1872784258300710671">Brave bruker helt privat produktdiagnostikk til å beregne den totale bruken av visse funksjoner</translation>
-<translation id="8712637175834984815">Skjønner</translation>
-<translation id="4394049700291259645">Slå av</translation>
-<translation id="8446884382197647889">Les mer</translation>
+<translation id="8985635554450124959">Synkronisering kunne ikke konfigureres</translation>
+<translation id="2514300153301737214">Vi ser at du har Brave Sync aktivert, men systemsynkroniseringen din er slått av og hindrer Brave å synkronisere. Trykk for å åpne innstillinger</translation>
+<translation id="7173114856073700355">Åpne Innstillinger</translation>
+<translation id="6965382102122355670">OK</translation>
+<translation id="4450893287417543264">Ikke vis igjen</translation>
 <translation id="597993392929850353">Brave-lisens</translation>
 <translation id="6336451774241870485">Ny privat fane</translation>
 <translation id="6199596294742117349">Dette er en privat fane</translation>
@@ -240,16 +220,7 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="7541582550122501404">Ventende bidrag</translation>
 <translation id="8520059774736886747">Skaper som <ph name="PUBLISHER_NAME"/> nylig har verifisert</translation>
 <translation id="7924320838799747606">Din saldo</translation>
-<translation id="6160106411363856968">BAP</translation>
-<translation id="1081826981536899387">BAT-poeng</translation>
-<translation id="9212459913845238740">Poengtildelinger gjort krav på</translation>
-<translation id="2132683977638223450">Gratis poengtildeling</translation>
-<translation id="4522570452068850558">Detaljer</translation>
 <translation id="1486343603936278248">token</translation>
-<translation id="8713995420537272453">poeng</translation>
-<translation id="2802462801862186499">1.000 <ph name="TIP"/></translation>
-<translation id="3215472762156924589">5.000 <ph name="TIP"/></translation>
-<translation id="487252517537426371">10 000 <ph name="TIP"/></translation>
 <translation id="7781069478569868053">Ny fane-side</translation>
 <translation id="8522669544471808198">Vis bakgrunnsbilder</translation>
 <translation id="3870475560794762985">Vis sponsede bilder</translation>
@@ -293,6 +264,8 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="9132378787893584761">Del Brave med dine venner!</translation>
 <translation id="717952606991220586">Opp sann, noe er galt. Prøv igjen senere.</translation>
 <translation id="2524310205387880526">Ranger Brave</translation>
+<translation id="987264212798334818">Generelt</translation>
+<translation id="1116694919640316211">Info</translation>
 <translation id="6680650203439190394">Kurs</translation>
 <translation id="2635089463885398597">Hvordan vil du rangere din opplevelse med Brave?</translation>
 <translation id="141901961143729572">Del dine tanker</translation>
@@ -307,18 +280,21 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="1465733111003593696">Du får tokener ved å se på dette bildet.</translation>
 <translation id="7877201489035217175">Lær mer om sponsede bilder</translation>
 <translation id="828092975561478703">For hvert sponset bilde du ser på, mottar du 70% av inntekten i tokener. Med Brave-annonser har du alltid kontroll over hvilke annonser du ser.</translation>
+<translation id="3624048886326677117">Blokker sporere og annonsen (aggressiv)</translation>
+<translation id="7151914815476509258">Blokker sporere og annonsen (standard)</translation>
+<translation id="7384778069178817075">Tillat alle sporere og annonser</translation>
 <translation id="4941539331405513605">Blokker informasjonskapsler på tvers av nettsider</translation>
 <translation id="3763681089644577874">Blokker informasjonskapsler</translation>
 <translation id="614747795780742163">Hindrer nettsteder fra å lagre informasjon om dine tidligere besøk</translation>
 <translation id="6883611015375728278">Blokker alle informasjonskapsler</translation>
 <translation id="5657156137487675418">Tillatt alle informasjonskapsler</translation>
-<translation id="5963670684159057574">Blokker bruk av fingeravtrykk på tvers av nettsteder</translation>
 <translation id="3895527457258986253">Blokker fingerprinting</translation>
+<translation id="7854108565842971747">Dette er standard Shields-innstillinger for nye nettsteder. Å endre disse påvirker ikke de eksisterende innstillingene per nettsted.</translation>
 <translation id="184568144098869637">Hindrer nettleseren fra å gjenkjenne din enhet</translation>
-<translation id="7396366757003005317">Fingeravtrykk blokkert (restriktivt; kan gjøre at nettsteder slutter å fungere)</translation>
-<translation id="700453611199558021">Fingeravtrykk er blokkert (standard)</translation>
+<translation id="7445306466605902444">Fingeravtrykk blokkert (strengt, kan ødelegge nettsteder)</translation>
+<translation id="5582686930349810484">Fingeravtrykk blokkert (standard)</translation>
 <translation id="769702552748212954">Tillat all bruk av fingeravtrykk</translation>
-<translation id="5142293891785304489">Trackere, annonser og\nmer blokkert</translation>
+<translation id="876424292214881779">Annonser og andre ekle ting blokkert</translation>
 <translation id="6930134873084561197">Nettsteder inkluderer ofte informasjonskapsler og skript som prøver å identifisere deg og din enhet. De ønsker å finne ut av hvem du er, følge deg på nettet og spore det du gjør på alle nettsider. \n\nBrave blokkerer dette, slik at du kan surfe på nett uten å bli fulgt.</translation>
 <translation id="8553998445606452168">Om Brave Shields</translation>
 <translation id="8912304686498704084">OPP</translation>
@@ -331,7 +307,31 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="5299848999918506028">Takk skal du ha!</translation>
 <translation id="76550953340008122">Takk for at du ga beskjed til utviklerne av Brave om at noe er galt med dette nettstedet. Vi skal gjøre vårt beste for å rette det!</translation>
 <translation id="650318023204990401">Avanserte kontroller</translation>
-<translation id="7182293319417450928">Det kreves en saldo på minimum 25 BAT for å verifisere.</translation>
+<translation id="6589609065569680305">Trackere og annonser blokkert på denne siden.</translation>
+<translation id="1283922192221545319">Brave Shields sikret nettopp personvernet ditt.</translation>
+<translation id="6227291358910554399">Annonser blokkeres når man ser på videoer på dette nettstedet.</translation>
+<translation id="7802980684512102010">Videoer uten annonser bruke mindre data.</translation>
+<translation id="2046475855484346614">10+ trackere og annonser blokkert på denne siden.</translation>
+<translation id="5806208250835099572">Brave Shields sikrer nett-personvernet ditt på hvert nettsted.</translation>
+<translation id="5617673581653540121">Forbindelsen din er nå kryptert.</translation>
+<translation id="4055107796760496928">Hvis tilgjengelig, oppgraderer Brave deg automatisk til en sikker forbindelse.</translation>
+<translation id="8869714780588464835">Del nyhetene</translation>
+<translation id="7427391215172269363">Hver dag sparer jeg data ved å surfe på nettet med Brave.</translation>
+<translation id="5372054974373489308">1000 sporere og annonser blokkert!</translation>
+<translation id="2338952568654182692">5000 sporere og annonser blokkert!</translation>
+<translation id="5289711064670408815">10 000 sporere og annonser blokkert!</translation>
+<translation id="7150609425870119925">25 000 sporere og annonser blokkert!</translation>
+<translation id="7856423737692274943">75 000 sporere og annonser blokkert!</translation>
+<translation id="7252948690584461484">100 000 sporere og annonser blokkert!</translation>
+<translation id="7579633043057546002">250 000 sporere og annonser blokkert!</translation>
+<translation id="8710984962087186365">500 000 sporere og annonser blokkert!</translation>
+<translation id="4383614608366907253">1 000 000 sporere og annonser blokkert!</translation>
+<translation id="6819535527112707811">Gratulerer! Du er virkelig noe for deg selv.</translation>
+<translation id="5819231438994979709">Gratulerer! Du er en del av en eksklusiv klubb.</translation>
+<translation id="5174835622895450943">Gratulerer! Du er en av proffene nå.</translation>
+<translation id="4625546020186631261">Gratulerer! Du har blitt en mester.</translation>
+<translation id="4288835546846020774">Gratulerer! Du har blitt en stormester.</translation>
+<translation id="6863752373888328811">Gratulerer! Du er legendarisk.</translation>
 <translation id="4776948189086901857">Brave fungerer overalt</translation>
 <translation id="1606322780901645965">Last ned Brave på brave.com på din bærbare PC eller nettbrett for et raskere og mer privat web</translation>
 <translation id="8374242949413616101">Personvernbeskyttelse</translation>
@@ -370,9 +370,11 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="1880168210969863408">Flott! Du har spart ti minutters innlastingstid med Brave-nettleseren.&#128168;&#128168;</translation>
 <translation id="7408493389591475748">Begynn å bruke nettleseren for å se personvernrapportering</translation>
 <translation id="9080777565335515917">Sett Brave som din standardnettleser for privat og trygg weblesing.</translation>
-<translation id="7801488941710395275">Lar Brave se personvernstatistikken din</translation>
+<translation id="1390943217516275883">Lar Brave vise statistikken din for personvern</translation>
 <translation id="1763352720905582220">Sender en ukentlig personvernrapport</translation>
 <translation id="1811691435325545066">Slett alle personvernrapport-data</translation>
+<translation id="5966003059662780423">Fjern data ved lukking</translation>
+<translation id="3980704343258720102">Fjerner alle nettleserdata</translation>
 <translation id="8089997572759938512">Tilbakestiller personvernrapportene dine til null</translation>
 <translation id="2718046830255553131">Data for personvernrapporter er slettet.</translation>
 <translation id="7559243474426790340">Oppdater status</translation>
@@ -380,6 +382,7 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="1383876407941801731">Søk</translation>
 <translation id="1972589975368876259">Rediger stabel</translation>
 <translation id="2490330380242414851">Fjern widget</translation>
+<translation id="8446884382197647889">Les mer</translation>
 <translation id="7384441892795736634">Oppdater data</translation>
 <translation id="4804818685124855865">Koble fra</translation>
 <translation id="4789438578712143420">≈ $<ph name="USD_BALANCE"/></translation>
@@ -437,13 +440,15 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="5876169128756792273">Polletter kan brukes til mer enn å støtte skapere. Du kan kjøpe digitalt innhold og andre artikler etter hvert som selgere blir med.</translation>
 <translation id="1402530520078693620">La oss til slutt få satt deg opp med basisinnstillingene</translation>
 <translation id="3494356595346329740">Du kan endre dette senere.</translation>
-<translation id="6462814326662189004">Hvor ofte vil du se annonser?\n(Annonser per time)</translation>
-<translation id="2134244432345596331">Hvor mye ønsker du å støtte favorittprodusentene dine med?\n(fra annonseinntjeningen din)</translation>
+<translation id="3115702351969988294">Hvor ofte ønsker du å se annonser?</translation>
+<translation id="3474670199029510295">(Annonser pr. time)</translation>
+<translation id="66599604460581068">Hvor mye støtte vil du gi favorittskaperne dine?</translation>
+<translation id="3164498053837913829">(fra annonseinntektene dine)</translation>
 <translation id="827315274423079662">Hurra, du er helt klar!</translation>
 <translation id="3895246934788932488">Ved å bruke Brave Rewards styrker du personvernet ditt og bidrar til å gjøre nettet til et bedre sted for alle. Det er bare fantastisk!</translation>
 <translation id="5705882733397021510">Gå tilbake</translation>
 <translation id="5140321319944305531">La oss ta en rask omvisning</translation>
-<translation id="3808131693704413134">Etter at du mottar de første annonseutbetalingene dine kan du komme tilbake og tipse denne produsenten.</translation>
+<translation id="2434574859640694129">Etter du mottar den første annonseutbetalingen din kan du komme tilbake og tipse denne innholdsprodusenten!</translation>
 <translation id="207242986925259074">Rask oppfrisknings-omvisning</translation>
 <translation id="8342862030112839977">Den første belønningsutbetalingen din kommer innen:</translation>
 <translation id="3769645103175790584">Tjen tokener og gi produsenter belønning for flott innhold mens du surfer. <ph name="QUICK_TOUR"/>.</translation>
@@ -454,7 +459,6 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="7889432931837317731">Åpne automatisk når mulig</translation>
 <translation id="8967385052772844086">Se hele Personvernrapporten</translation>
 <translation id="6864343534748973390">Mest populær</translation>
-<translation id="1622983732360473885">Støtter Brave</translation>
 <translation id="4608192160278975831">Privat og ingen sporing</translation>
 <translation id="7208522820527289601">Privat og uten sporing, EU-basert</translation>
 <translation id="1161008391729450974">Google-resultater uten trackere</translation>
@@ -469,4 +473,32 @@ helt til vedkommende verifiserer bidraget, eller til det har gått 90 dager.</tr
 <translation id="6478996494082389936">privat produktanalyse.</translation>
 <translation id="5187052478998910855">Behov for å friske opp kunnskapene dine om Rewards?</translation>
 <translation id="8622329973403382303">Ta en rask omvisning og frisk opp kunnskapen om hvordan du går inn i historien som Rewards-rockestjerne!</translation>
+<translation id="8401711613788729448">Åpne alle lenker med Brave for å sikre personvernet ditt</translation>
+<translation id="3184805785843994538">Brave Shields blokkerer trackere og annonser, lagrer data og sparer deg for tid på hvert nettsted du besøker.</translation>
+<translation id="8722651357687610395">Sett Brave som standard</translation>
+<translation id="3479552764303398839">Ikke nå</translation>
+<translation id="4956847150856741762">1</translation>
+<translation id="5196716972587102051">2</translation>
+<translation id="7839580021124293374">3</translation>
+<translation id="2918322085844739869">4</translation>
+<translation id="7267186368513450821">5</translation>
+<translation id="6972003925509023890">1 BAT</translation>
+<translation id="8867821173176188875">5 BAT</translation>
+<translation id="8762169086048682708">10 BAT</translation>
+<translation id="7921571842056754133">15 BAT</translation>
+<translation id="3605291544485823713">25 BAT</translation>
+<translation id="817946134291678509">50 BAT</translation>
+<translation id="4548973860489847866">0,00 BAT</translation>
+<translation id="4193129043743994339">0,00 USD</translation>
+<translation id="8792121506918889955">WebRTCs IP-håndteringspolicy</translation>
+<translation id="8798099450830957504">Standard</translation>
+<translation id="1822560017823072927">Standard offentlige og private grensesnitt</translation>
+<translation id="5825943197137337319">Kun standard offentlig grensesnitt</translation>
+<translation id="1689062823386843231">Deaktiver ikke-proxied UDP</translation>
+<translation id="3171931580569169744">Aktiver fanegrupper</translation>
+<translation id="5587305863196367357">Ved å bekrefte lommeboken kan du enkelt administrere midlene dine, og gjøre innskudd og uttak</translation>
+<translation id="5760671211380791582">Du har ikke nok BAT.</translation>
+<translation id="6960458596933484861">Du må ha minst 15 BAT for å lage en bekreftet Uphold-lommebok. Prøv igjen senere.</translation>
+<translation id="4389085954549744469">Hvis du allerede har en bekreftet Uphold-konto, <ph name="CONTINUE_TO_LOGIN"/>.</translation>
+<translation id="6146966915297143881">fortsett til innlogging</translation>
 </translationbundle>

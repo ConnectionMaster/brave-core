@@ -51,18 +51,6 @@
     "message": "Részletek",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Az ön egyenlege",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "BAT-pontok",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "felhasználható a Brave Rewardsban a kedvenc tartalomkészítőinek küldött hozzájáruláshoz. A BAT-pontok nem cserélhetők be BAT-ra.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "bekapcsolva",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Beváltott zseton adományok ",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Pontok begyűjtve",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Jövedelem hirdetésekből",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Készíts biztonsági másolatot Brave pénztárcádról.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "További információ",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Eszközhatár elérve",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Pénztárcád nem ellenőrizhető, mert elérted a maximális ellenőrzött eszközhatárt.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Brave Jutalmak fiókja letétre vár.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Hirdetések bekapcsolása",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Ingyenes zseton adomány",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Ingyenes pontok",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Hirdetési jutalmat kapott!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Pénztárca ellenőrizve",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Lépj be Uphold fiókodba",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Ugrás a(z) $provider$ fiókomra",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Brave Jutalmak kapcsolat bontása",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "pontok",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Tokenadományok",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Pontjóváírások",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Szia $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Uphold fiók készítéséhez legalább 25 BAT-od kell legyen. Próbáld újra később.\nFolytasd a belépést, ha már rendelkezel Uphold fiókkal.",
-    "description": "Text for login button"
+    "message": "Uphold-fiók létrehozásához legalább $amount$ BAT szükséges. Ha már van hitelesített Uphold-fiókja, lépjen tovább a bejelentkezésre.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Kapcsolódva",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Figyelem: Tranzakcióid az engedélyezés után láthatók lesznek az Uphold számára; például látni fogják a címzettet és a borravalóid mértékét.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Megjegyzés: Tranzakcióidat látni fogja a(z) $provider$, ha egyszer engedélyezted; például látni fogja a címzettet és a borravalóid összegét.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Szerezzen tokeneket és adjon vissza",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Szerezzen tokeneket adatvédelmet tiszteletben tartó hirdetések nézésével, és támogassa automatikusan kedvenc oldalait és tartalomkészítőit.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Milyen gyakran szeretnél reklámot látni?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(hirdetés óránként)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Mennyi havi támogatást akarsz adni kedvenc alkotóidnak?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(hirdetési bevételeidből)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Mikor kapja meg a jutalmakat",
+    "message": "Mikor kapja meg a jutalmakat?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "A tokeneket nem csak az alkotók támogatására használhatod. Digitális tartalmakat és egyéb javakat is vásárolhatsz, amint kereskedők csatlakoznak hozzánk.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Végül, állítsuk be az alapbeállításokat.",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Ez később megváltoztatható.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Juhé, készen állsz!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "A Brave Rewards használatával segítesz mindenki számára jobbá tenni az internetet. Ez fantasztikus!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Pénztárca megerősítése",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "A hirdetések megtekintése után járó tokenek kivonásához erősítse meg a pénztárcáját.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Később",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "A pénztárcám megerősítése",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "A bitFlyer wallet szolgáltatást a bitFlyer, Inc. kezeli.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "A pénztárcája megerősítésével, valamint annak a bitFlyer-fiókjához kapcsolásával könnyebben tudja tárolni és kezelni a Brave Rewardson keresztül megszerzett tokenjeit.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Tudjon meg többet$link_end$ a Brave böngésző bitFlyer-fiókkal történő összekapcsolásának menetéről.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

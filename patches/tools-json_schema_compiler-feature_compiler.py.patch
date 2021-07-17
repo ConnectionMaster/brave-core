@@ -1,8 +1,8 @@
 diff --git a/tools/json_schema_compiler/feature_compiler.py b/tools/json_schema_compiler/feature_compiler.py
-index 3827dc3cdb7385290aac2dc674066f2ba7308a7d..cbb6df36a1f8df563614ded56277f1818675531e 100644
+index e46232951a768ab4e560cc6f8669373c953af2f2..cbc0264ad65d5064c8a10f10be6a9350485176bf 100644
 --- a/tools/json_schema_compiler/feature_compiler.py
 +++ b/tools/json_schema_compiler/feature_compiler.py
-@@ -768,6 +768,14 @@ class FeatureCompiler(object):
+@@ -768,6 +768,15 @@ class FeatureCompiler(object):
                    abs_source_file)
          raise
        dupes = set(f_json) & set(self._json)
@@ -14,6 +14,7 @@ index 3827dc3cdb7385290aac2dc674066f2ba7308a7d..cbb6df36a1f8df563614ded56277f181
 +      dupes.discard('sockets.tcp')
 +      dupes.discard('sockets.udp')
 +      dupes.discard('sockets.tcpServer')
++      dupes.discard('tabs')
        assert not dupes, 'Duplicate keys found: %s' % list(dupes)
        self._json.update(f_json)
  

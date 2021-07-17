@@ -131,7 +131,10 @@
                                 "segments",
                                 "creatives",
                                 "oses",
-                                "channels"
+                                "channels",
+                                "perMonth",
+                                "perWeek",
+                                "value"
                             ],
                             "properties": {
                                 "creativeSetId": {
@@ -142,6 +145,18 @@
                                 },
                                 "totalMax": {
                                     "type": "number"
+                                },
+                                "perMonth": {
+                                    "type": "number"
+                                },
+                                "perWeek": {
+                                    "type": "number"
+                                },
+                                "splitTestGroup": {
+                                    "type": "string"
+                                },
+                                "value": {
+                                    "type": "string"
                                 },
                                 "conversions": {
                                     "type": "array",
@@ -162,6 +177,12 @@
                                             },
                                             "observationWindow": {
                                                 "type": "number"
+                                            },
+                                            "conversionPublicKey": {
+                                                "type": "string"
+                                            },
+                                            "extractExternalId": {
+                                                "type": "boolean"
                                             }
                                         }
                                     }
@@ -285,32 +306,6 @@
                                                     },
                                                     {
                                                         "properties": {
-                                                            "domain": {
-                                                                "type": "string"
-                                                            },
-                                                            "feed": {
-                                                                "type": "string"
-                                                            },
-                                                            "title": {
-                                                                "type": "string"
-                                                            },
-                                                            "category": {
-                                                                "type": "string"
-                                                            },
-                                                            "ogImages": {
-                                                                "type": "boolean"
-                                                            },
-                                                            "contentType": {
-                                                                "type": "string"
-                                                            },
-                                                            "description": {
-                                                                "type": "string"
-                                                            }
-                                                        },
-                                                        "additionalProperties": false
-                                                    },
-                                                    {
-                                                        "properties": {
                                                             "logo": {
                                                                 "type": "object",
                                                                 "required": [
@@ -360,6 +355,55 @@
                                                                         }
                                                                     }
                                                                 }
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    },
+                                                    {
+                                                        "properties": {
+                                                            "domain": {
+                                                                "type": "string"
+                                                            },
+                                                            "feed": {
+                                                                "type": "string"
+                                                            },
+                                                            "title": {
+                                                                "type": "string"
+                                                            },
+                                                            "description": {
+                                                                "type": "string"
+                                                            },
+                                                            "category": {
+                                                                "type": "string"
+                                                            },
+                                                            "ogImages": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "contentType": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "additionalProperties": false
+                                                    },
+                                                    {
+                                                        "properties": {
+                                                            "title": {
+                                                                "type": "string"
+                                                            },
+                                                            "description": {
+                                                                "type": "string"
+                                                            },
+                                                            "imageUrl": {
+                                                                "type": "string"
+                                                            },
+                                                            "dimensions": {
+                                                                "type": "string"
+                                                            },
+                                                            "targetUrl": {
+                                                                "type": "string"
+                                                            },
+                                                            "ctaText": {
+                                                                "type": "string"
                                                             }
                                                         },
                                                         "additionalProperties": false

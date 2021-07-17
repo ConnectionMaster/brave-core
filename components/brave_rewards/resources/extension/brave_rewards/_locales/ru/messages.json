@@ -51,18 +51,6 @@
     "message": "Сведения",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Ваш баланс",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Баллы BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "можно использовать в наградах Brave, чтобы пожертвовать средства своим любимым создателям контента. Очки BAT нельзя обменять на BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "вкл.",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Утвержденные токен-гранты",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Утвержденные гранты баллов",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Доход от рекламы",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Пожалуйста, создайте резервную копию вашего кошелька Brave.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Подробнее…",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Достигнуто ограничение на число устройств",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Ваш кошелек не может быть подтвержден, потому что вы достигли максимального количества подтвержденных устройств.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Ваш аккаунт Brave Rewards ожидает внесения депозита.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Включить рекламу",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Токен-грант бесплатно",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Бесплатный грант баллов",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Вы заработали награду за рекламу!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Кошелек верифицирован",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Перейти к моей учетной записи Uphold",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Перейти в мой аккаунт $provider$",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Отключиться от Brave Rewards",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "очки",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Выдачи токенов",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Бонусные очки",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Привет, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Для создания аккаунта Uphold вам нужно иметь минимум 25 BAT. Пожалуйста, повторите попытку позже. \n Если у вас уже есть верифицированный аккаунт Uphold, переходите ко входу в систему.",
-    "description": "Text for login button"
+    "message": "Если вы хотите создать аккаунт Uphold, у вас должно быть не менее $amount$ BAT. Если у вас уже есть подтвержденный аккаунт, войдите в него.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Подключено",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Примечание: ваши транзакции будут видимы для Uphold с момента вашей авторизации; например, они смогут просмотреть получателя и сумму ваших чаевых.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Внимание: ваши транзакции будут видны $provider$ после авторизации; например, они смогут увидеть получателя и сумму чаевых.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Зарабатывайте жетоны и выражайте благодарность",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Зарабатывайте жетоны, просматривая рекламу, не нарушающую вашу конфиденциальность, и автоматически поддерживайте ваши любимые сайты и создателей контента.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Как часто вы хотите видеть рекламу?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(Количество рекламных объявлений в час)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Сколько вы хотите пожертвовать на поддержку ваших любимых авторов?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(из ваших заработков за рекламу)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Когда вы получаете вознаграждения",
+    "message": "Когда вы получаете вознаграждение?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Токены можно использовать не только для поддержки создателей контента. Вы сможете покупать цифровой контент и другие товары по мере прихода на платформу продавцов.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "В заключение, давайте настроим основные параметры",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Вы сможете поменять это позже.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Ура, всё готово к работе!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Используя Brave Rewards, вы помогаете сделать Интернет лучше для всех. И это прекрасно!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Подтвердите свой кошелек",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Чтобы вывести баллы, полученные за просмотр рекламы, подтвердите ваш кошелек.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Позже",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Подтверждаю",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Кошелек bitFlyer — сервис, предоставляемый компанией bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Подтвердите ваш кошелек и свяжите его с аккаунтом bitFlyer. Хранить баллы Brave Rewards и управлять ими станет еще удобнее.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Подробнее$link_end$ о том, как привязать аккаунт bitFlyer к браузеру Brave.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

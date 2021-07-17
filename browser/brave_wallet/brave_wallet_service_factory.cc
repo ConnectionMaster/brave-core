@@ -5,17 +5,15 @@
 
 #include "brave/browser/brave_wallet/brave_wallet_service_factory.h"
 
-#include <memory>
-
-#include "brave/browser/brave_wallet/brave_wallet_delegate_impl.h"
-#include "brave/components/brave_wallet/brave_wallet_service.h"
+#include "brave/components/brave_wallet/browser/brave_wallet_service.h"
 #include "chrome/browser/profiles/incognito_helpers.h"
-#include "chrome/browser/profiles/profile.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
-#include "extensions/browser/extension_registry_factory.h"
-#include "extensions/browser/extension_system.h"
-#include "extensions/browser/extension_system_provider.h"
-#include "extensions/browser/extensions_browser_client.h"
+#include "components/user_prefs/user_prefs.h"
+#include "content/public/browser/browser_context.h"
+#include "content/public/browser/storage_partition.h"
+#include "services/network/public/cpp/shared_url_loader_factory.h"
+
+namespace brave_wallet {
 
 // static
 BraveWalletServiceFactory* BraveWalletServiceFactory::GetInstance() {
@@ -23,29 +21,36 @@ BraveWalletServiceFactory* BraveWalletServiceFactory::GetInstance() {
 }
 
 // static
-BraveWalletService* BraveWalletServiceFactory::GetForProfile(Profile* profile) {
+BraveWalletService* BraveWalletServiceFactory::GetForContext(
+    content::BrowserContext* context) {
   return static_cast<BraveWalletService*>(
-      GetInstance()->GetServiceForBrowserContext(profile, true));
+      GetInstance()->GetServiceForBrowserContext(context, true));
 }
 
 BraveWalletServiceFactory::BraveWalletServiceFactory()
     : BrowserContextKeyedServiceFactory(
           "BraveWalletService",
           BrowserContextDependencyManager::GetInstance()) {
-  DependsOn(extensions::ExtensionRegistryFactory::GetInstance());
-  DependsOn(
-      extensions::ExtensionsBrowserClient::Get()->GetExtensionSystemFactory());
 }
 
 BraveWalletServiceFactory::~BraveWalletServiceFactory() {}
 
 KeyedService* BraveWalletServiceFactory::BuildServiceInstanceFor(
     content::BrowserContext* context) const {
-  return new BraveWalletService(Profile::FromBrowserContext(context),
-                                std::make_unique<BraveWalletDelegateImpl>());
+  auto* default_storage_partition = context->GetDefaultStoragePartition();
+  auto shared_url_loader_factory =
+      default_storage_partition->GetURLLoaderFactoryForBrowserProcess();
+  return new BraveWalletService(user_prefs::UserPrefs::Get(context),
+                                shared_url_loader_factory);
 }
 
 content::BrowserContext* BraveWalletServiceFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
   return chrome::GetBrowserContextRedirectedInIncognito(context);
 }
+
+bool BraveWalletServiceFactory::ServiceIsCreatedWithBrowserContext() const {
+  return true;
+}
+
+}  // namespace brave_wallet

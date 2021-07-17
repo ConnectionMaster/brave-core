@@ -10,7 +10,6 @@ import {
   ModalActivity,
   ModalBackupRestore,
   ModalPending,
-  ModalVerify,
   WalletEmpty,
   WalletSummary,
   WalletWrapper
@@ -25,8 +24,7 @@ import * as rewardsActions from '../actions/rewards_actions'
 import * as utils from '../utils'
 import { ExtendedActivityRow, SummaryItem, SummaryType } from '../../ui/components/modalActivity'
 import { DetailRow as TransactionRow } from '../../ui/components/tableTransactions'
-
-const clipboardCopy = require('clipboard-copy')
+import { ConnectWalletModal } from './connect_wallet_modal'
 
 interface State {
   activeTabId: number
@@ -60,8 +58,10 @@ class PageWallet extends React.Component<Props, State> {
 
   componentDidMount () {
     this.isBackupUrl()
+    this.isDisconnectUrl()
     this.isVerifyUrl()
     this.actions.getMonthlyReportIds()
+    chrome.send('brave_rewards.getExternalWalletProviders')
   }
 
   onModalBackupClose = () => {
@@ -91,7 +91,7 @@ class PageWallet extends React.Component<Props, State> {
   onModalBackupOnCopy = async (backupKey: string) => {
     // TODO(jsadler) possibly flash a message that copy was completed
     try {
-      await clipboardCopy(backupKey)
+      await navigator.clipboard.writeText(backupKey)
       console.log('Copy successful')
       chrome.send('brave_rewards.setBackupCompleted')
     } catch (e) {
@@ -201,6 +201,12 @@ class PageWallet extends React.Component<Props, State> {
     }
   }
 
+  isDisconnectUrl = () => {
+    if (this.urlHashIs('#disconnect-wallet')) {
+      this.actions.disconnectWallet()
+    }
+  }
+
   toggleVerifyModal = () => {
     if (this.state.modalVerify) {
       window.history.replaceState({}, 'Rewards', '/')
@@ -223,6 +229,7 @@ class PageWallet extends React.Component<Props, State> {
 
   walletAlerts = (): AlertWallet | null => {
     const {
+      disconnectWalletError,
       walletRecoveryStatus,
       walletServerProblem
     } = this.props.rewardsData.ui
@@ -240,6 +247,17 @@ class PageWallet extends React.Component<Props, State> {
         type: 'success',
         onAlertClose: () => {
           this.actions.onClearAlert('walletRecoveryStatus')
+        }
+      }
+    }
+
+    const { externalWallet } = this.props.rewardsData
+    if (externalWallet && disconnectWalletError) {
+      return {
+        node: <><b>{getLocale('uhOh')}</b><br />{getLocale('disconnectWalletFailed').replace('$1', utils.getWalletProviderName(externalWallet))}<br /><br /><a href='https://support.brave.com/hc/en-us/articles/360062026432'>{getLocale('learnMore')}</a></>,
+        type: 'error',
+        onAlertClose: () => {
+          this.actions.onClearAlert('disconnectWalletError')
         }
       }
     }
@@ -289,7 +307,7 @@ class PageWallet extends React.Component<Props, State> {
 
       let type: PendingType = 'ac'
 
-      if (item.type === 8) { // one time tip
+      if (item.type === 8) { // one-time tip
         type = 'tip'
       } else if (item.type === 16) { // recurring tip
         type = 'recurring'
@@ -320,45 +338,47 @@ class PageWallet extends React.Component<Props, State> {
     this.actions.removeAllPendingContribution()
   }
 
-  handleUpholdLink = () => {
-    const { ui, externalWallet, balance } = this.props.rewardsData
+  handleExternalWalletLink = () => {
+    const { externalWallet } = this.props.rewardsData
 
     if (!externalWallet) {
       return
     }
 
-    if (balance.total < 25) {
-      window.open(externalWallet.loginUrl, '_self')
-      return
-    }
-
-    if (!ui.verifyOnboardingDisplayed && externalWallet.status === 0) {
+    if (externalWallet.status === 0) {
       this.toggleVerifyModal()
       return
     }
 
-    window.open(externalWallet.verifyUrl, '_self')
-  }
-
-  onVerifyClick = (hideVerify: boolean) => {
-    const { externalWallet } = this.props.rewardsData
-
-    if (!externalWallet || !externalWallet.verifyUrl) {
-      this.actions.getExternalWallet('uphold')
+    if (externalWallet.status === 1) {
+      window.open(externalWallet.verifyUrl, '_self')
       return
     }
 
-    if (hideVerify) {
-      this.actions.onVerifyOnboardingDisplayed()
+    if (externalWallet.loginUrl) {
+      window.open(externalWallet.loginUrl, '_self')
+    }
+  }
+
+  onConnectWalletContinue = (provider: string) => {
+    chrome.send('brave_rewards.setExternalWalletType', [provider])
+  }
+
+  onVerifyClick = () => {
+    const { externalWallet } = this.props.rewardsData
+
+    if (!externalWallet || !externalWallet.loginUrl) {
+      this.actions.getExternalWallet()
+      return
     }
 
-    this.handleUpholdLink()
+    this.handleExternalWalletLink()
   }
 
   getWalletStatus = (): WalletState | undefined => {
-    const { externalWallet, ui } = this.props.rewardsData
+    const { externalWallet } = this.props.rewardsData
 
-    if (ui.onlyAnonWallet || !externalWallet) {
+    if (!externalWallet) {
       return undefined
     }
 
@@ -407,17 +427,17 @@ class PageWallet extends React.Component<Props, State> {
       }
     }
 
-    if (externalWallet.verifyUrl) {
-      this.handleUpholdLink()
+    if (externalWallet.loginUrl) {
+      this.handleExternalWalletLink()
       return
     }
   }
 
-  goToUphold = () => {
+  goToExternalWallet = () => {
     const { externalWallet } = this.props.rewardsData
 
     if (!externalWallet || !externalWallet.accountUrl) {
-      this.actions.getExternalWallet('uphold')
+      this.actions.getExternalWallet()
       return
     }
 
@@ -434,16 +454,10 @@ class PageWallet extends React.Component<Props, State> {
   }
 
   onDisconnectClick = () => {
-    this.actions.disconnectWallet('uphold')
+    this.actions.disconnectWallet()
   }
 
   getActions = () => {
-    const { ui } = this.props.rewardsData
-
-    if (ui.onlyAnonWallet) {
-      return []
-    }
-
     return [
       {
         name: getLocale('panelAddFunds'),
@@ -601,6 +615,10 @@ class PageWallet extends React.Component<Props, State> {
         text = getLocale('processorBraveUserFunds')
         break
       }
+      case 4: { // Rewards.Processor.BITFLYER
+        text = getLocale('processorBitflyer')
+        break
+      }
     }
 
     if (text.length === 0) {
@@ -674,8 +692,8 @@ class PageWallet extends React.Component<Props, State> {
     const { monthlyReportIds } = this.props.rewardsData
 
     const ids = [
-      ...monthlyReportIds || [],
-      `${new Date().getFullYear()}_${new Date().getMonth() + 1}`
+      `${new Date().getFullYear()}_${new Date().getMonth() + 1}`,
+      ...monthlyReportIds || []
     ]
 
     let result: Record<string, string> = {}
@@ -693,6 +711,11 @@ class PageWallet extends React.Component<Props, State> {
         return
       }
 
+      // Don't show drop-down items for a future month
+      if (new Date(year, month).getTime() > Date.now()) {
+        return
+      }
+
       const date = new Date(Date.UTC(year, month, 10))
       result[id] = new Intl.DateTimeFormat('default', { month: 'long', year: 'numeric' }).format(date)
     })
@@ -701,7 +724,7 @@ class PageWallet extends React.Component<Props, State> {
   }
 
   generateMonthlyReport = () => {
-    const { monthlyReport, ui } = this.props.rewardsData
+    const { monthlyReport, externalWallet } = this.props.rewardsData
 
     if (!monthlyReport || monthlyReport.year === -1 || monthlyReport.month === -1) {
       return undefined
@@ -709,11 +732,11 @@ class PageWallet extends React.Component<Props, State> {
 
     return (
       <ModalActivity
-        onlyAnonWallet={ui.onlyAnonWallet}
         summary={this.generateSummaryRows()}
         activityRows={this.generateActivityRows()}
         transactionRows={this.generateTransactionRows()}
         months={this.getMonthlyReportDropDown()}
+        walletType={externalWallet ? externalWallet.type : ''}
         onClose={this.onModalActivityToggle}
         onMonthChange={this.onModalActivityAction.bind(this,'onMonthChange')}
       />
@@ -758,31 +781,25 @@ class PageWallet extends React.Component<Props, State> {
     return ''
   }
 
-  showLoginMessage = () => {
-    const { balance } = this.props.rewardsData
-    const walletStatus = this.getWalletStatus()
-
-    return (!walletStatus || walletStatus === 'unverified') && balance && balance.total < 25
+  generateExternalWalletProviderList = (walletProviders: string[]) => {
+    return walletProviders.map((type) => ({ type, name: utils.getWalletProviderName(type) }))
   }
 
   render () {
     const {
       balance,
+      externalWalletProviderList,
       ui,
       pendingContributionTotal,
-      recoveryKey
+      recoveryKey,
+      externalWallet
     } = this.props.rewardsData
     const { total } = balance
-    const { emptyWallet, modalBackup, onlyAnonWallet } = ui
+    const { emptyWallet, modalBackup } = ui
 
     const pendingTotal = parseFloat((pendingContributionTotal || 0).toFixed(3))
-
-    let onVerifyClick = undefined
-    let showCopy = false
-    if (!onlyAnonWallet) {
-      onVerifyClick = this.onVerifyClick.bind(this, false)
-      showCopy = true
-    }
+    const walletType = externalWallet ? externalWallet.type : undefined
+    const walletProvider = utils.getWalletProviderName(externalWallet)
 
     return (
       <>
@@ -791,23 +808,22 @@ class PageWallet extends React.Component<Props, State> {
           converted={utils.formatConverted(this.getConversion())}
           actions={this.getActions()}
           onSettingsClick={this.onModalBackupOpen}
-          showCopy={showCopy}
+          showCopy={true}
           showSecActions={true}
           alert={this.walletAlerts()}
+          walletType={walletType}
           walletState={this.getWalletStatus()}
-          onVerifyClick={onVerifyClick}
+          walletProvider={walletProvider}
+          onVerifyClick={this.onVerifyClick}
           onDisconnectClick={this.onDisconnectClick}
-          goToUphold={this.goToUphold}
+          goToExternalWallet={this.goToExternalWallet}
           greetings={this.getGreetings()}
-          onlyAnonWallet={onlyAnonWallet}
-          showLoginMessage={this.showLoginMessage()}
         >
           {
             emptyWallet && pendingTotal === 0
-            ? <WalletEmpty onlyAnonWallet={onlyAnonWallet} />
+            ? <WalletEmpty />
             : <WalletSummary
               reservedAmount={pendingTotal}
-              onlyAnonWallet={onlyAnonWallet}
               reservedMoreLink={'https://brave.com/faq/#unclaimed-funds'}
               onActivity={this.onModalActivityToggle}
               {...this.getWalletSummary()}
@@ -820,13 +836,14 @@ class PageWallet extends React.Component<Props, State> {
               activeTabId={this.state.activeTabId}
               backupKey={recoveryKey}
               showBackupNotice={this.showBackupNotice()}
+              walletProvider={walletProvider}
               onTabChange={this.onModalBackupTabChange}
               onClose={this.onModalBackupClose}
               onCopy={this.onModalBackupOnCopy}
               onPrint={this.onModalBackupOnPrint}
               onSaveFile={this.onModalBackupOnSaveFile}
               onRestore={this.onModalBackupOnRestore}
-              onVerify={this.onVerifyClick.bind(this, true)}
+              onVerify={this.onVerifyClick}
               onReset={this.onModalBackupOnReset}
               internalFunds={this.getInternalFunds()}
               error={this.getBackupErrorMessage()}
@@ -836,7 +853,6 @@ class PageWallet extends React.Component<Props, State> {
         {
           this.state.modalPendingContribution
             ? <ModalPending
-              onlyAnonWallet={onlyAnonWallet}
               onClose={this.onModalPendingToggle}
               rows={this.getPendingRows()}
               onRemoveAll={this.removeAllPendingContribution}
@@ -844,10 +860,12 @@ class PageWallet extends React.Component<Props, State> {
             : null
         }
         {
-          !onlyAnonWallet && this.state.modalVerify
-            ? <ModalVerify
-              onVerifyClick={this.onVerifyClick.bind(this, true)}
-              onClose={this.toggleVerifyModal}
+          this.state.modalVerify
+            ? <ConnectWalletModal
+                rewardsBalance={balance.total}
+                providers={this.generateExternalWalletProviderList(externalWalletProviderList)}
+                onContinue={this.onConnectWalletContinue}
+                onClose={this.toggleVerifyModal}
             />
             : null
         }

@@ -28,9 +28,6 @@ export const getUIMessages = (): Record<string, string> => {
     'backupWalletNotification',
     'backupWalletTitle',
     'bat',
-    'bap',
-    'batPoints',
-    'batPointsMessage',
     'braveAdsLaunchTitle',
     'braveAdsLaunchMsg',
     'braveAdsTitle',
@@ -46,6 +43,9 @@ export const getUIMessages = (): Record<string, string> => {
     'contributionTips',
     'connectedText',
     'details',
+    'deviceLimitReachedLearnMore',
+    'deviceLimitReachedNotification',
+    'deviceLimitReachedTitle',
     'disabledPanelTextTwo',
     'donateMonthly',
     'donateNow',
@@ -82,8 +82,6 @@ export const getUIMessages = (): Record<string, string> => {
     'oneTimeDonation',
     'pendingContributionTitle',
     'point',
-    'pointGrantClaimed',
-    'points',
     'privacyPolicy',
     'recurringDonations',
     'reservedAmountText',
@@ -101,7 +99,6 @@ export const getUIMessages = (): Record<string, string> => {
     'token',
     'tokens',
     'tokenGrants',
-    'pointGrants',
     'unVerifiedCheck',
     'turnOnAds',
     'unVerifiedPublisher',
@@ -132,32 +129,22 @@ export const getUIMessages = (): Record<string, string> => {
     'walletButtonUnverified',
     'walletButtonVerified',
     'walletGoToVerifyPage',
-    'walletGoToUphold',
+    'walletGoToProvider',
     'walletDisconnect',
-    'walletVerificationButton',
-    'walletVerificationFooter',
-    'walletVerificationID',
-    'walletVerificationListCompact1',
-    'walletVerificationListCompact2',
-    'walletVerificationListCompact3',
-    'walletVerificationListHeader',
-    'walletVerificationTitle1',
     'walletVerified',
-    'yourBalance',
     'cancel',
     'changeAmount',
     'login',
     'loginMessageTitle',
     'loginMessageText',
     'walletPending',
-    'walletConnected',
-    'walletVerificationNote3'
+    'walletConnected'
   ]
 
   let translations = {}
 
   strings.forEach((key: string) => {
-    translations[key] = getMessage(key)
+    translations[key] = getMessage(key, ['$1', '$2', '$3', '$4', '$5', '$6'])
   })
 
   return translations

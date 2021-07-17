@@ -5,33 +5,29 @@
 
 #include "bat/ads/internal/unittest_util.h"
 
-#include <stdint.h>
-
 #include <limits>
-#include <vector>
 
 #include "base/base_paths.h"
 #include "base/containers/flat_map.h"
 #include "base/files/file_util.h"
 #include "base/path_service.h"
-#include "base/strings/string16.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
-#include "base/time/time.h"
+#include "base/time/time_to_iso8601.h"
+#include "bat/ads/internal/ads_client_mock.h"
 #include "bat/ads/internal/logging.h"
+#include "bat/ads/internal/time_formatting_util.h"
+#include "bat/ads/internal/url_util.h"
+#include "bat/ads/pref_names.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
 #include "net/http/http_status_code.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "third_party/re2/src/re2/re2.h"
 #include "url/gurl.h"
 #include "url/url_constants.h"
-#include "bat/ads/internal/ads_client_mock.h"
-#include "bat/ads/internal/time_formatting_util.h"
-#include "bat/ads/internal/url_util.h"
-#include "bat/ads/pref_names.h"
 
 using ::testing::_;
 using ::testing::Invoke;
@@ -43,6 +39,8 @@ namespace {
 
 static std::map<std::string, uint16_t> g_url_endpoint_indexes;
 
+static std::map<std::string, std::vector<uint64_t>> g_ad_events;
+
 static std::map<std::string, std::string> g_prefs;
 
 const char kNowTagValue[] = "now";
@@ -53,13 +51,11 @@ const char kFromMinutesTagValue[] = "minutes";
 const char kFromHoursTagValue[] = "hours";
 const char kFromDaysTagValue[] = "days";
 
-bool ParseTimeDelta(
-    const std::string& value,
-    base::TimeDelta* time_delta) {
+bool ParseTimeDelta(const std::string& value, base::TimeDelta* time_delta) {
   DCHECK(time_delta);
 
-  const std::vector<std::string> components = base::SplitString(value,
-      " ", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
+  const std::vector<std::string> components = base::SplitString(
+      value, " ", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
 
   int offset;
   if (!base::StringToInt(components.at(0), &offset)) {
@@ -82,38 +78,36 @@ bool ParseTimeDelta(
   return true;
 }
 
-bool ParseTimeTag(
-    std::string* value) {
+bool ParseTimeTag(std::string* value) {
   DCHECK(value);
 
   base::Time time;
 
   if (*value == kNowTagValue) {
-    time = base::Time::Now();
+    time = Now();
   } else if (*value == kDistantPastTagValue) {
-    time = base::Time::FromDoubleT(DistantPast());
+    time = DistantPast();
   } else if (*value == kDistantFutureTagValue) {
-    time = base::Time::FromDoubleT(DistantFuture());
+    time = DistantFuture();
   } else if (re2::RE2::FullMatch(*value,
-      "[-+]?[0-9]*.*(seconds|minutes|hours|days)")) {
+                                 "[-+]?[0-9]*.*(seconds|minutes|hours|days)")) {
     base::TimeDelta time_delta;
 
     if (!ParseTimeDelta(*value, &time_delta)) {
       return false;
     }
 
-    time = base::Time::Now() + time_delta;
+    time = Now() + time_delta;
   } else {
     return false;
   }
 
-  *value = TimeToISO8601(time);
+  *value = base::TimeToISO8601(time);
 
   return true;
 }
 
-std::vector<std::string> ParseTagsForText(
-    std::string* text) {
+std::vector<std::string> ParseTagsForText(std::string* text) {
   DCHECK(text);
 
   re2::StringPiece text_string_piece(*text);
@@ -130,14 +124,13 @@ std::vector<std::string> ParseTagsForText(
   return tags;
 }
 
-void ReplaceTagsForText(
-    std::string* text,
-    const std::vector<std::string>& tags) {
+void ReplaceTagsForText(std::string* text,
+                        const std::vector<std::string>& tags) {
   DCHECK(text);
 
   for (const auto& tag : tags) {
-    const std::vector<std::string> components = base::SplitString(tag, ":",
-        base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
+    const std::vector<std::string> components = base::SplitString(
+        tag, ":", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
 
     if (components.size() != 2) {
       FAIL() << "Invalid tag: " << tag;
@@ -164,21 +157,19 @@ void ReplaceTagsForText(
   }
 }
 
-void ParseAndReplaceTagsForText(
-    std::string* text) {
+void ParseAndReplaceTagsForText(std::string* text) {
   DCHECK(text);
 
   const std::vector<std::string> tags = ParseTagsForText(text);
   ReplaceTagsForText(text, tags);
 }
 
-std::string GetUuid(
-    const std::string& name) {
+std::string GetUuid(const std::string& name) {
   const ::testing::TestInfo* const test_info =
       ::testing::UnitTest::GetInstance()->current_test_info();
 
   return base::StringPrintf("%s:%s.%s", name.c_str(),
-      test_info->test_suite_name(), test_info->name());
+                            test_info->test_suite_name(), test_info->name());
 }
 
 URLEndpointResponses GetUrlEndpointResponsesForPath(
@@ -192,10 +183,9 @@ URLEndpointResponses GetUrlEndpointResponsesForPath(
   return iter->second;
 }
 
-bool GetNextUrlEndpointResponse(
-    const std::string& url,
-    const URLEndpoints& endpoints,
-    URLEndpointResponse* url_endpoint_response) {
+bool GetNextUrlEndpointResponse(const std::string& url,
+                                const URLEndpoints& endpoints,
+                                URLEndpointResponse* url_endpoint_response) {
   DCHECK(!url.empty()) << "Empty URL";
   DCHECK(!endpoints.empty()) << "Missing endpoints";
   DCHECK(url_endpoint_response);
@@ -244,8 +234,8 @@ base::flat_map<std::string, std::string> UrlRequestHeadersToMap(
   base::flat_map<std::string, std::string> normalized_headers;
 
   for (const auto& header : headers) {
-    const std::vector<std::string> components = base::SplitString(header,
-        ":", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
+    const std::vector<std::string> components = base::SplitString(
+        header, ":", base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
 
     if (components.size() != 2) {
       NOTREACHED();
@@ -261,14 +251,11 @@ base::flat_map<std::string, std::string> UrlRequestHeadersToMap(
   return normalized_headers;
 }
 
-void MockGetBooleanPref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockGetBooleanPref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, GetBooleanPref(_))
-      .WillByDefault(Invoke([](
-          const std::string& path) -> bool {
+      .WillByDefault(Invoke([](const std::string& path) -> bool {
         const std::string pref_path = GetUuid(path);
         const std::string value = g_prefs[pref_path];
-
         DCHECK(!value.empty());
 
         int value_as_int;
@@ -277,22 +264,17 @@ void MockGetBooleanPref(
       }));
 }
 
-void MockSetBooleanPref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockSetBooleanPref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, SetBooleanPref(_, _))
-      .WillByDefault(Invoke([](
-          const std::string& path,
-          const bool value) {
+      .WillByDefault(Invoke([](const std::string& path, const bool value) {
         const std::string pref_path = GetUuid(path);
         g_prefs[pref_path] = base::NumberToString(static_cast<int>(value));
       }));
 }
 
-void MockGetIntegerPref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockGetIntegerPref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, GetIntegerPref(_))
-      .WillByDefault(Invoke([](
-          const std::string& path) -> int {
+      .WillByDefault(Invoke([](const std::string& path) -> int {
         const std::string pref_path = GetUuid(path);
         const std::string value = g_prefs[pref_path];
         DCHECK(!value.empty());
@@ -303,22 +285,17 @@ void MockGetIntegerPref(
       }));
 }
 
-void MockSetIntegerPref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockSetIntegerPref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, SetIntegerPref(_, _))
-      .WillByDefault(Invoke([](
-          const std::string& path,
-          const int value) {
+      .WillByDefault(Invoke([](const std::string& path, const int value) {
         const std::string pref_path = GetUuid(path);
         g_prefs[pref_path] = base::NumberToString(value);
       }));
 }
 
-void MockGetDoublePref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockGetDoublePref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, GetDoublePref(_))
-      .WillByDefault(Invoke([](
-          const std::string& path) -> double {
+      .WillByDefault(Invoke([](const std::string& path) -> double {
         const std::string pref_path = GetUuid(path);
         const std::string value = g_prefs[pref_path];
         DCHECK(!value.empty());
@@ -329,44 +306,35 @@ void MockGetDoublePref(
       }));
 }
 
-void MockSetDoublePref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockSetDoublePref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, SetDoublePref(_, _))
-      .WillByDefault(Invoke([](
-          const std::string& path,
-          const double value) {
+      .WillByDefault(Invoke([](const std::string& path, const double value) {
         const std::string pref_path = GetUuid(path);
         g_prefs[pref_path] = base::NumberToString(value);
       }));
 }
 
-void MockGetStringPref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockGetStringPref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, GetStringPref(_))
-      .WillByDefault(Invoke([](
-          const std::string& path) -> std::string {
+      .WillByDefault(Invoke([](const std::string& path) -> std::string {
         const std::string pref_path = GetUuid(path);
         const std::string value = g_prefs[pref_path];
         return value;
       }));
 }
 
-void MockSetStringPref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockSetStringPref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, SetStringPref(_, _))
-      .WillByDefault(Invoke([](
-          const std::string& path,
-          const std::string& value) {
-        const std::string pref_path = GetUuid(path);
-        g_prefs[pref_path] = value;
-      }));
+      .WillByDefault(
+          Invoke([](const std::string& path, const std::string& value) {
+            const std::string pref_path = GetUuid(path);
+            g_prefs[pref_path] = value;
+          }));
 }
 
-void MockGetInt64Pref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockGetInt64Pref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, GetInt64Pref(_))
-      .WillByDefault(Invoke([](
-          const std::string& path) -> int64_t {
+      .WillByDefault(Invoke([](const std::string& path) -> int64_t {
         const std::string pref_path = GetUuid(path);
         const std::string value = g_prefs[pref_path];
         DCHECK(!value.empty());
@@ -377,22 +345,17 @@ void MockGetInt64Pref(
       }));
 }
 
-void MockSetInt64Pref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockSetInt64Pref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, SetInt64Pref(_, _))
-      .WillByDefault(Invoke([](
-          const std::string& path,
-          const int64_t value) {
+      .WillByDefault(Invoke([](const std::string& path, const int64_t value) {
         const std::string pref_path = GetUuid(path);
         g_prefs[pref_path] = base::NumberToString(value);
       }));
 }
 
-void MockGetUint64Pref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockGetUint64Pref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, GetUint64Pref(_))
-      .WillByDefault(Invoke([](
-          const std::string& path) -> uint64_t {
+      .WillByDefault(Invoke([](const std::string& path) -> uint64_t {
         const std::string pref_path = GetUuid(path);
         const std::string value = g_prefs[pref_path];
         DCHECK(!value.empty());
@@ -403,33 +366,26 @@ void MockGetUint64Pref(
       }));
 }
 
-void MockSetUint64Pref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockSetUint64Pref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, SetUint64Pref(_, _))
-      .WillByDefault(Invoke([](
-          const std::string& path,
-          const uint64_t value) {
+      .WillByDefault(Invoke([](const std::string& path, const uint64_t value) {
         const std::string pref_path = GetUuid(path);
         g_prefs[pref_path] = base::NumberToString(value);
       }));
 }
 
-void MockClearPref(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockClearPref(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, ClearPref(_))
-      .WillByDefault(Invoke([](
-          const std::string& path) {
-        g_prefs.erase(path);
-      }));
+      .WillByDefault(
+          Invoke([](const std::string& path) { g_prefs.erase(path); }));
 }
 
-void MockDefaultPrefs(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockDefaultPrefs(const std::unique_ptr<AdsClientMock>& mock) {
   mock->SetBooleanPref(prefs::kEnabled, true);
 
-  mock->SetUint64Pref(prefs::kAdsPerHour, kDefaultAdNotificationsPerHour);
+  mock->SetInt64Pref(prefs::kAdsPerHour, -1);
 
-  mock->SetIntegerPref(prefs::kIdleThreshold, 15);
+  mock->SetIntegerPref(prefs::kIdleTimeThreshold, 15);
 
   mock->SetBooleanPref(prefs::kShouldAllowConversionTracking, true);
 
@@ -440,7 +396,11 @@ void MockDefaultPrefs(
   mock->SetStringPref(prefs::kCatalogId, "");
   mock->SetIntegerPref(prefs::kCatalogVersion, 1);
   mock->SetInt64Pref(prefs::kCatalogPing, 7200000);
-  mock->SetInt64Pref(prefs::kCatalogLastUpdated, DistantPast());
+  mock->SetInt64Pref(prefs::kCatalogLastUpdated, DistantPastAsTimestamp());
+
+  mock->SetDoublePref(prefs::kUnreconciledTransactions, 0.0);
+
+  mock->SetBooleanPref(prefs::kHasMigratedConversionState, true);
 }
 
 }  // namespace
@@ -461,14 +421,14 @@ base::FilePath GetTestPath() {
   return path;
 }
 
-base::Optional<std::string> ReadFileFromTestPathToString(
+absl::optional<std::string> ReadFileFromTestPathToString(
     const std::string& name) {
   base::FilePath path = GetTestPath();
   path = path.AppendASCII(name);
 
   std::string value;
   if (!base::ReadFileToString(path, &value)) {
-    return base::nullopt;
+    return absl::nullopt;
   }
 
   ParseAndReplaceTagsForText(&value);
@@ -482,47 +442,39 @@ base::FilePath GetResourcesPath() {
   return path;
 }
 
-base::Optional<std::string> ReadFileFromResourcePathToString(
+absl::optional<std::string> ReadFileFromResourcePathToString(
     const std::string& name) {
   base::FilePath path = GetResourcesPath();
   path = path.AppendASCII(name);
 
   std::string value;
   if (!base::ReadFileToString(path, &value)) {
-    return base::nullopt;
+    return absl::nullopt;
   }
 
   return value;
 }
 
-void SetEnvironment(
-    const Environment environment) {
+void SetEnvironment(const Environment environment) {
   g_environment = environment;
 }
 
-void SetSysInfo(
-    const SysInfo& sys_info) {
-  g_sys_info.manufacturer = sys_info.manufacturer;
-  g_sys_info.model = sys_info.model;
+void SetSysInfo(const SysInfo& sys_info) {
+  g_sys_info.is_uncertain_future = sys_info.is_uncertain_future;
 }
 
-void SetBuildChannel(
-    const bool is_release,
-    const std::string& name) {
+void SetBuildChannel(const bool is_release, const std::string& name) {
   g_build_channel.is_release = is_release;
   g_build_channel.name = name;
 }
 
-void MockLocaleHelper(
-    const std::unique_ptr<brave_l10n::LocaleHelperMock>& mock,
-    const std::string& locale) {
-  ON_CALL(*mock, GetLocale())
-      .WillByDefault(Return(locale));
+void MockLocaleHelper(const std::unique_ptr<brave_l10n::LocaleHelperMock>& mock,
+                      const std::string& locale) {
+  ON_CALL(*mock, GetLocale()).WillByDefault(Return(locale));
 }
 
-void MockPlatformHelper(
-    const std::unique_ptr<PlatformHelperMock>& mock,
-    const PlatformType platform_type) {
+void MockPlatformHelper(const std::unique_ptr<PlatformHelperMock>& mock,
+                        const PlatformType platform_type) {
   bool is_mobile;
   std::string platform_name;
 
@@ -564,14 +516,11 @@ void MockPlatformHelper(
     }
   }
 
-  ON_CALL(*mock, IsMobile())
-      .WillByDefault(Return(is_mobile));
+  ON_CALL(*mock, IsMobile()).WillByDefault(Return(is_mobile));
 
-  ON_CALL(*mock, GetPlatformName())
-      .WillByDefault(Return(platform_name));
+  ON_CALL(*mock, GetPlatformName()).WillByDefault(Return(platform_name));
 
-  ON_CALL(*mock, GetPlatform())
-      .WillByDefault(Return(platform_type));
+  ON_CALL(*mock, GetPlatform()).WillByDefault(Return(platform_type));
 }
 
 void MockIsNetworkConnectionAvailable(
@@ -581,53 +530,102 @@ void MockIsNetworkConnectionAvailable(
       .WillByDefault(Return(is_available));
 }
 
-void MockIsForeground(
-    const std::unique_ptr<AdsClientMock>& mock,
-    const bool is_foreground) {
-  ON_CALL(*mock, IsForeground())
-      .WillByDefault(Return(is_foreground));
+void MockIsForeground(const std::unique_ptr<AdsClientMock>& mock,
+                      const bool is_foreground) {
+  ON_CALL(*mock, IsForeground()).WillByDefault(Return(is_foreground));
 }
 
-void MockShouldShowNotifications(
-    const std::unique_ptr<AdsClientMock>& mock,
-    const bool should_show) {
-  ON_CALL(*mock, ShouldShowNotifications())
-      .WillByDefault(Return(should_show));
+void MockIsFullScreen(const std::unique_ptr<AdsClientMock>& mock,
+                      const bool is_full_screen) {
+  ON_CALL(*mock, IsFullScreen()).WillByDefault(Return(is_full_screen));
 }
 
-void MockShowNotification(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockShouldShowNotifications(const std::unique_ptr<AdsClientMock>& mock,
+                                 const bool should_show) {
+  ON_CALL(*mock, ShouldShowNotifications()).WillByDefault(Return(should_show));
+}
+
+void MockShowNotification(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, ShowNotification(_))
-      .WillByDefault(Invoke([](
-          const AdNotificationInfo& ad_notification) {
-      }));
+      .WillByDefault(Invoke([](const AdNotificationInfo& ad_notification) {}));
 }
 
-void MockCloseNotification(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockCloseNotification(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, CloseNotification(_))
-      .WillByDefault(Invoke([](
-          const std::string& uuid) {
+      .WillByDefault(Invoke([](const std::string& uuid) {}));
+}
+
+void MockRecordAdEvent(const std::unique_ptr<AdsClientMock>& mock) {
+  ON_CALL(*mock, RecordAdEvent(_, _, _))
+      .WillByDefault(Invoke([](const std::string& ad_type,
+                               const std::string& confirmation_type,
+                               const uint64_t timestamp) {
+        DCHECK(!ad_type.empty());
+        DCHECK(!confirmation_type.empty());
+
+        const std::string name = ad_type + confirmation_type;
+        const std::string uuid = GetUuid(name);
+
+        const auto iter = g_ad_events.find(uuid);
+        if (iter == g_ad_events.end()) {
+          g_ad_events.insert({uuid, {timestamp}});
+        } else {
+          iter->second.push_back(timestamp);
+        }
       }));
 }
 
-void MockSave(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockGetAdEvents(const std::unique_ptr<AdsClientMock>& mock) {
+  ON_CALL(*mock, GetAdEvents(_, _))
+      .WillByDefault(Invoke(
+          [](const std::string& ad_type,
+             const std::string& confirmation_type) -> std::vector<uint64_t> {
+            DCHECK(!ad_type.empty());
+            DCHECK(!confirmation_type.empty());
+
+            const std::string name = ad_type + confirmation_type;
+            const std::string uuid = GetUuid(name);
+
+            const auto iter = g_ad_events.find(uuid);
+            if (iter == g_ad_events.end()) {
+              return {};
+            }
+
+            return iter->second;
+          }));
+}
+
+void MockResetAdEvents(const std::unique_ptr<AdsClientMock>& mock) {
+  ON_CALL(*mock, ResetAdEvents()).WillByDefault(Invoke([]() {
+    g_ad_events = {};
+  }));
+}
+
+void MockGetBrowsingHistory(const std::unique_ptr<AdsClientMock>& mock) {
+  ON_CALL(*mock, GetBrowsingHistory(_, _, _))
+      .WillByDefault(Invoke([](const int max_count, const int days_ago,
+                               GetBrowsingHistoryCallback callback) {
+        std::vector<std::string> history;
+        for (int i = 0; i < max_count; i++) {
+          const std::string entry =
+              base::StringPrintf("https://www.brave.com/%d", i);
+          history.push_back(entry);
+        }
+
+        callback(history);
+      }));
+}
+
+void MockSave(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, Save(_, _, _))
-      .WillByDefault(Invoke([](
-          const std::string& name,
-          const std::string& value,
-          ResultCallback callback) {
-        callback(SUCCESS);
-      }));
+      .WillByDefault(
+          Invoke([](const std::string& name, const std::string& value,
+                    ResultCallback callback) { callback(SUCCESS); }));
 }
 
-void MockLoad(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockLoad(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, Load(_, _))
-      .WillByDefault(Invoke([](
-          const std::string& name,
-          LoadCallback callback) {
+      .WillByDefault(Invoke([](const std::string& name, LoadCallback callback) {
         base::FilePath path = GetTestPath();
         path = path.AppendASCII(name);
 
@@ -641,31 +639,46 @@ void MockLoad(
       }));
 }
 
-void MockLoadUserModelForId(
-    const std::unique_ptr<AdsClientMock>& mock) {
-  ON_CALL(*mock, LoadUserModelForId(_, _))
-      .WillByDefault(Invoke([](
-          const std::string& id,
-          LoadCallback callback) {
-        base::FilePath path = GetTestPath();
-        path = path.AppendASCII("user_models");
-        path = path.AppendASCII(id);
+void MockLoad(const std::unique_ptr<AdsClientMock>& mock,
+              const std::string& filename,
+              const std::string& filename_override) {
+  ON_CALL(*mock, Load(filename, _))
+      .WillByDefault(
+          Invoke([=](const std::string& name, LoadCallback callback) {
+            base::FilePath path = GetTestPath();
+            path = path.AppendASCII(filename_override);
 
-        std::string value;
-        if (!base::ReadFileToString(path, &value)) {
-          callback(FAILED, value);
-          return;
-        }
+            std::string value;
+            if (!base::ReadFileToString(path, &value)) {
+              callback(FAILED, value);
+              return;
+            }
 
-        callback(SUCCESS, value);
-      }));
+            callback(SUCCESS, value);
+          }));
 }
 
-void MockLoadResourceForId(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockLoadAdsResource(const std::unique_ptr<AdsClientMock>& mock) {
+  ON_CALL(*mock, LoadAdsResource(_, _, _))
+      .WillByDefault(Invoke(
+          [](const std::string& id, const int version, LoadCallback callback) {
+            base::FilePath path = GetTestPath();
+            path = path.AppendASCII("resources");
+            path = path.AppendASCII(id);
+
+            std::string value;
+            if (!base::ReadFileToString(path, &value)) {
+              callback(FAILED, value);
+              return;
+            }
+
+            callback(SUCCESS, value);
+          }));
+}
+
+void MockLoadResourceForId(const std::unique_ptr<AdsClientMock>& mock) {
   ON_CALL(*mock, LoadResourceForId(_))
-      .WillByDefault(Invoke([](
-          const std::string& id) -> std::string {
+      .WillByDefault(Invoke([](const std::string& id) -> std::string {
         base::FilePath path = GetResourcesPath();
         path = path.AppendASCII(id);
 
@@ -676,13 +689,11 @@ void MockLoadResourceForId(
       }));
 }
 
-void MockUrlRequest(
-    const std::unique_ptr<AdsClientMock>& mock,
-    const URLEndpoints& endpoints) {
+void MockUrlRequest(const std::unique_ptr<AdsClientMock>& mock,
+                    const URLEndpoints& endpoints) {
   ON_CALL(*mock, UrlRequest(_, _))
-      .WillByDefault(Invoke([&endpoints](
-          const UrlRequestPtr& url_request,
-          UrlRequestCallback callback) {
+      .WillByDefault(Invoke([&endpoints](const UrlRequestPtr& url_request,
+                                         UrlRequestCallback callback) {
         int status_code = -1;
 
         std::string body;
@@ -692,15 +703,15 @@ void MockUrlRequest(
 
         URLEndpointResponse url_endpoint_response;
         if (GetNextUrlEndpointResponse(url_request->url, endpoints,
-            &url_endpoint_response)) {
+                                       &url_endpoint_response)) {
           status_code = url_endpoint_response.first;
           if (status_code / 100 == 2) {
             body = url_endpoint_response.second;
 
             if (base::StartsWith(body, "/",
-                base::CompareCase::INSENSITIVE_ASCII)) {
-              const base::StringPiece filename = base::TrimString(body, "//",
-                  base::TrimPositions::TRIM_LEADING);
+                                 base::CompareCase::INSENSITIVE_ASCII)) {
+              const base::StringPiece filename = base::TrimString(
+                  body, "//", base::TrimPositions::TRIM_LEADING);
 
               const base::FilePath path = GetTestPath().AppendASCII(filename);
               ASSERT_TRUE(base::ReadFileToString(path, &body));
@@ -719,13 +730,11 @@ void MockUrlRequest(
       }));
 }
 
-void MockRunDBTransaction(
-    const std::unique_ptr<AdsClientMock>& mock,
-    const std::unique_ptr<Database>& database) {
+void MockRunDBTransaction(const std::unique_ptr<AdsClientMock>& mock,
+                          const std::unique_ptr<Database>& database) {
   ON_CALL(*mock, RunDBTransaction(_, _))
-      .WillByDefault(Invoke([&database](
-          DBTransactionPtr transaction,
-          RunDBTransactionCallback callback) {
+      .WillByDefault(Invoke([&database](DBTransactionPtr transaction,
+                                        RunDBTransactionCallback callback) {
         DBCommandResponsePtr response = DBCommandResponse::New();
 
         if (!database) {
@@ -738,8 +747,7 @@ void MockRunDBTransaction(
       }));
 }
 
-void MockPrefs(
-    const std::unique_ptr<AdsClientMock>& mock) {
+void MockPrefs(const std::unique_ptr<AdsClientMock>& mock) {
   MockGetBooleanPref(mock);
   MockSetBooleanPref(mock);
 
@@ -763,43 +771,54 @@ void MockPrefs(
   MockDefaultPrefs(mock);
 }
 
-base::Time TimeFromDateString(
-    const std::string& date) {
-  const std::string utc_date = date + " 23:59:59.999 +00:00";
-
-  base::Time time;
-  if (!base::Time::FromString(utc_date.c_str(), &time)) {
-    return base::Time();
-  }
-
-  return time;
+int64_t TimestampFromDateString(const std::string& date) {
+  return TimeFromDateString(date).ToDoubleT();
 }
 
-int64_t DistantPast() {
-  return 0;
+base::Time TimeFromDateString(const std::string& date) {
+  base::Time time;
+  if (!base::Time::FromUTCString(date.c_str(), &time)) {
+    return time;
+  }
+
+  return time.UTCMidnight() + base::TimeDelta::FromDays(1) -
+         base::TimeDelta::FromMilliseconds(1);
+}
+
+int64_t DistantPastAsTimestamp() {
+  return 0;  // Thursday, 1 January 1970 00:00:00
+}
+
+base::Time DistantPast() {
+  return base::Time::FromDoubleT(DistantPastAsTimestamp());
 }
 
 std::string DistantPastAsISO8601() {
-  const int64_t distant_past = DistantPast();
-  return TimestampToISO8601(distant_past);
+  return base::TimeToISO8601(DistantPast());
 }
 
-int64_t Now() {
-  return static_cast<int64_t>(base::Time::Now().ToDoubleT());
+int64_t NowAsTimestamp() {
+  return static_cast<int64_t>(Now().ToDoubleT());
+}
+
+base::Time Now() {
+  return base::Time::Now();
 }
 
 std::string NowAsISO8601() {
-  const base::Time time = base::Time::Now();
-  return TimeToISO8601(time);
+  return base::TimeToISO8601(Now());
 }
 
-int64_t DistantFuture() {
-  return 4102444799;
+int64_t DistantFutureAsTimestamp() {
+  return 4102444799;  // Thursday, 31 December 2099 23:59:59
+}
+
+base::Time DistantFuture() {
+  return base::Time::FromDoubleT(DistantFutureAsTimestamp());
 }
 
 std::string DistantFutureAsISO8601() {
-  const int64_t distant_future = DistantFuture();
-  return TimestampToISO8601(distant_future);
+  return base::TimeToISO8601(DistantFuture());
 }
 
 }  // namespace ads

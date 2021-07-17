@@ -3,7 +3,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
-import styled, { css } from 'brave-ui/theme'
+import styled, { css } from 'styled-components'
+
+import favoritesSelectedLight from './assets/favorites-selected.png'
+import favoritesUnselectedLight from './assets/favorites-unselected.png'
+import frecencySelectedLight from './assets/frecency-selected.png'
+import frecencyUnselectedLight from './assets/frecency-unselected.png'
+
+import favoritesSelectedDark from './assets/favorites-selected-dark.png'
+import favoritesUnselectedDark from './assets/favorites-unselected-dark.png'
+import frecencySelectedDark from './assets/frecency-selected-dark.png'
+import frecencyUnselectedDark from './assets/frecency-unselected-dark.png'
 
 interface Props {
   textDirection: string
@@ -13,10 +23,26 @@ const isDarkTheme = (p: any) => {
   return p.theme.name === 'Brave Dark'
 }
 
-export const SettingsMenu = styled<Props, 'div'>('div')`
+const getTopSiteCustomizationImage = (dark: boolean, selected: boolean, favorites: boolean) => {
+  if (dark) {
+    if (selected) {
+      return favorites ? favoritesSelectedDark : frecencySelectedDark
+    } else {
+      return favorites ? favoritesUnselectedDark : frecencyUnselectedDark
+    }
+  } else {
+    if (selected) {
+      return favorites ? favoritesSelectedLight : frecencySelectedLight
+    } else {
+      return favorites ? favoritesUnselectedLight : frecencyUnselectedLight
+    }
+  }
+}
+
+export const SettingsMenu = styled('div')<Props>`
   width: 720px;
   min-width: 720px;
-  ${p => p.textDirection && (p.textDirection === 'rtl') ? `left: 12px` : `right: 12px`}
+  ${p => p.textDirection && (p.textDirection === 'rtl') ? `left: 12px` : `right: 12px`};
   background-color: ${p => p.theme.color.contextMenuBackground};
   color:  ${p => p.theme.color.contextMenuForeground};
   border-radius: 8px;
@@ -26,7 +52,7 @@ export const SettingsMenu = styled<Props, 'div'>('div')`
   font-family: ${p => p.theme.fontFamily.body};
 `
 
-export const SettingsContent = styled<{}, 'div'>('div')`
+export const SettingsContent = styled('div')<{}>`
   display: grid;
   grid-template-columns: auto 1fr;
   grid-gap: 20px;
@@ -36,7 +62,7 @@ export const SettingsContent = styled<{}, 'div'>('div')`
   }
 `
 
-export const SettingsSidebar = styled<{}, 'aside'>('aside')`
+export const SettingsSidebar = styled('aside')<{}>`
   position: relative;
   /* normalize against SettingsMenu default padding */
   margin-left: -24px;
@@ -48,7 +74,7 @@ interface SettingsSidebarActiveButtonSliderProps {
 }
 
 export const SettingsSidebarActiveButtonSlider =
-  styled<SettingsSidebarActiveButtonSliderProps, 'div'>('div')`
+  styled('div')<SettingsSidebarActiveButtonSliderProps>`
   position: absolute;
   top: 0;
   left: 0;
@@ -67,7 +93,7 @@ interface SettingsSidebarSVGContentProps {
   isActive: boolean
 }
 
-export const SettingsSidebarSVGContent = styled<SettingsSidebarSVGContentProps, 'div'>('div')`
+export const SettingsSidebarSVGContent = styled('div')<SettingsSidebarSVGContentProps>`
   position: relative;
   width: 20px;
   height: 20px;
@@ -104,7 +130,7 @@ export const SettingsSidebarSVGContent = styled<SettingsSidebarSVGContentProps, 
 
 `
 
-export const SettingsSidebarButtonText = styled<{ isActive: boolean }, 'span'>('span')`
+export const SettingsSidebarButtonText = styled('span')<{ isActive: boolean }>`
   margin-left: 16px;
   font-weight: 500;
   font-size: 13px;
@@ -161,7 +187,7 @@ interface SettingsSidebarButtonProps {
   activeTab: boolean
 }
 
-export const SettingsSidebarButton = styled<SettingsSidebarButtonProps, 'button'>('button')`
+export const SettingsSidebarButton = styled('button')<SettingsSidebarButtonProps>`
   --sidebar-button-transition-timing: .12s;
   appearance: none;
   padding: 0;
@@ -200,14 +226,14 @@ export const SettingsSidebarButton = styled<SettingsSidebarButtonProps, 'button'
   }
 `
 
-export const SettingsFeatureBody = styled<{}, 'section'>('section')`
+export const SettingsFeatureBody = styled('section')<{}>`
   padding: 10px 16px;
   height: 360px;
   overflow: auto;
   overscroll-behavior: contain;
 `
 
-export const SettingsTitle = styled<{}, 'div'>('div')`
+export const SettingsTitle = styled('div')<{}>`
   margin-bottom: 17px;
   grid-template-columns: 1fr 20px;
   display: grid;
@@ -220,11 +246,10 @@ export const SettingsTitle = styled<{}, 'div'>('div')`
     font-size: 20px;
     line-height: 30px;
     letter-spacing: 0.02em;
-    color: ${p => p.theme.color.neutral900};
   }
 `
 
-export const SettingsCloseIcon = styled<{}, 'button'>('button')`
+export const SettingsCloseIcon = styled('button')<{}>`
   appearance: none;
   padding: 0;
   margin: 0;
@@ -251,7 +276,7 @@ interface SettingsRowProps {
   isInteractive?: boolean
 }
 
-export const SettingsRow = styled<SettingsRowProps, 'div'>('div')`
+export const SettingsRow = styled('div')<SettingsRowProps>`
   box-sizing: border-box;
   margin-bottom: 10px;
   display: grid;
@@ -283,7 +308,7 @@ export const SettingsRow = styled<SettingsRowProps, 'div'>('div')`
   }
 `
 
-export const SettingsText = styled<{}, 'span'>('span')`
+export const SettingsText = styled('span')<{}>`
   display: flex;
   align-items: center;
   font-style: normal;
@@ -304,7 +329,7 @@ interface SettingsWrapperProps {
   textDirection: string
 }
 
-export const SettingsWrapper = styled<SettingsWrapperProps, 'div'>('div')`
+export const SettingsWrapper = styled('div')<SettingsWrapperProps>`
   position: fixed;
   top: 0;
   left: 0;
@@ -329,7 +354,7 @@ export const SettingsWrapper = styled<SettingsWrapperProps, 'div'>('div')`
   }
 `
 
-export const SettingsWidget = styled<{}, 'div'>('div')`
+export const SettingsWidget = styled('div')<{}>`
   width: calc(50% - var(--widget-gap));
   margin-top: calc(20px - var(--widget-gap));
   padding: 0px 1px;
@@ -347,28 +372,28 @@ export const StyledWidgetSettings = styled('div')`
   gap: var(--widget-gap);
 `
 
-export const FeaturedSettingsWidget = styled<{}, 'div'>('div')`
+export const FeaturedSettingsWidget = styled('div')<{}>`
   width: 100%;
 `
 
-export const StyledBannerImage = styled<{}, 'img'>('img')`
+export const StyledBannerImage = styled('img')<{}>`
   width: 100%;
   margin-bottom: 10px;
 `
 
-export const StyledSettingsInfo = styled<{}, 'div'>('div')`
+export const StyledSettingsInfo = styled('div')<{}>`
   float: left;
   max-width: 250px;
   flex-grow: 1;
 `
 
-export const StyledSettingsTitle = styled<{}, 'div'>('div')`
+export const StyledSettingsTitle = styled('div')<{}>`
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 5px;
 `
 
-export const StyledSettingsCopy = styled<{}, 'div'>('div')`
+export const StyledSettingsCopy = styled('div')<{}>`
   font-size: 13px;
   font-weight: 300;
   line-height: 17px;
@@ -379,7 +404,7 @@ interface WidgetToggleProps {
   float: boolean
 }
 
-export const StyledWidgetToggle = styled<WidgetToggleProps, 'button'>('button')`
+export const StyledWidgetToggle = styled('button')<WidgetToggleProps>`
   color: white;
   font-weight: 600;
   font-size: 13px;
@@ -402,7 +427,7 @@ export const StyledWidgetToggle = styled<WidgetToggleProps, 'button'>('button')`
   }
 `
 
-export const StyledButtonIcon = styled<{}, 'div'>('div')`
+export const StyledButtonIcon = styled('div')<{}>`
   display: inline-block;
   margin-right: 5px;
   width: 19px;
@@ -419,14 +444,14 @@ export const StyledHideButtonIcon = styled(StyledButtonIcon)`
   height: 17px;
 `
 
-export const StyledButtonLabel = styled<{}, 'span'>('span')`
+export const StyledButtonLabel = styled('span')<{}>`
   max-width: 100px;
   text-overflow: ellipsis;
   display: inline-block;
   white-space: nowrap;
 `
 
-export const ToggleCardsWrapper = styled<{}, 'div'>('div')`
+export const ToggleCardsWrapper = styled('div')<{}>`
   padding: 15px 15px 5px 15px;
   clear: both;
   border-radius: 10px;
@@ -434,21 +459,106 @@ export const ToggleCardsWrapper = styled<{}, 'div'>('div')`
   color: ${p => isDarkTheme(p) ? '#FFF' : 'rgb(59, 62, 79)'};
 `
 
-export const ToggleCardsText = styled<{}, 'div'>('div')`
+export const ToggleCardsText = styled('div')<{}>`
   text-align: left;
   max-width: 325px;
 `
 
-export const ToggleCardsTitle = styled<{}, 'span'>('span')`
+export const ToggleCardsTitle = styled('span')<{}>`
   font-weight: bold;
 `
 
-export const ToggleCardsCopy = styled<{}, 'p'>('p')`
+export const ToggleCardsCopy = styled('p')<{}>`
   line-height: 18px;
   font-weight: normal;
 `
 
-export const ToggleCardsSwitch = styled<{}, 'div'>('div')`
+export const ToggleCardsSwitch = styled('div')<{}>`
   float: right;
   margin: -65px -10px 0 0;
+`
+
+export const StyledTopSitesCustomizationSettings = styled('div')`
+  --widget-gap: 10px;
+  font-family: ${p => p.theme.fontFamily.heading};
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  gap: var(--widget-gap)
+`
+
+export const StyledTopSitesCustomizationSettingsOption = styled('button')<{}>`
+  width: calc(50% - var(--widget-gap) / 2);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: unset;
+  outline: unset;
+  background: inherit;
+
+  &:focus-visible {
+    outline-style: solid;
+    outline-color: ${p => p.theme.color.brandBrave};
+    outline-width: 1px;
+  }
+`
+
+interface CustomizationImageBorderProps {
+  selected: boolean
+}
+
+export const StyledTopSitesCustomizationImageBorder = styled('div')<CustomizationImageBorderProps>`
+  margin-bottom: 8px;
+  border-radius: 11px;
+
+  ${p => p.selected && css`
+    background: ${p => isDarkTheme(p) ? 'linear-gradient(314.42deg, #FA7250 6.04%, #FF1893 44.31%, #A78AFF 100%)'
+                                      : 'linear-gradient(122.53deg, #4C54D2 0%, #BF14A2 56.25%, #F73A1C 100%)'};
+    padding: 3px;
+  `}
+
+  ${p => !p.selected && css`
+    border: 2px solid ${p => isDarkTheme(p) ? '#3B3E4F' : '#F1F3F5'};
+    background: ${p => isDarkTheme(p) ? '#17171F' : '#FFF'};
+    padding: 1px;
+
+    &:hover {
+      border: 2px solid ${p => isDarkTheme(p) ? '#C2C4CF' : '#AEB1C2'};
+      background: ${p => isDarkTheme(p) ? '#2B2D3F' : '#FAFAFF'};
+      padding: 1px;
+    }
+  `}
+`
+
+interface CustomizationImageProps {
+  isFavorites: boolean
+  selected: boolean
+}
+
+export const StyledTopSitesCustomizationImage = styled('img')<CustomizationImageProps>`
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  content: url(${p => getTopSiteCustomizationImage(isDarkTheme(p), p.selected, p.isFavorites)});
+
+  ${p => p.selected && css`
+    background: ${p => isDarkTheme(p) ? '#525779' : '#F0F2FF'};
+    border-radius: 8px;
+  `}
+`
+
+export const StyledTopSitesCustomizationOptionTitle = styled('div')<{}>`
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 20px;
+  margin-bottom: 2px;
+  text-align: left;
+`
+
+export const StyledTopSitesCustomizationOptionDesc = styled('div')<{}>`
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 17px;
+  text-align: left;
 `

@@ -8,6 +8,8 @@
 
 #include "base/containers/flat_map.h"
 #include "base/test/bind.h"
+#include "base/test/scoped_feature_list.h"
+#include "bat/ledger/global_constants.h"
 #include "bat/ledger/internal/uphold/uphold_util.h"
 #include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "brave/common/brave_paths.h"
@@ -19,6 +21,8 @@
 #include "brave/components/brave_rewards/browser/test/common/rewards_browsertest_promotion.h"
 #include "brave/components/brave_rewards/browser/test/common/rewards_browsertest_response.h"
 #include "brave/components/brave_rewards/browser/test/common/rewards_browsertest_util.h"
+#include "brave/components/brave_rewards/common/features.h"
+#include "brave/components/brave_rewards/common/pref_names.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/testing_profile.h"
@@ -37,6 +41,7 @@ class RewardsBrowserTest : public InProcessBrowserTest {
     response_ = std::make_unique<RewardsBrowserTestResponse>();
     contribution_ = std::make_unique<RewardsBrowserTestContribution>();
     promotion_ = std::make_unique<RewardsBrowserTestPromotion>();
+    feature_list_.InitAndEnableFeature(brave_rewards::features::kGeminiFeature);
   }
 
   void SetUpOnMainThread() override {
@@ -109,6 +114,19 @@ class RewardsBrowserTest : public InProcessBrowserTest {
     return url;
   }
 
+  double FetchBalance() {
+    double total = -1.0;
+    base::RunLoop run_loop;
+    rewards_service_->FetchBalance(base::BindLambdaForTesting(
+        [&](ledger::type::Result result, ledger::type::BalancePtr balance) {
+          total = balance ? balance->total : -1.0;
+          run_loop.Quit();
+        }));
+    run_loop.Run();
+    return total;
+  }
+
+  base::test::ScopedFeatureList feature_list_;
   brave_rewards::RewardsServiceImpl* rewards_service_;
   std::unique_ptr<net::EmbeddedTestServer> https_server_;
   std::unique_ptr<RewardsBrowserTestResponse> response_;
@@ -270,7 +288,8 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, ShowACPercentInThePanel) {
   EXPECT_NE(score.find("100%"), std::string::npos);
 }
 
-IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, ZeroBalanceWalletClaimNotCalled) {
+IN_PROC_BROWSER_TEST_F(RewardsBrowserTest,
+                       ZeroBalanceWalletClaimNotCalled_Uphold) {
   response_->SetVerifiedWallet(true);
   rewards_browsertest_util::StartProcess(rewards_service_);
   contribution_->SetUpUpholdWallet(rewards_service_, 50.0);
@@ -278,28 +297,58 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, ZeroBalanceWalletClaimNotCalled) {
   response_->ClearRequests();
 
   base::RunLoop run_loop;
-  auto test_callback =
-      [&](
-          const ledger::type::Result result,
-          ledger::type::UpholdWalletPtr wallet) {
-        auto requests = response_->GetRequests();
-        EXPECT_EQ(result, ledger::type::Result::LEDGER_OK);
-        EXPECT_FALSE(requests.empty());
+  auto test_callback = [&](const ledger::type::Result result,
+                           ledger::type::ExternalWalletPtr wallet) {
+    auto requests = response_->GetRequests();
+    EXPECT_EQ(result, ledger::type::Result::LEDGER_OK);
+    EXPECT_FALSE(requests.empty());
 
-        // Should not attempt to call /v2/wallet/UUID/claim endpoint
-        // since by default the wallet should contain 0 `user_funds`
-        auto wallet_claim_call = std::find_if(
-            requests.begin(), requests.end(),
-            [](const Request& req) {
-              return req.url.find("/v2/wallet") != std::string::npos &&
-                     req.url.find("/claim") != std::string::npos;
-            });
+    // Should not attempt to call /v2/wallet/UUID/claim endpoint
+    // since by default the wallet should contain 0 `user_funds`
+    auto wallet_claim_call =
+        std::find_if(requests.begin(), requests.end(), [](const Request& req) {
+          return req.url.find("/v2/wallet") != std::string::npos &&
+                 req.url.find("/claim") != std::string::npos;
+        });
 
-        EXPECT_TRUE(wallet_claim_call == requests.end());
-        run_loop.Quit();
-      };
+    EXPECT_TRUE(wallet_claim_call == requests.end());
+    run_loop.Quit();
+  };
 
-  rewards_service_->GetUpholdWallet(base::BindLambdaForTesting(test_callback));
+  rewards_service_->GetExternalWallet(
+      base::BindLambdaForTesting(test_callback));
+  run_loop.Run();
+}
+
+IN_PROC_BROWSER_TEST_F(RewardsBrowserTest,
+                       ZeroBalanceWalletClaimNotCalled_Gemini) {
+  response_->SetVerifiedWallet(true);
+  rewards_browsertest_util::StartProcess(rewards_service_);
+  contribution_->SetUpGeminiWallet(rewards_service_, 50.0);
+
+  response_->ClearRequests();
+
+  base::RunLoop run_loop;
+  auto test_callback = [&](const ledger::type::Result result,
+                           ledger::type::ExternalWalletPtr wallet) {
+    auto requests = response_->GetRequests();
+    EXPECT_EQ(result, ledger::type::Result::LEDGER_OK);
+    EXPECT_FALSE(requests.empty());
+
+    // Should not attempt to call /v2/wallet/UUID/claim endpoint
+    // since by default the wallet should contain 0 `user_funds`
+    auto wallet_claim_call =
+        std::find_if(requests.begin(), requests.end(), [](const Request& req) {
+          return req.url.find("/v2/wallet") != std::string::npos &&
+                 req.url.find("/claim") != std::string::npos;
+        });
+
+    EXPECT_TRUE(wallet_claim_call == requests.end());
+    run_loop.Quit();
+  };
+
+  rewards_service_->GetExternalWallet(
+      base::BindLambdaForTesting(test_callback));
   run_loop.Run();
 }
 
@@ -330,7 +379,7 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest,
 }
 
 IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, BackupRestoreModalHasNoNotice) {
-  response_->SetUserFundsBalance(true);
+  response_->SetUserFundsBalance(20.0);
   rewards_browsertest_util::StartProcess(rewards_service_);
   rewards_browsertest_util::CreateWallet(rewards_service_);
   context_helper_->LoadURL(rewards_browsertest_util::GetRewardsUrl());
@@ -395,9 +444,8 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, DISABLED_ResetRewardsWithBAT) {
       "[data-test-id='settings-modal-tabs-2']");
 
   rewards_browsertest_util::WaitForElementToContain(
-      contents(),
-      "[data-test-id='reset-text']",
-      "Your 30 BATs and other Rewards");
+      contents(), "[data-test-id='reset-text']",
+      "Your 30 BAT and other Rewards");
 }
 
 // https://github.com/brave/brave-browser/issues/12704
@@ -426,6 +474,27 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, DISABLED_UpholdLimitNoBAT) {
     auto found = current_url.spec().find("intention=login");
     ASSERT_TRUE(found != std::string::npos);
   }
+}
+
+IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, EnableRewardsWithBalance) {
+  // Make sure rewards, ads, and AC prefs are off
+  auto* prefs = browser()->profile()->GetPrefs();
+  prefs->SetBoolean(brave_rewards::prefs::kEnabled, false);
+  prefs->SetBoolean(brave_rewards::prefs::kAutoContributeEnabled, false);
+
+  // Load a balance into the user's wallet
+  rewards_browsertest_util::StartProcess(rewards_service_);
+  rewards_browsertest_util::CreateWallet(rewards_service_);
+  rewards_service_->FetchPromotions();
+  promotion_->WaitForPromotionInitialization();
+  promotion_->ClaimPromotionViaCode();
+
+  rewards_service_->EnableRewards();
+  base::RunLoop().RunUntilIdle();
+
+  // Ensure that AC is not enabled
+  EXPECT_TRUE(prefs->GetBoolean(brave_rewards::prefs::kEnabled));
+  EXPECT_FALSE(prefs->GetBoolean(brave_rewards::prefs::kAutoContributeEnabled));
 }
 
 }  // namespace rewards_browsertest

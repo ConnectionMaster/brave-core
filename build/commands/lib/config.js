@@ -2,6 +2,7 @@
 
 const path = require('path')
 const fs = require('fs')
+const os = require('os')
 const assert = require('assert')
 const { spawnSync } = require('child_process')
 const rootDir = require('./root')
@@ -23,8 +24,8 @@ const run = (cmd, args = []) => {
 }
 
 // this is a huge hack because the npm config doesn't get passed through from brave-browser .npmrc/package.json
-var packageConfig = function(key){
-  let packages = { config: {}}
+var packageConfig = function (key) {
+  let packages = { config: {} }
   if (fs.existsSync(path.join(rootDir, 'package.json'))) {
     packages = require(path.relative(__dirname, path.join(rootDir, 'package.json')))
   }
@@ -56,8 +57,8 @@ const parseExtraInputs = (inputs, accumulator, callback) => {
       separatorIndex = input.length
     }
 
-    const key = input.substring(0, separatorIndex);
-    const value = input.substring(separatorIndex + 1);
+    const key = input.substring(0, separatorIndex)
+    const value = input.substring(separatorIndex + 1)
     callback(accumulator, key, value)
   }
 }
@@ -84,16 +85,35 @@ const Config = function () {
   this.targetArch = getNPMConfig(['target_arch']) || 'x64'
   this.targetOS = getNPMConfig(['target_os'])
   this.gypTargetArch = 'x64'
-  this.targetApkBase ='classic'
-  this.braveGoogleApiKey = getNPMConfig(['brave_google_api_key']) || 'AIzaSyAQfxPJiounkhOjODEO5ZieffeBv6yft2Q'
+  this.targetAndroidBase = 'classic'
+  this.braveGoogleApiKey = getNPMConfig(['brave_google_api_key']) || 'AIzaSyAREPLACEWITHYOUROWNGOOGLEAPIKEY2Q'
   this.googleApiEndpoint = getNPMConfig(['brave_google_api_endpoint']) || 'https://www.googleapis.com/geolocation/v1/geolocate?key='
   this.googleDefaultClientId = getNPMConfig(['google_default_client_id']) || ''
   this.googleDefaultClientSecret = getNPMConfig(['google_default_client_secret']) || ''
   this.braveServicesKey = getNPMConfig(['brave_services_key']) || ''
   this.infuraProjectId = getNPMConfig(['brave_infura_project_id']) || ''
   this.binanceClientId = getNPMConfig(['binance_client_id']) || ''
+  this.ftxClientId = getNPMConfig(['ftx_client_id']) || ''
+  this.ftxClientSecret = getNPMConfig(['ftx_client_secret']) || ''
+  this.bitflyerClientId = getNPMConfig(['bitflyer_client_id']) || ''
+  this.bitflyerClientSecret = getNPMConfig(['bitflyer_client_secret']) || ''
+  this.bitflyerStagingClientId = getNPMConfig(['bitflyer_staging_client_id']) || ''
+  this.bitflyerStagingClientSecret = getNPMConfig(['bitflyer_staging_client_secret']) || ''
+  this.bitflyerStagingUrl = getNPMConfig(['bitflyer_staging_url']) || ''
+  this.geminiApiUrl = getNPMConfig(['gemini_api_url']) || ''
+  this.geminiApiStagingUrl = getNPMConfig(['gemini_api_staging_url']) || ''
+  this.geminiOauthUrl = getNPMConfig(['gemini_oauth_url']) || ''
+  this.geminiOauthStagingUrl = getNPMConfig(['gemini_oauth_staging_url']) || ''
+  this.geminiWalletClientId = getNPMConfig(['gemini_wallet_client_id']) || ''
+  this.geminiWalletClientSecret = getNPMConfig(['gemini_wallet_client_secret']) || ''
+  this.geminiWalletStagingClientId = getNPMConfig(['gemini_wallet_staging_client_id']) || ''
+  this.geminiWalletStagingClientSecret = getNPMConfig(['gemini_wallet_staging_client_secret']) || ''
   this.geminiClientId = getNPMConfig(['gemini_client_id']) || ''
   this.geminiClientSecret = getNPMConfig(['gemini_client_secret']) || ''
+  this.upholdClientId = getNPMConfig(['uphold_client_id']) || ''
+  this.upholdClientSecret = getNPMConfig(['uphold_client_secret']) || ''
+  this.upholdStagingClientId = getNPMConfig(['uphold_staging_client_id']) || ''
+  this.upholdStagingClientSecret = getNPMConfig(['uphold_staging_client_secret']) || ''
   this.braveSyncEndpoint = getNPMConfig(['brave_sync_endpoint']) || ''
   this.safeBrowsingApiEndpoint = getNPMConfig(['safebrowsing_api_endpoint']) || ''
   this.updaterProdEndpoint = getNPMConfig(['updater_prod_endpoint']) || ''
@@ -115,10 +135,14 @@ const Config = function () {
   this.channel = 'development'
   this.git_cache_path = getNPMConfig(['git_cache_path'])
   this.sccache = getNPMConfig(['sccache'])
+  this.gomaServerHost = getNPMConfig(['goma_server_host'])
+  // os.cpus().length is number of threads not physical cores
+  this.gomaJValue = Math.min(40, os.cpus().length * 2)
   this.braveStatsApiKey = getNPMConfig(['brave_stats_api_key']) || ''
   this.braveStatsUpdaterUrl = getNPMConfig(['brave_stats_updater_url']) || ''
   this.ignore_compile_failure = false
   this.enable_hangout_services_extension = true
+  this.enable_pseudolocales = false
   this.sign_widevine_cert = process.env.SIGN_WIDEVINE_CERT || ''
   this.sign_widevine_key = process.env.SIGN_WIDEVINE_KEY || ''
   this.sign_widevine_passwd = process.env.SIGN_WIDEVINE_PASSPHRASE || ''
@@ -146,17 +170,13 @@ Config.prototype.isDebug = function () {
   return this.buildConfig === 'Debug'
 }
 
-Config.prototype.isDcheckAlwaysOn = function () {
-  return this.buildConfig !== 'Release'
-}
-
 Config.prototype.enableCDMHostVerification = function () {
   const enable = this.buildConfig === 'Release' &&
-                 process.platform !== 'linux' &&
-                 this.sign_widevine_cert !== "" &&
-                 this.sign_widevine_key !== "" &&
-                 this.sign_widevine_passwd !== "" &&
-                 fs.existsSync(this.signature_generator)
+    process.platform !== 'linux' &&
+    this.sign_widevine_cert !== "" &&
+    this.sign_widevine_key !== "" &&
+    this.sign_widevine_passwd !== "" &&
+    fs.existsSync(this.signature_generator)
   if (enable) {
     console.log('Widevine cdm host verification is enabled')
   } else {
@@ -200,7 +220,7 @@ Config.prototype.buildArgs = function () {
     target_cpu: this.targetArch,
     is_official_build: this.isOfficialBuild() && !this.isAsan(),
     is_debug: this.isDebug(),
-    dcheck_always_on: this.isDcheckAlwaysOn(),
+    dcheck_always_on: getNPMConfig(['dcheck_always_on']) || this.buildConfig !== 'Release',
     brave_channel: this.channel,
     brave_google_api_key: this.braveGoogleApiKey,
     brave_google_api_endpoint: this.googleApiEndpoint,
@@ -208,8 +228,27 @@ Config.prototype.buildArgs = function () {
     google_default_client_secret: this.googleDefaultClientSecret,
     brave_infura_project_id: this.infuraProjectId,
     binance_client_id: this.binanceClientId,
+    ftx_client_id: this.ftxClientId,
+    ftx_client_secret: this.ftxClientSecret,
+    bitflyer_client_id: this.bitflyerClientId,
+    bitflyer_client_secret: this.bitflyerClientSecret,
+    bitflyer_staging_client_id: this.bitflyerStagingClientId,
+    bitflyer_staging_client_secret: this.bitflyerStagingClientSecret,
+    bitflyer_staging_url: this.bitflyerStagingUrl,
+    gemini_api_url: this.geminiApiUrl,
+    gemini_api_staging_url: this.geminiApiStagingUrl,
+    gemini_oauth_url: this.geminiOauthUrl,
+    gemini_oauth_staging_url: this.geminiOauthStagingUrl,
+    gemini_wallet_client_id: this.geminiWalletClientId,
+    gemini_wallet_client_secret: this.geminiWalletClientSecret,
+    gemini_wallet_staging_client_id: this.geminiWalletStagingClientId,
+    gemini_wallet_staging_client_secret: this.geminiWalletStagingClientSecret,
     gemini_client_id: this.geminiClientId,
     gemini_client_secret: this.geminiClientSecret,
+    uphold_client_id: this.upholdClientId,
+    uphold_client_secret: this.upholdClientSecret,
+    uphold_staging_client_id: this.upholdStagingClientId,
+    uphold_staging_client_secret: this.upholdStagingClientSecret,
     brave_product_name: getNPMConfig(['brave_product_name']) || "brave-core",
     brave_project_name: getNPMConfig(['brave_project_name']) || "brave-core",
     brave_version_major: version_parts[0],
@@ -227,6 +266,7 @@ Config.prototype.buildArgs = function () {
     brave_stats_updater_url: this.braveStatsUpdaterUrl,
     enable_hangout_services_extension: this.enable_hangout_services_extension,
     enable_cdm_host_verification: this.enableCDMHostVerification(),
+    enable_pseudolocales: this.enable_pseudolocales,
     skip_signing: !this.shouldSign(),
     chrome_pgo_phase: this.chromePgoPhase,
     sparkle_dsa_private_key_file: this.sparkleDSAPrivateKeyFile,
@@ -264,9 +304,16 @@ Config.prototype.buildArgs = function () {
     args.last_chrome_installer = this.last_chrome_installer
   }
 
+  if (process.platform === 'darwin') {
+    args.allow_runtime_configurable_key_storage = true
+    if (this.use_goma && this.gomaServerHost) {
+      args.use_system_xcode = false
+    }
+  }
+
   if (this.isDebug() &&
-      this.targetOS !== 'ios' &&
-      this.targetOS !== 'android') {
+    this.targetOS !== 'ios' &&
+    this.targetOS !== 'android') {
     if (process.platform === 'darwin') {
       args.enable_stripping = false
     }
@@ -286,8 +333,8 @@ Config.prototype.buildArgs = function () {
   }
 
   if (this.targetArch === 'x64' &&
-      process.platform === 'linux' &&
-      this.targetOS !== 'android') {
+    process.platform === 'linux' &&
+    this.targetOS !== 'android') {
     // Include vaapi support
     args.use_vaapi = true
   }
@@ -303,14 +350,18 @@ Config.prototype.buildArgs = function () {
       args.chrome_public_manifest_package = 'com.brave.browser'
     } else if (this.channel === 'beta') {
       args.chrome_public_manifest_package = 'com.brave.browser_beta'
+      args.exclude_unwind_tables = false
     } else if (this.channel === 'dev') {
       args.chrome_public_manifest_package = 'com.brave.browser_dev'
     } else if (this.channel === 'nightly') {
       args.android_channel = 'canary'
       args.chrome_public_manifest_package = 'com.brave.browser_nightly'
+      args.exclude_unwind_tables = false
     }
 
-    args.target_apk_base = this.targetApkBase
+    args.target_android_base = this.targetAndroidBase
+    args.target_android_output_format =
+      this.targetAndroidOutputFormat || (this.buildConfig === 'Release' ? 'aab' : 'apk')
     args.android_override_version_name = this.androidOverrideVersionName
 
     args.brave_android_developer_options_code = this.braveAndroidDeveloperOptionsCode
@@ -328,21 +379,24 @@ Config.prototype.buildArgs = function () {
     }
 
     // Feed is not used in Brave
-    args.enable_feed_v1 = false
     args.enable_feed_v2 = false
 
     // TODO(fixme)
     args.enable_tor = false
 
+    // Fixes WebRTC IP leak with default option
+    args.enable_mdns = true
+
     // These do not exist on android
     // TODO - recheck
     delete args.enable_nacl
     delete args.enable_hangout_services_extension
-    delete args.brave_infura_project_id
     // Ideally we'd not pass this on Linux CI and then
     // not have a default value for this. But we'll
     // eventually want it on Android, so keeping CI
     // unchanged and deleting here for now.
+    delete args.ftx_client_id
+    delete args.ftx_client_secret
     delete args.gemini_client_id
     delete args.gemini_client_secret
   }
@@ -387,8 +441,27 @@ Config.prototype.buildArgs = function () {
     delete args.brave_stats_updater_url
     delete args.brave_infura_project_id
     delete args.binance_client_id
+    delete args.ftx_client_id
+    delete args.ftx_client_secret
+    delete args.bitflyer_client_id
+    delete args.bitflyer_client_secret
+    delete args.bitflyer_staging_client_id
+    delete args.bitflyer_staging_client_secret
+    delete args.bitflyer_staging_url
+    delete args.gemini_api_url
+    delete args.gemini_api_staging_url
+    delete args.gemini_oauth_url
+    delete args.gemini_oauth_staging_url
+    delete args.gemini_wallet_client_id
+    delete args.gemini_wallet_client_secret
+    delete args.gemini_wallet_staging_client_id
+    delete args.gemini_wallet_staging_client_secret
     delete args.gemini_client_id
     delete args.gemini_client_secret
+    delete args.uphold_client_id
+    delete args.uphold_client_secret
+    delete args.uphold_staging_client_id
+    delete args.uphold_staging_client_secret
     delete args.webcompat_report_api_endpoint
     delete args.use_blink_v8_binding_new_idl_interface
     delete args.v8_enable_verify_heap
@@ -396,7 +469,7 @@ Config.prototype.buildArgs = function () {
   }
 
   if (process.platform === 'win32') {
-    args.cc_wrapper = path.join(this.srcDir, 'brave', 'script', 'redirect-cc.cmd')
+    args.cc_wrapper = path.join(this.srcDir, 'brave', 'buildtools', 'win', 'redirect-cc', 'bin', 'redirect-cc.exe')
   } else {
     args.cc_wrapper = path.join(this.srcDir, 'brave', 'script', 'redirect-cc.py')
   }
@@ -405,9 +478,9 @@ Config.prototype.buildArgs = function () {
 
 Config.prototype.shouldSign = function () {
   if (this.skip_signing ||
-      this.buildConfig !== 'Release' ||
-      this.targetOS === 'ios') {
-    return false;
+    this.buildConfig !== 'Release' ||
+    this.targetOS === 'ios') {
+    return false
   }
 
   if (this.targetOS === 'android') {
@@ -420,10 +493,10 @@ Config.prototype.shouldSign = function () {
 
   if (process.platform === 'win32') {
     return process.env.CERT !== undefined &&
-           process.env.SIGNTOOL_ARGS !== undefined
+      process.env.SIGNTOOL_ARGS !== undefined
   }
 
-  return false;
+  return false
 }
 
 Config.prototype.prependPath = function (oldPath, addPath) {
@@ -489,8 +562,11 @@ Config.prototype.update = function (options) {
 
   if (options.target_os === 'android') {
     this.targetOS = 'android'
-    if (options.target_apk_base) {
-      this.targetApkBase = options.target_apk_base
+    if (options.target_android_base) {
+      this.targetAndroidBase = options.target_android_base
+    }
+    if (options.target_android_output_format) {
+      this.targetAndroidOutputFormat = options.target_android_output_format
     }
     if (options.android_override_version_name) {
       this.androidOverrideVersionName = options.android_override_version_name
@@ -507,6 +583,18 @@ Config.prototype.update = function (options) {
     this.is_asan = false
   }
 
+  if (options.use_goma) {
+    this.use_goma = true
+  } else {
+    this.use_goma = false
+  }
+
+  if (options.force_gn_gen) {
+    this.force_gn_gen = true;
+  } else {
+    this.force_gn_gen = false;
+  }
+
   if (options.C) {
     this.__outputDir = options.C
   }
@@ -520,7 +608,7 @@ Config.prototype.update = function (options) {
   }
 
   if (options.brave_safetynet_api_key) {
-    this.braveSafetyNetApiKey = options.brave_safetynet_api_key;
+    this.braveSafetyNetApiKey = options.brave_safetynet_api_key
   }
 
   if (options.brave_google_api_endpoint) {
@@ -535,12 +623,85 @@ Config.prototype.update = function (options) {
     this.binanceClientId = options.binance_client_id
   }
 
+  if (options.ftx_client_id) {
+    this.ftxClientId = options.ftx_client_id
+  }
+
+  if (options.ftx_client_secret) {
+    this.ftxClientSecret = options.ftx_client_secret
+  }
+
+  if (options.bitflyer_client_id) {
+    this.bitflyerClientId = options.bitflyer_client_id
+  }
+
+  if (options.bitflyer_client_secret) {
+    this.bitflyerClientSecret = options.bitflyer_client_secret
+  }
+
+  if (options.bitflyer_staging_client_id) {
+    this.bitflyerStagingClientId = options.bitflyer_staging_client_id
+  }
+
+  if (options.bitflyer_staging_client_secret) {
+    this.bitflyerStagingClientSecret = options.bitflyer_staging_client_secret
+  }
+
+  if (options.bitflyer_staging_url) {
+    this.bitflyerStagingUrl = options.bitflyer_staging_url
+  }
+
+  if (options.gemini_api_url) {
+    this.geminiApiUrl = options.gemini_api_url
+  }
+
+  if (options.gemini_api_staging_url) {
+    this.geminiApiStagingUrl = options.gemini_api_staging_url
+  }
+
+  if (options.gemini_oauth_url) {
+    this.geminiOauthUrl = options.gemini_oauth_url
+  }
+
+  if (options.gemini_oauth_staging_url) {
+    this.geminiOauthStagingUrl = options.gemini_oauth_staging_url
+  }
+
+  if (options.gemini_wallet_client_secret) {
+    this.geminiWalletClientSecret = options.gemini_wallet_client_secret
+  }
+
+  if (options.gemini_wallet_staging_client_id) {
+    this.geminiWalletStagingClientId = options.gemini_wallet_staging_client_id
+  }
+
+  if (options.gemini_wallet_staging_client_secret) {
+    this.geminiWalletStagingClientSecret = options.gemini_wallet_staging_client_secret
+  }
+
+
   if (options.gemini_client_id) {
     this.geminiClientId = options.gemini_client_id
   }
 
   if (options.gemini_client_secret) {
     this.geminiClientSecret = options.gemini_client_secret
+  }
+
+  if (options.uphold_client_id) {
+    this.upholdClientId = options.uphold_client_id
+  }
+
+  if (options.uphold_client_secret) {
+    this.upholdClientSecret = options.uphold_client_secret
+  }
+
+  if (options.uphold_staging_client_id) {
+    this.upholdStagingClientId = options.uphold_staging_client_id
+  }
+
+  if (options.uphold_staging_client_secret) {
+    this.upholdStagingClientSecret = options.uphold_staging_client_secret
   }
 
   if (options.safebrowsing_api_endpoint) {
@@ -613,7 +774,7 @@ Config.prototype.update = function (options) {
   if (options.xcode_gen) {
     assert(process.platform === 'darwin' || options.target_os === 'ios')
     if (options.xcode_gen === 'ios') {
-      this.xcode_gen_target = '//brave/vendor/brave-ios:*'
+      this.xcode_gen_target = '//brave/ios:*'
     } else {
       this.xcode_gen_target = options.xcode_gen
     }
@@ -645,6 +806,8 @@ Config.prototype.getCachePath = function () {
 Object.defineProperty(Config.prototype, 'defaultOptions', {
   get: function () {
     let env = Object.assign({}, process.env)
+    env = this.addPathToEnv(env, path.join(this.depotToolsDir, 'python3-bin'), true)
+    env = this.addPathToEnv(env, path.join(this.depotToolsDir, 'python2-bin'), true)
     env = this.addPathToEnv(env, this.depotToolsDir, true)
     env = this.addPythonPathToEnv(env, path.join(this.srcDir, 'brave', 'chromium_src', 'python_modules'))
     env = this.addPythonPathToEnv(env, path.join(this.srcDir, 'brave', 'script'))
@@ -666,21 +829,30 @@ Object.defineProperty(Config.prototype, 'defaultOptions', {
       env.GIT_CACHE_PATH = path.join(this.getCachePath())
     }
 
-    if (this.sccache) {
+    if (this.use_goma && this.gomaServerHost) {
+      env.CC_WRAPPER = path.join(this.depotToolsDir, '.cipd_bin', 'gomacc')
+      env.GOMA_SERVER_HOST = this.gomaServerHost
+      // env.NINJA_REMOTE_NUM_JOBS = this.gomaJValue
+      // console.log('ninja remote jobs number is ' + env.NINJA_REMOTE_NUM_JOBS)
+      console.log('using goma with j value of ' + this.gomaJValue + ' at ' + this.gomaServerHost)
+    } else if (this.sccache) {
       env.CC_WRAPPER = this.sccache
+      console.log('using cc wrapper ' + path.basename(this.sccache))
       if (path.basename(this.sccache) === 'ccache') {
-        console.log('using ccache')
         env.CCACHE_CPP2 = 'yes'
         env.CCACHE_SLOPPINESS = 'pch_defines,time_macros,include_file_mtime'
         env.CCACHE_BASEDIR = this.srcDir
         env = this.addPathToEnv(env, path.join(this.srcDir, 'third_party', 'llvm-build', 'Release+Asserts', 'bin'))
-      } else {
-        console.log('using sccache')
       }
     }
 
     if (process.platform === 'linux') {
       env.LLVM_DOWNLOAD_GOLD_PLUGIN = '1'
+    }
+
+    if (process.platform === 'win32') {
+      // Disable vcvarsall.bat telemetry.
+      env.VSCMD_SKIP_SENDTELEMETRY = '1'
     }
 
     return {

@@ -6,9 +6,11 @@
 #ifndef BRAVE_COMPONENTS_COSMETIC_FILTERS_RENDERER_COSMETIC_FILTERS_JS_HANDLER_H_
 #define BRAVE_COMPONENTS_COSMETIC_FILTERS_RENDERER_COSMETIC_FILTERS_JS_HANDLER_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "base/memory/weak_ptr.h"
 #include "brave/components/cosmetic_filters/common/cosmetic_filters.mojom.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_frame_observer.h"
@@ -31,7 +33,8 @@ class CosmeticFiltersJSHandler {
   // Adds the "cs_worker" JavaScript object and its functions to the current
   // render_frame_.
   void AddJavaScriptObjectToFrame(v8::Local<v8::Context> context);
-  void ProcessURL(const GURL& url);
+  void ProcessURL(const GURL& url, base::OnceClosure callback);
+  void ApplyRules();
 
  private:
   void BindFunctionsToObject(v8::Isolate* isolate,
@@ -44,14 +47,17 @@ class CosmeticFiltersJSHandler {
                             const std::string& name,
                             const base::RepeatingCallback<Sig>& callback);
   bool EnsureConnected();
+  void OnRemoteDisconnect();
 
   void CreateWorkerObject(v8::Isolate* isolate, v8::Local<v8::Context> context);
 
   // A function to be called from JS
   void HiddenClassIdSelectors(const std::string& input);
 
-  void OnShouldDoCosmeticFiltering(bool enabled, bool first_party_enabled);
-  void OnUrlCosmeticResources(base::Value result);
+  void OnShouldDoCosmeticFiltering(base::OnceClosure callback,
+                                   bool enabled,
+                                   bool first_party_enabled);
+  void OnUrlCosmeticResources(base::OnceClosure callback, base::Value result);
   void CSSRulesRoutine(base::DictionaryValue* resources_dict);
   void OnHiddenClassIdSelectors(base::Value result);
 
@@ -59,9 +65,11 @@ class CosmeticFiltersJSHandler {
   mojo::Remote<cosmetic_filters::mojom::CosmeticFiltersResources>
       cosmetic_filters_resources_;
   int32_t isolated_world_id_;
-  bool enabled_1st_party_cf_filtering_;
+  bool enabled_1st_party_cf_;
   std::vector<std::string> exceptions_;
   GURL url_;
+  std::unique_ptr<base::DictionaryValue> resources_dict_;
+  base::WeakPtrFactory<CosmeticFiltersJSHandler> weak_ptr_factory_{this};
 };
 
 // static

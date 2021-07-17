@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.h b/chrome/browser/ui/views/toolbar/toolbar_view.h
-index 1fd8c2ceb74353c9a073f648e223027122387227..bfba80fc480dda1b7a4973cf7b28fe94a88d77ee 100644
+index c232c1c70350012e3da51564c40623d09a3be6de..3fcbc68d6f45aaba8772f3dba731d45787343b15 100644
 --- a/chrome/browser/ui/views/toolbar/toolbar_view.h
 +++ b/chrome/browser/ui/views/toolbar/toolbar_view.h
-@@ -91,12 +91,14 @@ class ToolbarView : public views::AccessiblePaneView,
+@@ -97,12 +97,14 @@ class ToolbarView : public views::AccessiblePaneView,
    ~ToolbarView() override;
  
    // Create the contents of the Browser Toolbar.
@@ -17,7 +17,7 @@ index 1fd8c2ceb74353c9a073f648e223027122387227..bfba80fc480dda1b7a4973cf7b28fe94
    void Update(content::WebContents* tab);
  
    // Updates the visibility of the custom tab bar, potentially animating the
-@@ -127,6 +129,7 @@ class ToolbarView : public views::AccessiblePaneView,
+@@ -133,6 +135,7 @@ class ToolbarView : public views::AccessiblePaneView,
        IntentPickerResponse callback);
  
    // Shows a bookmark bubble and anchors it appropriately.
@@ -25,16 +25,16 @@ index 1fd8c2ceb74353c9a073f648e223027122387227..bfba80fc480dda1b7a4973cf7b28fe94
    void ShowBookmarkBubble(const GURL& url,
                            bool already_bookmarked,
                            bookmarks::BookmarkBubbleObserver* observer);
-@@ -190,6 +193,7 @@ class ToolbarView : public views::AccessiblePaneView,
-   void ChildPreferredSizeChanged(views::View* child) override;
+@@ -197,6 +200,7 @@ class ToolbarView : public views::AccessiblePaneView,
+   friend class AvatarToolbarButtonBrowserTest;
  
   protected:
 +  friend class BraveToolbarView;
-   // AccessiblePaneView:
-   bool SetPaneFocusAndFocusDefault() override;
- 
-@@ -237,6 +241,7 @@ class ToolbarView : public views::AccessiblePaneView,
-   views::View* GetViewForDrop() override;
+   // This controls Toolbar, LocationBar and CustomTabBar visibility.
+   // If we don't set all three, tab navigation from the app menu breaks
+   // on Chrome OS.
+@@ -247,6 +251,7 @@ class ToolbarView : public views::AccessiblePaneView,
+   void OnChromeLabsPrefChanged();
  
    // Loads the images for all the child views.
 +  virtual

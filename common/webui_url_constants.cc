@@ -7,7 +7,8 @@
 
 const char kAdblockHost[] = "adblock";
 const char kAdblockJS[] = "brave_adblock.js";
-const char kIPFSHost[] = "ipfs";
+const char kIPFSWebUIHost[] = "ipfs-internals";
+const char kIPFSWebUIURL[] = "chrome://ipfs-internals/";
 const char kWebcompatReporterHost[] = "webcompat";
 const char kRewardsPageHost[] = "rewards";
 const char kRewardsInternalsHost[] = "rewards-internals";
@@ -17,12 +18,15 @@ const char kTipHost[] = "tip";
 const char kBraveNewTabJS[] = "brave_new_tab.js";
 const char kBraveUIRewardsURL[] = "chrome://rewards/";
 const char kBraveUIAdblockURL[] = "chrome://adblock/";
-const char kBraveUIIPFSURL[] = "chrome://ipfs/";
 const char kBraveUIWebcompatReporterURL[] = "chrome://webcompat/";
 const char kBraveUITipURL[] = "chrome://tip/";
 const char kBraveUIWalletURL[] = "chrome://wallet/";
+const char kBraveUIWalletPanelURL[] = "chrome://wallet-panel.top-chrome/";
+const char kWalletPanelHost[] = "wallet-panel.top-chrome";
+const char kBraveUIWalletPageURL[] = "chrome://wallet/";
+const char kWalletPageHost[] = "wallet";
 const char kExtensionSettingsURL[] = "brave://settings/extensions";
-const char kWalletHost[] = "wallet";
+const char kWalletSettingsURL[] = "brave://settings/wallet";
 const char kBraveSyncPath[] = "braveSync";
 const char kBraveSyncSetupPath[] = "braveSync/setup";
 const char kTorInternalsHost[] = "tor-internals";

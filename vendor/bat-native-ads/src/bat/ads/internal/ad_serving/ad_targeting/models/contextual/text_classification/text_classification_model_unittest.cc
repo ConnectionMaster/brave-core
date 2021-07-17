@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "bat/ads/internal/ad_targeting/processors/contextual/text_classification/text_classification_processor.h"
-#include "bat/ads/internal/ad_targeting/resources/contextual/text_classification/text_classification_resource.h"
+#include "bat/ads/internal/resources/contextual/text_classification/text_classification_resource.h"
 #include "bat/ads/internal/unittest_base.h"
 #include "bat/ads/internal/unittest_util.h"
 
@@ -26,10 +26,9 @@ class BatAdsTextClassificationModelTest : public UnitTestBase {
 };
 
 TEST_F(BatAdsTextClassificationModelTest,
-    GetUntargetedSegmentForUnsupportedLocale) {
+       GetUntargetedSegmentForUninitializedResource) {
   // Arrange
   resource::TextClassification resource;
-  resource.LoadForLocale("XX-XX");
 
   const std::string text = "The quick brown fox jumps over the lazy dog";
   processor::TextClassification processor(&resource);
@@ -40,18 +39,15 @@ TEST_F(BatAdsTextClassificationModelTest,
   const SegmentList segments = model.GetSegments();
 
   // Assert
-  const SegmentList expected_segments = {
-    "untargeted"
-  };
+  const SegmentList expected_segments = {"untargeted"};
 
   EXPECT_EQ(expected_segments, segments);
 }
 
-TEST_F(BatAdsTextClassificationModelTest,
-    GetUntargetedSegmentForEmptyText) {
+TEST_F(BatAdsTextClassificationModelTest, GetUntargetedSegmentForEmptyText) {
   // Arrange
   resource::TextClassification resource;
-  resource.LoadForLocale("en-US");
+  resource.Load();
 
   const std::string text = "";
   processor::TextClassification processor(&resource);
@@ -62,18 +58,16 @@ TEST_F(BatAdsTextClassificationModelTest,
   const SegmentList segments = model.GetSegments();
 
   // Assert
-  const SegmentList expected_segments = {
-    "untargeted"
-  };
+  const SegmentList expected_segments = {"untargeted"};
 
   EXPECT_EQ(expected_segments, segments);
 }
 
 TEST_F(BatAdsTextClassificationModelTest,
-    GetSegmentsForPreviouslyClassifiedText) {
+       GetSegmentsForPreviouslyClassifiedText) {
   // Arrange
   resource::TextClassification resource;
-  resource.LoadForLocale("en-US");
+  resource.Load();
 
   const std::string text = "Some content about technology & computing";
   processor::TextClassification processor(&resource);
@@ -85,25 +79,21 @@ TEST_F(BatAdsTextClassificationModelTest,
 
   // Assert
   const SegmentList expected_segments = {
-    "technology & computing-technology & computing",
-    "technology & computing-unix",
-    "science-geology"
-  };
+      "technology & computing-technology & computing",
+      "technology & computing-unix", "science-geology"};
 
   EXPECT_EQ(expected_segments, segments);
 }
 
 TEST_F(BatAdsTextClassificationModelTest,
-    GetSegmentsForPreviouslyClassifiedTexts) {
+       GetSegmentsForPreviouslyClassifiedTexts) {
   // Arrange
   resource::TextClassification resource;
-  resource.LoadForLocale("en-US");
+  resource.Load();
 
   const std::vector<std::string> texts = {
-    "Some content about cooking food",
-    "Some content about finance & banking",
-    "Some content about technology & computing"
-  };
+      "Some content about cooking food", "Some content about finance & banking",
+      "Some content about technology & computing"};
 
   processor::TextClassification processor(&resource);
   for (const auto& text : texts) {
@@ -116,28 +106,24 @@ TEST_F(BatAdsTextClassificationModelTest,
 
   // Assert
   const SegmentList expected_segments = {
-    "technology & computing-technology & computing",
-    "personal finance-banking",
-    "food & drink-cooking"
-  };
+      "technology & computing-technology & computing",
+      "personal finance-banking", "food & drink-cooking"};
 
   EXPECT_EQ(expected_segments, segments);
 }
 
 TEST_F(BatAdsTextClassificationModelTest,
-    GetUntargetedSegmentIfNeverProcessed) {
+       GetUntargetedSegmentIfNeverProcessed) {
   // Arrange
   resource::TextClassification resource;
-  resource.LoadForLocale("en-US");
+  resource.Load();
 
   // Act
   model::TextClassification model;
   const SegmentList segments = model.GetSegments();
 
   // Assert
-  const SegmentList expected_segments = {
-    "untargeted"
-  };
+  const SegmentList expected_segments = {"untargeted"};
 
   EXPECT_EQ(expected_segments, segments);
 }

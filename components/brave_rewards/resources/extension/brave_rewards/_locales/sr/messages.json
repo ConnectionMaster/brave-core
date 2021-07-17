@@ -51,18 +51,6 @@
     "message": "Detalji",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Vaše stanje",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "BAT poeni",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "se može koristiti u Brave nagradama da doprinesete omiljenim kreatorima sadržaja. BAT bodovi se ne mogu zameniti za BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "uključeno",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Traženi tokeni odobrenja",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Zahtevano je odobrenje poena",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Zarade od oglasa",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Molim vas napravite rezervnu kopiju svog Brave novčanika.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Više informacija",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Dostignuto je ograničenje uređaja",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Vaš novčanik nije moguće verifikovati zato što ste dostigli maksimalno ograničenje za verifikaciju na vašem uređaju.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Vaš Brave Rewards nalog čeka na depozit.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Uključi oglase",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Besplatan token odobrenja.",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Dodeljeni besplatni poeni",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Zaradili ste nagradu za oglase!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Novčanik verifikovan",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Idi na moj Uphold nalog",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Idu u nalog mog dobavljača $provider$",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Prekinite vezu sa Brave Nagradama",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "poeni",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Žeton Grants",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Dodela poena",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Zdravo, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Potrebno je da imate najmanje 25 BAT-a da biste kreirali nalog na Uphold-u. Pokušajte ponovo kasnije. \n Ako već imate verifikovani nalog na Uphold-u, nastavite da biste se prijavili.",
-    "description": "Text for login button"
+    "message": "Potrebno je da imate najmanje $amount$ BATA da biste kreirali nalog na Uphold-u. Pokušajte ponovo kasnije.  Ako već imate verifikovani nalog na Uphold-u, nastavite da biste se prijavili.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Повезан",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Napomena: Vaše transakcije će biti vidljive Uphold-u čim budete dali ovlašćenje; na primer, moći će da se vidi primalac i iznos napojnice.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Napomena: Vaša transakcija će biti vidljiva dobavljaču $provider$ čim budete dali ovlašćenje; na primer, videće se primalac i iznos vaših napojnica.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Zaradi tokene & Uzvrati isto",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Zaradite tokene gledajući reklame koje poštuju privatnost i podržavajte automatski vaše omiljene veb lokacije i kreatore sadržaja.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Koliko često biste želeli da vidite reklame?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(reklame na čas)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Koliko mesečne podrške želite da date svojim omiljenim kreatorima?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(od Vaše zarade od reklama)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Kada dobijate nagrade",
+    "message": "Kada dobijate nagrade?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Tokeni se mogu koristiti i van podržavanja kreatora. Možete kupiti digitalni sadržaj i drugu robu kako se prodavci pridružuju.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Konačno, hajde da sve postavimo na osnovna podešavanja ",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Ovo možete promeniti kasnije.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Vuuhuu, potpuno ste spremni!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Korišćenjem Brave nagrada pomažete da veb bude bolje mesto za sve. I to je sjajno!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Verifikujte svoj novčanik",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Da biste preuzeli tokene i zaradili gledajući oglase, moraćete da verifikujete svoj novčanik.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Uraditi kasnije",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Verifikuj moj novčanik",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Uslugu bitFlyer wallet održava kompanija bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Verifikovanjem vašeg novčanika i njegovim povezivanjem sa bitFlyer nalogom, lakše ćete moći da čuvate i održavate tokene koje ste zaradili kroz Brave Rewards",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Saznajte više$link_end$ o tome kako da povežete vaš Brave pretraživač s vašim bitFlyer nalogom.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

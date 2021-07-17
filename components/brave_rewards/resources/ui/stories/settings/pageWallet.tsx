@@ -239,9 +239,9 @@ class PageWallet extends React.Component<Props, State> {
           contentPadding={false}
           onSettingsClick={this.onBackupModalOpen}
           showCopy={true}
-          onlyAnonWallet={false}
           showSecActions={true}
           walletState={walletState}
+          walletProvider={'Uphold'}
         >
           {
             content === 'empty' ? <WalletEmpty /> : null
@@ -258,7 +258,6 @@ class PageWallet extends React.Component<Props, State> {
                   tips: { tokens: '19.0', converted: '5.25' }
                 }}
                 onActivity={this.onActivity}
-                onlyAnonWallet={false}
               />
               : null
           }
@@ -269,6 +268,7 @@ class PageWallet extends React.Component<Props, State> {
               activeTabId={this.state.activeTabId}
               backupKey={'crouch  hint  glow  recall  round  angry  weasel  luggage save  hood  census  near  still   power  vague  balcony camp  law  now  certain  wagon  affair  butter  choice '}
               showBackupNotice={false}
+              walletProvider={'Uphold'}
               onTabChange={this.onBackupTabChange.bind(self)}
               onClose={this.onBackupModalClose.bind(self)}
               onCopy={doNothing}

@@ -49,6 +49,9 @@ declare namespace Rewards {
       github: boolean
     }
     excludedList: ExcludedPublisher[]
+    externalWalletProviderList: string[]
+    // TODO(zenparsing): Remove |firstLoad| when Android settings page has been
+    // migrated to native.
     firstLoad: boolean | null
     monthlyReport: MonthlyReport
     monthlyReportIds: string[]
@@ -66,6 +69,7 @@ declare namespace Rewards {
     tipsList: Publisher[]
     tipsLoad: boolean
     ui: {
+      disconnectWalletError: boolean
       emptyWallet: boolean
       modalBackup: boolean
       modalRedirect: 'show' | 'hide' | 'error' | 'notAllowed' | 'batLimit'
@@ -76,7 +80,6 @@ declare namespace Rewards {
       walletRecoveryStatus: number | null
       walletServerProblem: boolean
       verifyOnboardingDisplayed?: boolean
-      onlyAnonWallet?: boolean
     }
   }
 
@@ -111,7 +114,9 @@ declare namespace Rewards {
     NONE = 0,
     BRAVE_TOKENS = 1,
     UPHOLD = 2,
-    BRAVE_USER_FUNDS = 3
+    BRAVE_USER_FUNDS = 3,
+    BITFLYER = 4,
+    GEMINI = 5
   }
 
   export interface TransactionReport {
@@ -170,23 +175,19 @@ declare namespace Rewards {
     promotion?: Promotion
   }
 
-  export enum ExcludeStatus {
-    DEFAULT = 0,
-    EXCLUDED = 1,
-    INCLUDED = 2
-  }
-
   export enum PublisherStatus {
     NOT_VERIFIED = 0,
     CONNECTED = 1,
-    VERIFIED = 2
+    UPHOLD_VERIFIED = 2,
+    BITFLYER_VERIFIED = 3,
+    GEMINI_VERIFIED = 4
   }
 
   export interface Publisher {
     publisherKey: string
     percentage: number
     status: PublisherStatus
-    excluded: ExcludeStatus
+    excluded: boolean
     url: string
     name: string
     provider: string
@@ -194,6 +195,11 @@ declare namespace Rewards {
     id: string
     tipDate?: number
     weight: number
+  }
+
+  export interface ExternalWalletProvider {
+    type: string
+    name: string
   }
 
   export interface ExcludedPublisher {
@@ -228,9 +234,10 @@ declare namespace Rewards {
     shouldAllowAdsSubdivisionTargeting: boolean
     adsUIEnabled: boolean
     adsIsSupported: boolean
-    adsEstimatedPendingRewards: number
-    adsNextPaymentDate: string
+    adsNextPaymentDate: number
     adsReceivedThisMonth: number
+    adsEarningsThisMonth: number
+    adsEarningsLastMonth: number
   }
 
   export enum RewardsType {
@@ -265,7 +272,7 @@ declare namespace Rewards {
     wallets: Record<string, number>
   }
 
-  export type WalletType = 'anonymous' | 'uphold'
+  export type WalletType = 'anonymous' | 'uphold' | 'bitflyer' | 'gemini'
 
   export enum WalletStatus {
     NOT_CONNECTED = 0,
@@ -276,7 +283,6 @@ declare namespace Rewards {
   }
 
   export interface ExternalWallet {
-    token: string
     address: string
     status: WalletStatus
     type: WalletType

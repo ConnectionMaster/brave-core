@@ -1,6 +1,6 @@
 import("//brave/components/tor/buildflags/buildflags.gni")
 
-source_set("tor") {
+static_library("tor") {
   public_deps = [ "//brave/components/tor/buildflags" ]
 
   sources = [
@@ -29,6 +29,8 @@ source_set("tor") {
       "tor_control_event.cc",
       "tor_control_event.h",
       "tor_control_event_list.h",
+      "tor_file_watcher.cc",
+      "tor_file_watcher.h",
       "tor_launcher_factory.cc",
       "tor_launcher_factory.h",
       "tor_navigation_throttle.cc",
@@ -58,6 +60,20 @@ source_set("tor") {
   ]
 }
 
+source_set("utils") {
+  sources = [
+    "tor_utils.cc",
+    "tor_utils.h",
+  ]
+
+  deps = [
+    ":tor",
+    "//base",
+    "//chrome/common:constants",
+    "//components/prefs",
+  ]
+}
+
 source_set("pref_names") {
   sources = [
     "pref_names.cc",
@@ -68,7 +84,10 @@ source_set("pref_names") {
 source_set("tor_unit_tests") {
   testonly = true
   if (enable_tor) {
-    sources = [ "tor_control_unittest.cc" ]
+    sources = [
+      "tor_control_unittest.cc",
+      "tor_file_watcher_unittest.cc",
+    ]
 
     deps = [
       "//base/test:test_support",

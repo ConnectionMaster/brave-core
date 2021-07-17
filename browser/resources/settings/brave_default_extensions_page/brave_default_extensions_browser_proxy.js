@@ -13,19 +13,16 @@ cr.define('settings', function () {
      * @param {boolean} value name.
      */
     setWebTorrentEnabled (value) {}
-    setBraveWalletEnabled (value) {}
     setHangoutsEnabled (value) {}
-    setIPFSCompanionEnabled (value) {}
     setTorEnabled (value) {}
     isTorEnabled () {}
     isTorManaged () {}
     setWidevineEnabled() {}
     isWidevineEnabled() {}
     getRestartNeeded () {}
-    getWeb3ProviderList () {}
     wasSignInEnabledAtStartup () {}
-    getIPFSResolveMethodList () {}
-    getIPFSEnabled () {}
+    isDecentralizedDnsEnabled() {}
+    getDecentralizedDnsResolveMethodList(provider) {}
   }
 
   /**
@@ -37,16 +34,8 @@ cr.define('settings', function () {
       chrome.send('setWebTorrentEnabled', [value])
     }
 
-    setBraveWalletEnabled (value) {
-      chrome.send('setBraveWalletEnabled', [value])
-    }
-
     setHangoutsEnabled (value) {
       chrome.send('setHangoutsEnabled', [value])
-    }
-
-    setIPFSCompanionEnabled (value) {
-      chrome.send('setIPFSCompanionEnabled', [value])
     }
 
     setMediaRouterEnabled (value) {
@@ -77,35 +66,16 @@ cr.define('settings', function () {
       return cr.sendWithPromise('getRestartNeeded')
     }
 
-    /** @override */
-    getWeb3ProviderList () {
-      return new Promise(resolve => chrome.braveWallet.getWeb3ProviderList(resolve))
-    }
-
     wasSignInEnabledAtStartup () {
       return loadTimeData.getBoolean('signInAllowedOnNextStartupInitialValue')
     }
 
-    /** @override */
-    getIPFSResolveMethodList () {
-      return new Promise(resolve => {
-        if (!chrome.ipfs) {
-          resolve(false)
-          return
-        }
-        chrome.ipfs.getResolveMethodList(resolve)
-      })
+    isDecentralizedDnsEnabled () {
+      return cr.sendWithPromise('isDecentralizedDnsEnabled')
     }
 
-    /** @override */
-    getIPFSEnabled () {
-      return new Promise(resolve => {
-        if (!chrome.ipfs) {
-          resolve(false)
-          return
-        }
-        chrome.ipfs.getIPFSEnabled(resolve)
-      })
+    getDecentralizedDnsResolveMethodList (provider) {
+      return cr.sendWithPromise('getDecentralizedDnsResolveMethodList', provider)
     }
   }
 

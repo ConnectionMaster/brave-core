@@ -7,8 +7,7 @@
 
 #include <string>
 
-#include "brave/browser/brave_browser_process_impl.h"
-#include "brave/browser/extensions/brave_component_loader.h"
+#include "base/feature_list.h"
 #include "brave/browser/ntp_background_images/view_counter_service_factory.h"
 #include "brave/browser/resources/settings/grit/brave_settings_resources.h"
 #include "brave/browser/resources/settings/grit/brave_settings_resources_map.h"
@@ -19,9 +18,11 @@
 #include "brave/browser/ui/webui/settings/brave_privacy_handler.h"
 #include "brave/browser/ui/webui/settings/brave_sync_handler.h"
 #include "brave/browser/ui/webui/settings/default_brave_shields_handler.h"
-#include "brave/browser/version_info.h"
 #include "brave/components/brave_sync/buildflags/buildflags.h"
 #include "brave/components/ntp_background_images/browser/view_counter_service.h"
+#include "brave/components/sidebar/buildflags/buildflags.h"
+#include "brave/components/speedreader/buildflags.h"
+#include "brave/components/version_info/version_info.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/webui/settings/metrics_reporting_handler.h"
 #include "content/public/browser/web_ui_data_source.h"
@@ -32,6 +33,14 @@
 
 #if BUILDFLAG(ENABLE_SPARKLE)
 #include "brave/browser/ui/webui/settings/brave_relaunch_handler_mac.h"
+#endif
+
+#if BUILDFLAG(ENABLE_SIDEBAR)
+#include "brave/browser/ui/sidebar/sidebar_utils.h"
+#endif
+
+#if BUILDFLAG(ENABLE_SPEEDREADER)
+#include "brave/components/speedreader/features.h"
 #endif
 
 using ntp_background_images::ViewCounterServiceFactory;
@@ -58,17 +67,9 @@ BraveSettingsUI::~BraveSettingsUI() {
 // static
 void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
                                    Profile* profile) {
-  constexpr char generated_prefix[] =
-      "@out_folder@/gen/brave/browser/resources/settings/preprocessed";
-  const auto generated_prefix_len = strlen(generated_prefix);
   for (size_t i = 0; i < kBraveSettingsResourcesSize; ++i) {
-    // Rewrite path for any generated entries
-    std::string path(kBraveSettingsResources[i].name);
-    size_t pos = path.find(generated_prefix);
-    if (pos != std::string::npos) {
-      path.erase(pos, generated_prefix_len);
-    }
-    html_source->AddResourcePath(path, kBraveSettingsResources[i].value);
+    html_source->AddResourcePath(kBraveSettingsResources[i].path,
+                                 kBraveSettingsResources[i].id);
   }
 
 #if BUILDFLAG(ENABLE_BRAVE_SYNC)
@@ -82,4 +83,16 @@ void BraveSettingsUI::AddResources(content::WebUIDataSource* html_source,
   NavigationBarDataProvider::Initialize(html_source);
   if (auto* service = ViewCounterServiceFactory::GetForProfile(profile))
     service->InitializeWebUIDataSource(html_source);
+#if BUILDFLAG(ENABLE_SIDEBAR)
+  // TODO(simonhong): Remove this when sidebar is shipped by default in all
+  // channels.
+  html_source->AddBoolean("isSidebarFeatureEnabled",
+                          sidebar::CanUseSidebar(profile));
+#endif
+#if BUILDFLAG(ENABLE_SPEEDREADER)
+  // TODO(keur): Remove this when Speedreader feature enabled by default.
+  html_source->AddBoolean(
+      "isSpeedreaderFeatureEnabled",
+      base::FeatureList::IsEnabled(speedreader::kSpeedreaderFeature));
+#endif
 }

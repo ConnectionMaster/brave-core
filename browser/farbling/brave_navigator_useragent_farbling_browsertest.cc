@@ -8,7 +8,6 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/task/post_task.h"
 #include "base/test/thread_test_helper.h"
-#include "brave/browser/brave_browser_process_impl.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/extensions/brave_base_local_data_files_browsertest.h"
 #include "brave/common/brave_paths.h"
@@ -22,6 +21,7 @@
 #include "chrome/common/chrome_content_client.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
+#include "components/embedder_support/user_agent_utils.h"
 #include "components/permissions/permission_request.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/render_frame_host.h"
@@ -34,8 +34,7 @@
 using brave_shields::ControlType;
 using content::TitleWatcher;
 
-const char kUserAgentScript[] =
-    "domAutomationController.send(navigator.userAgent);";
+const char kUserAgentScript[] = "navigator.userAgent";
 
 class BraveNavigatorUserAgentFarblingBrowserTest : public InProcessBrowserTest {
  public:
@@ -77,11 +76,6 @@ class BraveNavigatorUserAgentFarblingBrowserTest : public InProcessBrowserTest {
     return user_agents_[user_agents_.size() - 1];
   }
 
-  std::string effective_user_agent() {
-    return browser_content_client_->GetEffectiveUserAgent(
-        browser()->profile(), contents()->GetLastCommittedURL());
-  }
-
   HostContentSettingsMap* content_settings() {
     return HostContentSettingsMapFactory::GetForProfile(browser()->profile());
   }
@@ -104,20 +98,6 @@ class BraveNavigatorUserAgentFarblingBrowserTest : public InProcessBrowserTest {
         embedded_test_server()->GetURL(domain, "/"));
   }
 
-  template <typename T>
-  int ExecScriptGetInt(const std::string& script, T* frame) {
-    int value;
-    EXPECT_TRUE(ExecuteScriptAndExtractInt(frame, script, &value));
-    return value;
-  }
-
-  template <typename T>
-  std::string ExecScriptGetStr(const std::string& script, T* frame) {
-    std::string value;
-    EXPECT_TRUE(ExecuteScriptAndExtractString(frame, script, &value));
-    return value;
-  }
-
   content::WebContents* contents() {
     return browser()->tab_strip_model()->GetActiveWebContents();
   }
@@ -136,38 +116,42 @@ class BraveNavigatorUserAgentFarblingBrowserTest : public InProcessBrowserTest {
 // Tests results of farbling user agent
 IN_PROC_BROWSER_TEST_F(BraveNavigatorUserAgentFarblingBrowserTest,
                        FarbleNavigatorUserAgent) {
-  base::string16 expected_title = base::ASCIIToUTF16("pass");
+  std::u16string expected_title(u"pass");
   std::string domain_b = "b.com";
   std::string domain_z = "z.com";
   GURL url_b = embedded_test_server()->GetURL(domain_b, "/simple.html");
   GURL url_z = embedded_test_server()->GetURL(domain_z, "/simple.html");
   // get real navigator.userAgent
-  std::string real_ua = ::GetUserAgent();
+  std::string unfarbled_ua = embedder_support::GetUserAgent();
   // Farbling level: off
   AllowFingerprinting(domain_b);
   NavigateToURLUntilLoadStop(url_b);
-  EXPECT_EQ(last_requested_http_user_agent(), real_ua);
-  std::string off_ua_b = ExecScriptGetStr(kUserAgentScript, contents());
-  // user agent should be the same as the real user agent
-  EXPECT_EQ(off_ua_b, real_ua);
+  // HTTP User-Agent header we just sent in that request should be the same as
+  // the unfarbled user agent
+  EXPECT_EQ(last_requested_http_user_agent(), unfarbled_ua);
+  auto off_ua_b = EvalJs(contents(), kUserAgentScript);
+  // user agent should be the same as the unfarbled user agent
+  EXPECT_EQ(unfarbled_ua, off_ua_b);
   AllowFingerprinting(domain_z);
   NavigateToURLUntilLoadStop(url_z);
   // HTTP User-Agent header we just sent in that request should be the same as
-  // the real user agent
-  EXPECT_EQ(last_requested_http_user_agent(), real_ua);
-  std::string off_ua_z = ExecScriptGetStr(kUserAgentScript, contents());
+  // the unfarbled user agent
+  EXPECT_EQ(last_requested_http_user_agent(), unfarbled_ua);
+  auto off_ua_z = EvalJs(contents(), kUserAgentScript);
   // user agent should be the same on every domain if farbling is off
-  EXPECT_EQ(off_ua_z, real_ua);
+  EXPECT_EQ(unfarbled_ua, off_ua_z);
 
   // Farbling level: default
   // navigator.userAgent may be farbled, but the farbling is not
   // domain-specific
   SetFingerprintingDefault(domain_b);
   NavigateToURLUntilLoadStop(url_b);
-  std::string default_ua_b = ExecScriptGetStr(kUserAgentScript, contents());
+  std::string default_ua_b =
+      EvalJs(contents(), kUserAgentScript).ExtractString();
   SetFingerprintingDefault(domain_z);
   NavigateToURLUntilLoadStop(url_z);
-  std::string default_ua_z = ExecScriptGetStr(kUserAgentScript, contents());
+  std::string default_ua_z =
+      EvalJs(contents(), kUserAgentScript).ExtractString();
   // user agent should be the same on every domain if farbling is default
   EXPECT_EQ(default_ua_b, default_ua_z);
 
@@ -178,12 +162,12 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorUserAgentFarblingBrowserTest,
   BlockFingerprinting(domain_b);
   // test known values
   NavigateToURLUntilLoadStop(url_b);
-  std::string max_ua_b = ExecScriptGetStr(kUserAgentScript, contents());
-  EXPECT_EQ(max_ua_b, default_ua_b + "   ");
+  auto max_ua_b = EvalJs(contents(), kUserAgentScript);
+  EXPECT_EQ(default_ua_b + "   ", max_ua_b);
   BlockFingerprinting(domain_z);
   NavigateToURLUntilLoadStop(url_z);
-  std::string max_ua_z = ExecScriptGetStr(kUserAgentScript, contents());
-  EXPECT_EQ(max_ua_z, default_ua_z + "  ");
+  auto max_ua_z = EvalJs(contents(), kUserAgentScript);
+  EXPECT_EQ(default_ua_z + "  ", max_ua_z);
 
   // test that iframes also inherit the farbled user agent
   // (farbling level is still maximum)
@@ -201,8 +185,8 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorUserAgentFarblingBrowserTest,
   NavigateToURLUntilLoadStop(embedded_test_server()->GetURL(
       domain_b, "/navigator/workers-useragent.html"));
   // HTTP User-Agent header we just sent in that request should be the same as
-  // the real user agent
-  EXPECT_EQ(last_requested_http_user_agent(), effective_user_agent());
+  // the unfarbled user agent
+  EXPECT_EQ(last_requested_http_user_agent(), unfarbled_ua);
   TitleWatcher watcher3(contents(), expected_title);
   EXPECT_EQ(expected_title, watcher3.WaitAndGetTitle());
 
@@ -210,7 +194,7 @@ IN_PROC_BROWSER_TEST_F(BraveNavigatorUserAgentFarblingBrowserTest,
   // verify that user agent is reset properly after having been farbled
   AllowFingerprinting(domain_b);
   NavigateToURLUntilLoadStop(url_b);
-  EXPECT_EQ(last_requested_http_user_agent(), real_ua);
-  std::string off_ua_b2 = ExecScriptGetStr(kUserAgentScript, contents());
-  EXPECT_EQ(off_ua_b, off_ua_b2);
+  EXPECT_EQ(last_requested_http_user_agent(), unfarbled_ua);
+  auto off_ua_b2 = EvalJs(contents(), kUserAgentScript);
+  EXPECT_EQ(off_ua_b.ExtractString(), off_ua_b2);
 }

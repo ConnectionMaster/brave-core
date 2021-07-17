@@ -46,7 +46,7 @@ std::string PostClaimUphold::GetUrl() {
 }
 
 std::string PostClaimUphold::GeneratePayload(const double user_funds) {
-  auto uphold_wallet = uphold::GetWallet(ledger_);
+  auto uphold_wallet = ledger_->uphold()->GetWallet();
   if (!uphold_wallet) {
     BLOG(0, "Wallet is null");
     return "";
@@ -129,6 +129,7 @@ type::Result PostClaimUphold::CheckStatusCode(const int status_code) {
   }
 
   if (status_code != net::HTTP_OK) {
+    BLOG(0, "Unexpected HTTP status: " << status_code);
     return type::Result::LEDGER_ERROR;
   }
 

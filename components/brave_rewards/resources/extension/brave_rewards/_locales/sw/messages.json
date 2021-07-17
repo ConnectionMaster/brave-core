@@ -51,18 +51,6 @@
     "message": "Maelezo",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Salio lako",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Pointi za BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "inaweza kutumika katika Tuzo za Brave ili kuchangia katika watengenezaji maudhui uwapendao. Pointi za BAT haziwezi kubadilishwa kwa BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "washa",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Ruzuku za Kianzio Zilizoombwa",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Umechukua Pointi za Ruzuku",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Mapato kutokana na Matangazo",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Tafadhali hifadhi kwa njia mbadala wallet yako ya Brave.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Jifunze Zaidi",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Kikomo ch Kifaa Kimefikishwa",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Pochi yako haiwezi kuthibitishwa kwa sababu umefikisha kikomo cha kifaa kilichothibitishwa cha juu zaidi.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Akaunto yako ya Brave Rewards inasubiri amana.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Ruhusu Matangazo",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Ruzuku ya Bure ya Kianzio",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Ruzuku Isiyolipishwa",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Umepata Tuzo ya Matangazo",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Pochi Imethibitishwa",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Nenda kwenye akaunti yangu ya Uphold",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Nenda kwenye akaunti yangu ya $provider$",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Ondoa kwenye Brave Rewards",
@@ -573,17 +567,9 @@
     "message": "Kianzio",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "pointi",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Ruzuku za Kianzio",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Ruzuku za Pointi",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Hujambo, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Unahitaji 25 BAT za chini zaidi ili kufungua akaunti ya Uphold. Tafadhali jaribu tena baadaye. \n Ikiwa tayari umethibitishwa akaunti ya Uphold, ingia.",
-    "description": "Text for login button"
+    "message": "Unahitaji kiwango cha chini zaidi cha $amount$BAT ili kufungua akaunti ya Uphold. Ikiwa tayari umethibitisha akaunti ya Uphold, ingia.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Umeunganishwa",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Dokezo: Miamala yako itaonekana kwa Uphold mara unapoidhinisha; kwa mfano, wataweza kuona mpokeaji na kiasi cha vidokezo vyako.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Dokezo: Miamala yako itaonekana kwa $provider$ mara unapoidhinisha; kwa mfano, wataweza kuona mpokeaji na kiasi cha bahshishi yako.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Pata Tokeni na Utoe Shukrani",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Pata tokeni kwa kutazama matangazo yanayoheshimu faragha na ufadhili tovuti na waundaji wa maudhui unaopenda kiotomatiki.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Ungependa kuona matangazo mara ngapi?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(matangazo kwa saa moja)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Ungependa kuwapa wasanii unaowapenda msaada kiasi gani kila mwezi?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(kutoka katika mapato yako ya matangazo)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Je, unazipokea zawadi lini",
+    "message": "Je, unazipokea zawadi lini?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Tokeni zinaweza kutumiwa zaidi ya kuwasaidia waundaji. Unaweza kununua maudhui ya dijitali na bidhaa nyingine wauzaji wanapokuja.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Kuhitimisiha, tutakuwekea mipangilio ya kawaida",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Unaweza kubadilisha hii baadaye.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Woohoo, uko tayari kuanza kutumia!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Kwa kutumia Zawadi za Brave, unasaidia kufanya wavuti kuwa mahali bora pa kila mtu. Na hilo ni jambo bora!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Thibitisha pochi yako",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Ili kutoa tokeni unazopata kwa kutazama matangazo, utahitaji kuthibitisha pochi yako.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Ifanye baadaye",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Thibitisha pochi yangu",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Pochi ya bitFlyer ni huduma inayodhibitiwa na bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Kwa kuthibitisha pochi yako na kuiunganisha kwenye akaunti ya bitFlyer, utaweza kuhifadhi na kudhibiti tokeni ulizopata kupitia Brave Rewards kwa urahisi zaidi",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Pata maelezo zaidi$link_end$ kuhusu jinsi ya kuunganisha kivinjari chako cha Brave na akaunti yako ya bitFlyer.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

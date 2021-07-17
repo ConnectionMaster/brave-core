@@ -17,6 +17,7 @@ const char kUndefinedConfirmationType[] = "";
 const char kClickedConfirmationType[] = "click";
 const char kDismissedConfirmationType[] = "dismiss";
 const char kViewedConfirmationType[] = "view";
+const char kServedConfirmationType[] = "served";
 const char kTransferredConfirmationType[] = "landed";
 const char kFlaggedConfirmationType[] = "flag";
 const char kUpvotedConfirmationType[] = "upvote";
@@ -25,8 +26,7 @@ const char kConversionConfirmationType[] = "conversion";
 
 }  // namespace
 
-ConfirmationType::ConfirmationType(
-    const std::string& value) {
+ConfirmationType::ConfirmationType(const std::string& value) {
   if (value == kUndefinedConfirmationType) {
     value_ = kUndefined;
   } else if (value == kClickedConfirmationType) {
@@ -35,6 +35,8 @@ ConfirmationType::ConfirmationType(
     value_ = kDismissed;
   } else if (value == kViewedConfirmationType) {
     value_ = kViewed;
+  } else if (value == kServedConfirmationType) {
+    value_ = kServed;
   } else if (value == kTransferredConfirmationType) {
     value_ = kTransferred;
   } else if (value == kFlaggedConfirmationType) {
@@ -72,6 +74,10 @@ ConfirmationType::operator std::string() const {
       return kViewedConfirmationType;
     }
 
+    case kServed: {
+      return kServedConfirmationType;
+    }
+
     case kTransferred: {
       return kTransferredConfirmationType;
     }
@@ -94,13 +100,11 @@ ConfirmationType::operator std::string() const {
   }
 }
 
-bool ConfirmationType::operator==(
-    const ConfirmationType& rhs) const {
+bool ConfirmationType::operator==(const ConfirmationType& rhs) const {
   return value_ == rhs.value_;
 }
 
-bool ConfirmationType::operator!=(
-    const ConfirmationType& rhs) const {
+bool ConfirmationType::operator!=(const ConfirmationType& rhs) const {
   return value_ != rhs.value_;
 }
 

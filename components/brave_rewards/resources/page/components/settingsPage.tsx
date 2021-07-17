@@ -28,6 +28,7 @@ import * as rewardsActions from '../actions/rewards_actions'
 import Promotion from './promotion'
 import { getLocale } from '../../../../common/locale'
 import { getActivePromos, getPromo, PromoType, Promo } from '../promos'
+import { getMinimumBalance } from './connect_wallet_modal'
 
 interface Props extends Rewards.ComponentProps {
 }
@@ -67,14 +68,6 @@ class SettingsPage extends React.Component<Props, State> {
   }
 
   componentDidMount () {
-    if (this.props.rewardsData.firstLoad === null) {
-      // First load ever
-      this.actions.onSettingSave('firstLoad', true, false)
-    } else if (this.props.rewardsData.firstLoad) {
-      // Second load ever
-      this.actions.onSettingSave('firstLoad', false, false)
-    }
-
     if (!this.props.rewardsData.initializing) {
       this.startRewards()
     }
@@ -117,7 +110,7 @@ class SettingsPage extends React.Component<Props, State> {
       prevProps.rewardsData.externalWallet &&
       !this.props.rewardsData.externalWallet
     ) {
-      this.actions.getExternalWallet('uphold')
+      this.actions.getExternalWallet()
     }
   }
 
@@ -127,15 +120,7 @@ class SettingsPage extends React.Component<Props, State> {
   }
 
   startRewards () {
-    if (this.props.rewardsData.firstLoad) {
-      this.actions.getBalanceReport(new Date().getMonth() + 1, new Date().getFullYear())
-      this.actions.getAdsData()
-      this.actions.getPendingContributions()
-      this.actions.getCountryCode()
-    } else {
-      // normal load
-      this.refreshActions()
-    }
+    this.refreshActions()
 
     this.actions.getRewardsParameters()
     this.actions.getContributionAmount()
@@ -146,8 +131,9 @@ class SettingsPage extends React.Component<Props, State> {
     }, 60000)
 
     this.actions.fetchPromotions()
-    this.actions.getExternalWallet('uphold')
+    this.actions.getExternalWallet()
     this.actions.getOnboardingStatus()
+    this.actions.getEnabledInlineTippingPlatforms()
 
     this.handleURL()
   }
@@ -184,7 +170,7 @@ class SettingsPage extends React.Component<Props, State> {
   }
 
   getPromotionsClaims = () => {
-    const { promotions, ui } = this.props.rewardsData
+    const { promotions } = this.props.rewardsData
 
     if (!promotions || promotions.length === 0) {
       return null
@@ -199,7 +185,7 @@ class SettingsPage extends React.Component<Props, State> {
 
           return (
             <div key={`promotion-${index}`}>
-              <Promotion promotion={promotion} onlyAnonWallet={ui.onlyAnonWallet} />
+              <Promotion promotion={promotion} />
             </div>
           )
         })}
@@ -222,13 +208,15 @@ class SettingsPage extends React.Component<Props, State> {
   }
 
   getRedirectModal = () => {
-    const { ui } = this.props.rewardsData
+    const { externalWallet, ui } = this.props.rewardsData
+    const walletType = externalWallet ? externalWallet.type : ''
 
     if (ui.modalRedirect === 'show') {
       return (
         <ModalRedirect
           id={'redirect-modal-show'}
           titleText={getLocale('processingRequest')}
+          walletType={walletType}
         />
       )
     }
@@ -240,18 +228,22 @@ class SettingsPage extends React.Component<Props, State> {
           errorText={getLocale('redirectModalNotAllowed')}
           titleText={getLocale('redirectModalErrorWallet')}
           buttonText={getLocale('redirectModalClose')}
+          walletType={walletType}
           onClick={this.actions.hideRedirectModal}
         />
       )
     }
 
     if (ui.modalRedirect === 'batLimit') {
+      // NOTE: The minimum BAT limit error is currently Uphold-specific
+      const text = getLocale('redirectModalBatLimitText')
       return (
         <ModalRedirect
           id={'redirect-modal-bat-limit'}
           titleText={getLocale('redirectModalBatLimitTitle')}
-          errorText={getLocale('redirectModalBatLimitText')}
+          errorText={text.replace('$1', String(getMinimumBalance(walletType)))}
           buttonText={getLocale('redirectModalClose')}
+          walletType={walletType}
           onClick={this.actions.hideRedirectModal}
         />
       )
@@ -264,7 +256,10 @@ class SettingsPage extends React.Component<Props, State> {
           errorText={getLocale('redirectModalError')}
           buttonText={getLocale('processingRequestButton')}
           titleText={getLocale('processingRequest')}
+          walletType={walletType}
+          displayCloseButton={true}
           onClick={this.onRedirectError}
+          onClose={this.actions.hideRedirectModal}
         />
       )
     }
@@ -339,9 +334,17 @@ class SettingsPage extends React.Component<Props, State> {
     const {
       adsData,
       contributionMonthly,
-      parameters,
-      ui
+      externalWallet,
+      parameters
     } = this.props.rewardsData
+
+    const externalWalletType = externalWallet ? externalWallet.type : ''
+
+    // Hide AC options in rewards onboarding for bitFlyer-associated regions.
+    let { autoContributeChoices } = parameters
+    if (externalWalletType === 'bitflyer') {
+      autoContributeChoices = []
+    }
 
     const onDone = () => {
       this.setState({ showRewardsTour: false, firstTimeSetup: false })
@@ -355,16 +358,23 @@ class SettingsPage extends React.Component<Props, State> {
       this.actions.onSettingSave('contributionMonthly', amount)
     }
 
+    const onVerifyClick = () => {
+      if (externalWallet && externalWallet.verifyUrl) {
+        window.open(externalWallet.verifyUrl, '_self')
+      }
+    }
+
     return (
       <RewardsTourModal
         layout='wide'
         firstTimeSetup={this.state.firstTimeSetup}
-        onlyAnonWallet={ui.onlyAnonWallet}
         adsPerHour={adsData.adsPerHour}
         autoContributeAmount={contributionMonthly}
-        autoContributeAmountOptions={parameters.autoContributeChoices}
+        autoContributeAmountOptions={autoContributeChoices}
+        externalWalletProvider={externalWalletType}
         onAdsPerHourChanged={onAdsPerHourChanged}
         onAutoContributeAmountChanged={onAcAmountChanged}
+        onVerifyWalletClick={onVerifyClick}
         onDone={onDone}
         onClose={onDone}
       />

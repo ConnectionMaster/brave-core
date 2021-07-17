@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/modules/cookie_store/cookie_store.cc b/third_party/blink/renderer/modules/cookie_store/cookie_store.cc
-index da6df111e5394deb1c1b903e490089383040ac3e..711730e2a7f438d9b9faca08f00c0bafb5758aca 100644
+index 73c8f6578d730e572a0227bf88deb8774be5a509..06d3f7d2f372ee169aaeeee8316d34df2d354cb6 100644
 --- a/third_party/blink/renderer/modules/cookie_store/cookie_store.cc
 +++ b/third_party/blink/renderer/modules/cookie_store/cookie_store.cc
-@@ -80,6 +80,7 @@ std::unique_ptr<net::CanonicalCookie> ToCanonicalCookie(
+@@ -82,6 +82,7 @@ std::unique_ptr<net::CanonicalCookie> ToCanonicalCookie(
    base::Time expires = options->hasExpiresNonNull()
                             ? base::Time::FromJavaTime(options->expiresNonNull())
                             : base::Time();

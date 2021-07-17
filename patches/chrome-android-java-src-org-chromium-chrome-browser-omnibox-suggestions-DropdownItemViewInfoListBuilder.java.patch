@@ -1,13 +1,13 @@
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/omnibox/suggestions/DropdownItemViewInfoListBuilder.java b/chrome/android/java/src/org/chromium/chrome/browser/omnibox/suggestions/DropdownItemViewInfoListBuilder.java
-index 1c5fdf4a3d1102ce3978c74d04496ca27ac95df0..a784a0e4ed04244df59710426ebf712535bb5c06 100644
+index 1d03f6211130ada943a7a0a5d123756ca000ade2..24d3217fb65ec517a0d8bdf9e1a1849cfa0c868a 100644
 --- a/chrome/android/java/src/org/chromium/chrome/browser/omnibox/suggestions/DropdownItemViewInfoListBuilder.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/omnibox/suggestions/DropdownItemViewInfoListBuilder.java
-@@ -92,7 +92,7 @@ class DropdownItemViewInfoListBuilder {
+@@ -95,7 +95,7 @@ class DropdownItemViewInfoListBuilder {
                  () -> mShareDelegateSupplier == null ? null : mShareDelegateSupplier.get();
  
          mHeaderProcessor = new HeaderProcessor(context, host, delegate);
 -        registerSuggestionProcessor(new EditUrlSuggestionProcessor(
 +        registerSuggestionProcessor(new org.chromium.chrome.browser.omnibox.suggestions.editurl.BraveEditUrlSuggestionProcessor(
-                 context, host, delegate, iconBridgeSupplier, tabSupplier, shareSupplier));
+                 context, host, delegate, iconBridgeSupplier, mActivityTabSupplier, shareSupplier));
          registerSuggestionProcessor(
                  new AnswerSuggestionProcessor(context, host, textProvider, imageFetcherSupplier));

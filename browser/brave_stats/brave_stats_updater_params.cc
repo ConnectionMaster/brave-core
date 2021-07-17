@@ -9,11 +9,12 @@
 #include "brave/components/brave_referrals/buildflags/buildflags.h"
 
 #include "base/strings/string_util.h"
+#include "base/system/sys_info.h"
+#include "base/threading/thread_restrictions.h"
 #include "base/time/time.h"
 #include "bat/ads/pref_names.h"
 #include "brave/common/pref_names.h"
 #include "brave/components/brave_referrals/common/pref_names.h"
-#include "brave/components/brave_stats/browser/brave_stats_updater_util.h"
 #include "chrome/browser/first_run/first_run.h"
 #include "components/prefs/pref_service.h"
 
@@ -26,9 +27,11 @@ static constexpr base::TimeDelta g_dtoi_delete_delta =
 
 BraveStatsUpdaterParams::BraveStatsUpdaterParams(
     PrefService* stats_pref_service,
-    PrefService* profile_pref_service)
+    PrefService* profile_pref_service,
+    const ProcessArch arch)
     : BraveStatsUpdaterParams(stats_pref_service,
                               profile_pref_service,
+                              arch,
                               GetCurrentDateAsYMD(),
                               GetCurrentISOWeekNumber(),
                               GetCurrentMonth()) {}
@@ -36,11 +39,13 @@ BraveStatsUpdaterParams::BraveStatsUpdaterParams(
 BraveStatsUpdaterParams::BraveStatsUpdaterParams(
     PrefService* stats_pref_service,
     PrefService* profile_pref_service,
+    const ProcessArch arch,
     const std::string& ymd,
     int woy,
     int month)
     : stats_pref_service_(stats_pref_service),
       profile_pref_service_(profile_pref_service),
+      arch_(arch),
       ymd_(ymd),
       woy_(woy),
       month_(month) {
@@ -85,6 +90,16 @@ std::string BraveStatsUpdaterParams::GetAdsEnabledParam() const {
       profile_pref_service_->GetBoolean(ads::prefs::kEnabled));
 }
 
+std::string BraveStatsUpdaterParams::GetProcessArchParam() const {
+  if (arch_ == ProcessArch::kArchSkip) {
+    return "";
+  } else if (arch_ == ProcessArch::kArchMetal) {
+    return base::SysInfo::OperatingSystemArchitecture();
+  } else {
+    return "virt";
+  }
+}
+
 void BraveStatsUpdaterParams::LoadPrefs() {
   last_check_ymd_ = stats_pref_service_->GetString(kLastCheckYMD);
   last_check_woy_ = stats_pref_service_->GetInteger(kLastCheckWOY);
@@ -93,12 +108,18 @@ void BraveStatsUpdaterParams::LoadPrefs() {
   week_of_installation_ = stats_pref_service_->GetString(kWeekOfInstallation);
   if (week_of_installation_.empty())
     week_of_installation_ = GetLastMondayAsYMD();
+
   if (ShouldForceFirstRun()) {
     date_of_installation_ = GetCurrentTimeNow();
   } else {
     date_of_installation_ = GetFirstRunTime(stats_pref_service_);
-    DCHECK(!date_of_installation_.is_null());
+    if (date_of_installation_.is_null()) {
+      LOG(WARNING)
+          << "Couldn't find the time of first run. This should only happen "
+             "when running tests, but never in production code.";
+    }
   }
+
 #if BUILDFLAG(ENABLE_BRAVE_REFERRALS)
   referral_promo_code_ = stats_pref_service_->GetString(kReferralPromoCode);
 #endif
@@ -181,8 +202,11 @@ base::Time BraveStatsUpdaterParams::GetFirstRunTime(PrefService* pref_service) {
 #else
   (void)pref_service;  // suppress unused warning
 
-  // Note that CreateSentinelIfNeeded() is called in chrome_browser_main.cc,
-  // so this will be a non-blocking read of the cached sentinel value.
+  // CreateSentinelIfNeeded() is called in chrome_browser_main.cc, making this a
+  // non-blocking read of the cached sentinel value when running from production
+  // code. However tests will never create the sentinel file due to being run
+  // with the switches:kNoFirstRun flag, so we need to allow blocking for that.
+  base::ScopedAllowBlockingForTesting allow_blocking;
   return first_run::GetFirstRunSentinelCreationTime();
 #endif  // #defined(OS_ANDROID)
 }

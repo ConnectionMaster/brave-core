@@ -12,12 +12,15 @@
   <if expr="not chromeos">
     </if>
 
-  <if expr="chromeos">
+  <if expr="chromeos or lacros">
     </if>
 
   <if expr="not chromeos">
   </if>
-  <if expr="not chromeos">
+  <if expr="chromeos">
+  </if>
+
+  <if expr="is_win">
     </if>
 
   <if expr="not chromeos">

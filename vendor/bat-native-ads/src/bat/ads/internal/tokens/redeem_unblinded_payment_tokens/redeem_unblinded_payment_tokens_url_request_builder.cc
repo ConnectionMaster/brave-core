@@ -9,29 +9,29 @@
 
 #include "base/json/json_writer.h"
 #include "base/strings/stringprintf.h"
-#include "wrapper.hpp"
 #include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/privacy/challenge_bypass_ristretto_util.h"
 #include "bat/ads/internal/server/confirmations_server_util.h"
+#include "bat/ads/internal/server/via_header_util.h"
+#include "wrapper.hpp"
 
 namespace ads {
 
+using challenge_bypass_ristretto::TokenPreimage;
 using challenge_bypass_ristretto::VerificationKey;
 using challenge_bypass_ristretto::VerificationSignature;
-using challenge_bypass_ristretto::TokenPreimage;
 
 RedeemUnblindedPaymentTokensUrlRequestBuilder::
-RedeemUnblindedPaymentTokensUrlRequestBuilder(
-    const WalletInfo& wallet,
-    const privacy::UnblindedTokenList& unblinded_tokens)
-    : wallet_(wallet),
-      unblinded_tokens_(unblinded_tokens) {
+    RedeemUnblindedPaymentTokensUrlRequestBuilder(
+        const WalletInfo& wallet,
+        const privacy::UnblindedTokenList& unblinded_tokens)
+    : wallet_(wallet), unblinded_tokens_(unblinded_tokens) {
   DCHECK(wallet_.IsValid());
   DCHECK(!unblinded_tokens_.empty());
 }
 
 RedeemUnblindedPaymentTokensUrlRequestBuilder::
-~RedeemUnblindedPaymentTokensUrlRequestBuilder() = default;
+    ~RedeemUnblindedPaymentTokensUrlRequestBuilder() = default;
 
 // PUT /v1/confirmation/payment/{payment_id}
 
@@ -51,14 +51,21 @@ UrlRequestPtr RedeemUnblindedPaymentTokensUrlRequestBuilder::Build() {
 
 std::string RedeemUnblindedPaymentTokensUrlRequestBuilder::BuildUrl() const {
   return base::StringPrintf("%s/v1/confirmation/payment/%s",
-      confirmations::server::GetHost().c_str(), wallet_.id.c_str());
+                            confirmations::server::GetHost().c_str(),
+                            wallet_.id.c_str());
 }
 
 std::vector<std::string>
 RedeemUnblindedPaymentTokensUrlRequestBuilder::BuildHeaders() const {
-  return {
-    "accept: application/json"
-  };
+  std::vector<std::string> headers;
+
+  const std::string via_header = server::BuildViaHeader();
+  headers.push_back(via_header);
+
+  const std::string accept_header = "accept: application/json";
+  headers.push_back(accept_header);
+
+  return headers;
 }
 
 std::string RedeemUnblindedPaymentTokensUrlRequestBuilder::BuildBody(
@@ -78,8 +85,8 @@ std::string RedeemUnblindedPaymentTokensUrlRequestBuilder::BuildBody(
   return json;
 }
 
-std::string
-RedeemUnblindedPaymentTokensUrlRequestBuilder::CreatePayload() const {
+std::string RedeemUnblindedPaymentTokensUrlRequestBuilder::CreatePayload()
+    const {
   base::Value payload(base::Value::Type::DICTIONARY);
   payload.SetKey("paymentId", base::Value(wallet_.id));
 
@@ -102,8 +109,8 @@ RedeemUnblindedPaymentTokensUrlRequestBuilder::CreatePaymentRequestDTO(
     base::Value credential = CreateCredential(unblinded_token, payload);
     payment_credential.SetKey("credential", base::Value(std::move(credential)));
 
-    payment_credential.SetKey("publicKey",
-        base::Value(unblinded_token.public_key.encode_base64()));
+    payment_credential.SetKey(
+        "publicKey", base::Value(unblinded_token.public_key.encode_base64()));
 
     payment_request_dto.Append(std::move(payment_credential));
   }

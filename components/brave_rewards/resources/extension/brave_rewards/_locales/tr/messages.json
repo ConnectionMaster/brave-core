@@ -51,18 +51,6 @@
     "message": "Detaylar",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Bakiyeniz",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "BAT Puanları",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "en sevdiğiniz içerik yaratıcılarına katkıda bulunmak için Brave Ödüller'de kullanılabilir. BAT Puanları, BAT almak için kullanılamaz.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "Açık",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Token Bağışları Talep Edildi",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Puan Bağışları Talep Edildi",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Reklam Kazançları",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Lütfen Brave cüzdanınızı yedekleyin.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Daha Fazla Bilgi Edinin",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Cihaz Limitine Erişildi",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Cüzdanınız doğrulanamaz çünkü en fazla doğrulanmış cihaz limitine ulaştınız.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Brave Ödülleri hesabınız para yatırmayı bekliyor.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Reklamları Etkinleştir",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Ücretsiz Token Bağışı",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Ücretsiz Puan Bağışı",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Bir Reklam Ödülü kazandınız!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Cüzdan Onaylandı",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Uphold hesabıma git",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "$provider$ hesabıma git",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Brave Ödüllerden Ayrıl",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "puanlar",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Token Bağışları",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Puan Bağışları",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Merhaba, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Bir Uphold hesabı yaratmak için en az 25 BAT'ye sahip olmalısınız. Lütfen daha sonra tekrar deneyin. Eğer zaten doğrulanmış bir Uphold hesabına sahipseniz, oturum açmak için devam edin.",
-    "description": "Text for login button"
+    "message": "Bir Uphold hesabı oluşturmak için en az $amount$ BAT sahibi olmanız gereklidir. Doğrulanmış bir Uphold hesabınız varsa oturum açın.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Bağlı",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Not: Yetki verdiğinizde işlemleriniz Uphold'a görünür olacak; örneğin, alıcıyı ve bahşişlerinizin miktarını görebilecekler.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Not: Yetkilendirdiğinizde işlemleriniz  $provider$ için görülebilir olacak; örneğin, alıcıyı ve bahşişlerinizin miktarını görebilecek.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Jeton Kazanın ve Geri Verin",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Gizlilik kurallarına uyan reklamları görüntüleyerek jeton kazanın ve favori sitelerinizi ve içerik üreticilerini otomatik olarak destekleyin.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Ne sıklıkla reklam görmek istersiniz?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(saat başına reklam sayısı)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Gözde içerik oluşturucularınıza aylık ne kadar destek vermek istiyorsunuz?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(reklam gelirlerinizden)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Ödülleri ne zaman alırsınız",
+    "message": "Ödülleri ne zaman alırsınız?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Jetonlar yaratıcıları desteklemenin ötesinde de kullanılabilir. Satıcılar katıldıkça dijital içerik ve diğer ürünleri satın alabilirsiniz.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Son olarak, temel ayarları yapalım.",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Bunu daha sonra değiştirebilirsiniz.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Yaşasın, her şey tamam!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Brave Rewards kullanarak webin herkes için daha iyi bir yer haline gelmesine yardım ediyorsunuz. Ve bu harika!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Cüzdanınızı doğrulayın",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Reklam görüntüleyerek kazandığınız tokenleri çekmek için cüzdanınızı doğrulamanız gerekecektir.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Daha sonra yap",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Cüzdanımı doğrula",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "bitFlyer cüzdanı; bitFlyer, Inc tarafından yönetilen bir hizmettir.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Cüzdanınızı doğrulayarak ve bir bitFlyer hesabına bağlayarak, Brave Rewards aracılığıyla kazandığınız tokenleri daha kolay depolayabilecek ve yönetebileceksiniz",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "Brave tarayıcınızı bitFlyer hesabınızla nasıl bağlayacağınız hakkında $link_begin$daha fazla bilgi alın$link_end$.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

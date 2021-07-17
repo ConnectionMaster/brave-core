@@ -6,15 +6,14 @@
 #include "bat/ads/internal/client/client_info.h"
 
 #include "base/time/time.h"
-#include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/json_helper.h"
+#include "bat/ads/internal/logging.h"
 
 namespace ads {
 
 ClientInfo::ClientInfo() = default;
 
-ClientInfo::ClientInfo(
-    const ClientInfo& state) = default;
+ClientInfo::ClientInfo(const ClientInfo& state) = default;
 
 ClientInfo::~ClientInfo() = default;
 
@@ -24,8 +23,7 @@ std::string ClientInfo::ToJson() {
   return json;
 }
 
-Result ClientInfo::FromJson(
-    const std::string& json) {
+Result ClientInfo::FromJson(const std::string& json) {
   rapidjson::Document document;
   document.Parse(json.c_str());
 
@@ -64,11 +62,11 @@ Result ClientInfo::FromJson(
 
   if (document.HasMember("purchaseIntentSignalHistory")) {
     for (const auto& segment_history :
-        document["purchaseIntentSignalHistory"].GetObject()) {
+         document["purchaseIntentSignalHistory"].GetObject()) {
       std::string segment = segment_history.name.GetString();
       std::deque<PurchaseIntentSignalHistoryInfo> histories;
       for (const auto& segment_history_item :
-          segment_history.value.GetArray()) {
+           segment_history.value.GetArray()) {
         PurchaseIntentSignalHistoryInfo history;
         rapidjson::StringBuffer buffer;
         rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -81,34 +79,46 @@ Result ClientInfo::FromJson(
     }
   }
 
-  if (document.HasMember("adsUUIDSeen")) {
-    for (const auto& seen_ad_notification :
-        document["adsUUIDSeen"].GetObject()) {
-      seen_ad_notifications.insert({seen_ad_notification.name.GetString(),
-          seen_ad_notification.value.GetInt64()});
+  if (document.HasMember("seenAds")) {
+    for (const auto& seen_ad_list : document["seenAds"].GetObject()) {
+      const std::string ad_type = seen_ad_list.name.GetString();
+
+      for (const auto& seen_ad : seen_ad_list.value.GetObject()) {
+        const std::string creative_instance_id = seen_ad.name.GetString();
+        const bool has_seen = seen_ad.value.GetBool();
+
+        seen_ads[ad_type][creative_instance_id] = has_seen;
+      }
     }
   }
 
-  if (document.HasMember("advertisersUUIDSeen")) {
-    for (const auto& seen_advertiser :
-        document["advertisersUUIDSeen"].GetObject()) {
-      seen_advertisers.insert({seen_advertiser.name.GetString(),
-          seen_advertiser.value.GetInt64()});
+  if (document.HasMember("seenAdvertisers")) {
+    for (const auto& seen_advertiser_list :
+         document["seenAdvertisers"].GetObject()) {
+      const std::string ad_type = seen_advertiser_list.name.GetString();
+
+      for (const auto& seen_advertiser :
+           seen_advertiser_list.value.GetObject()) {
+        const std::string advertiser_id = seen_advertiser.name.GetString();
+        const bool has_seen = seen_advertiser.value.GetBool();
+
+        seen_advertisers[ad_type][advertiser_id] = has_seen;
+      }
     }
   }
 
   if (document.HasMember("nextCheckServeAd")) {
-    next_ad_serving_interval_timestamp_ =
+    next_ad_serving_interval_timestamp =
         document["nextCheckServeAd"].GetUint64();
   }
 
   if (document.HasMember("textClassificationProbabilitiesHistory")) {
     for (const auto& probabilities :
-        document["textClassificationProbabilitiesHistory"].GetArray()) {
+         document["textClassificationProbabilitiesHistory"].GetArray()) {
       TextClassificationProbabilitiesMap new_probabilities;
 
       for (const auto& probability :
-          probabilities["textClassificationProbabilities"].GetArray()) {
+           probabilities["textClassificationProbabilities"].GetArray()) {
         const std::string segment = probability["segment"].GetString();
         const double page_score = probability["pageScore"].GetDouble();
 
@@ -126,9 +136,7 @@ Result ClientInfo::FromJson(
   return SUCCESS;
 }
 
-void SaveToJson(
-    JsonWriter* writer,
-    const ClientInfo& state) {
+void SaveToJson(JsonWriter* writer, const ClientInfo& state) {
   writer->StartObject();
 
   writer->String("adPreferences");
@@ -154,24 +162,40 @@ void SaveToJson(
   }
   writer->EndObject();
 
-  writer->String("adsUUIDSeen");
+  writer->String("seenAds");
   writer->StartObject();
-  for (const auto& seen_ad_notification : state.seen_ad_notifications) {
-    writer->String(seen_ad_notification.first.c_str());
-    writer->Uint64(seen_ad_notification.second);
+  for (const auto& seen_ads : state.seen_ads) {
+    const std::string type = std::string(seen_ads.first);
+    writer->String(type.c_str());
+    writer->StartObject();
+
+    for (const auto& seen_ad : seen_ads.second) {
+      writer->String(seen_ad.first.c_str());
+      writer->Bool(seen_ad.second);
+    }
+
+    writer->EndObject();
   }
   writer->EndObject();
 
-  writer->String("advertisersUUIDSeen");
+  writer->String("seenAdvertisers");
   writer->StartObject();
-  for (const auto& seen_advertiser : state.seen_advertisers) {
-    writer->String(seen_advertiser.first.c_str());
-    writer->Uint64(seen_advertiser.second);
+  for (const auto& seen_advertisers : state.seen_advertisers) {
+    const std::string type = std::string(seen_advertisers.first);
+    writer->String(type.c_str());
+    writer->StartObject();
+
+    for (const auto& seen_advertiser : seen_advertisers.second) {
+      writer->String(seen_advertiser.first.c_str());
+      writer->Bool(seen_advertiser.second);
+    }
+
+    writer->EndObject();
   }
   writer->EndObject();
 
   writer->String("nextCheckServeAd");
-  writer->Uint64(state.next_ad_serving_interval_timestamp_);
+  writer->Uint64(state.next_ad_serving_interval_timestamp);
 
   writer->String("textClassificationProbabilitiesHistory");
   writer->StartArray();

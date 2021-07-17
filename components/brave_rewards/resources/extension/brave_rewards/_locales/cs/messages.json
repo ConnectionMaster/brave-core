@@ -51,18 +51,6 @@
     "message": "Podrobnosti",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Váš zůstatek",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "BAT body",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "můžete v Brave Rewards použít pro zaslání příspěvku vašemu oblíbenému tvůrci obsahu. Body BAT nelze vyměnit za BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "zapnuto ",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Nárokovaných žetonových grantů",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Bodové příspěvky získány",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Zisk z reklam",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Zálohujte, prosím, svoji Brave peněženku.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Zjistit více",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Bylo dosaženo limitu zařízení",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Vaši peněženku nelze ověřit, protože jste dosáhli maximálního počtu ověřených zařízení.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Váš účet Brave Rewards čeká na převod prostředků.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Zapněte Ads",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Volný žetonový grant",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Příspěvek volných bodů",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Získali jste odměnu za reklamy!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Ověřená peněženka",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Přejít na můj Uphold účet",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Přejít na můj účet $provider$",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Odpojit od Brave Rewards",
@@ -573,17 +567,9 @@
     "message": "Žeton",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "bodů",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Žetonové granty",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Udělení bodů",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Ahoj, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Abyste mohli vytvořit účet Uphold, musíte mít minimálně 25 BAT. Zkuste to prosím později.\nPokud již máte ověřený účet Uphold, pokračujte v přihlašování.",
-    "description": "Text for login button"
+    "message": "Abyste mohli vytvořit účet Uphold, musíte mít minimálně $amount$ BAT. Pokud již máte ověřený účet Uphold, pokračujte v přihlašování. ",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Připojeno",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Poznámka: Jakmile provedete ověření, transakce budou pro Uphold viditelné; například uvidí příjemce a částky vašich příspěvků.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Poznámka: Po provedení autorizace budou vaše transakce viditelné pro službu $provider$; uvidí například příjemce a částku spropitného.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Vydělejte tokeny a odvděčte se",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Vydělávejte zobrazováním reklam respektujících soukromí tokeny a podporujte automaticky své oblíbené weby a tvůrce obsahu.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Jak často chcete vídat reklamy?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(reklam za hodinu)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Jak velkou měsíční podporu chcete věnovat svým oblíbeným tvůrcům?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(z vašich výdělků za reklamy)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Kdy dostanete odměny",
+    "message": "Kdy obdržíte odměnu?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Tokeny lze použít i nad rámec podpory tvůrců.  Jakmile se přidají obchodníci, můžete si za ně koupit digitální obsah a další zboží.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "A nakonec společně provedeme základní nastavení",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Toto můžete později změnit.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Hurá, vše bylo nastaveno!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Používáním služby Brave Rewards pomáháte vytvářet z webu lepší místo pro všechny. A to je úžasné!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Ověřit peněženku",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Abyste mohli vybrat tokeny, které získáte za prohlížení reklam, je potřeba ověřit vaši peněženku.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Později",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Ověřit peněženku",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Peněženka bitFlyer je služba spravovaná společností bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Ověření peněženky a její propojení s účtem bitFlyer vám umožní snáze ukládat a spravovat tokeny, které jste získali prostřednictvím Brave Rewards",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Zjistěte více$link_end$ o tom, jak propojit váš prohlížeč Brave s vaším účtem bitFlyer.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

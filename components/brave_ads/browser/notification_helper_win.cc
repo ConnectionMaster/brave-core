@@ -3,21 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <Windows.h>
-
 #include "brave/components/brave_ads/browser/notification_helper_win.h"
 
-#include "chrome/browser/fullscreen.h"
-#include "base/win/windows_version.h"
+#include <Windows.h>
+
+#include "base/feature_list.h"
+#include "base/logging.h"
 #include "base/win/core_winrt_util.h"
 #include "base/win/scoped_hstring.h"
-#include "base/feature_list.h"
-#include "brave/common/brave_channel_info.h"
+#include "base/win/windows_version.h"
+#include "brave/components/brave_ads/browser/features.h"
 #include "chrome/common/chrome_features.h"
 #include "chrome/install_static/install_util.h"
 #include "chrome/installer/util/install_util.h"
 #include "chrome/installer/util/shell_util.h"
-#include "base/logging.h"
 
 namespace brave_ads {
 
@@ -37,19 +36,19 @@ typedef const struct _WNF_STATE_NAME* PCWNF_STATE_NAME;
 
 typedef struct _WNF_TYPE_ID {
   GUID TypeId;
-} WNF_TYPE_ID, * PWNF_TYPE_ID;
+} WNF_TYPE_ID, *PWNF_TYPE_ID;
 
 typedef const WNF_TYPE_ID* PCWNF_TYPE_ID;
 
-typedef ULONG WNF_CHANGE_STAMP, * PWNF_CHANGE_STAMP;
+typedef ULONG WNF_CHANGE_STAMP, *PWNF_CHANGE_STAMP;
 
-typedef NTSTATUS (NTAPI* PNTQUERYWNFSTATEDATA)(
-  _In_ PWNF_STATE_NAME StateName,
-  _In_opt_ PWNF_TYPE_ID TypeId,
-  _In_opt_ const VOID* ExplicitScope,
-  _Out_ PWNF_CHANGE_STAMP ChangeStamp,
-  _Out_writes_bytes_to_opt_(* BufferSize, * BufferSize) PVOID Buffer,
-  _Inout_ PULONG BufferSize);
+typedef NTSTATUS(NTAPI* PNTQUERYWNFSTATEDATA)(
+    _In_ PWNF_STATE_NAME StateName,
+    _In_opt_ PWNF_TYPE_ID TypeId,
+    _In_opt_ const VOID* ExplicitScope,
+    _Out_ PWNF_CHANGE_STAMP ChangeStamp,
+    _Out_writes_bytes_to_opt_(*BufferSize, *BufferSize) PVOID Buffer,
+    _Inout_ PULONG BufferSize);
 
 enum FocusAssistResult {
   NOT_SUPPORTED = -2,
@@ -66,12 +65,7 @@ NotificationHelperWin::NotificationHelperWin() = default;
 NotificationHelperWin::~NotificationHelperWin() = default;
 
 bool NotificationHelperWin::ShouldShowNotifications() {
-  if (IsFullScreenMode()) {
-    LOG(WARNING) << "Notification not made: Full screen mode";
-    return false;
-  }
-
-  if (brave::IsNightlyOrDeveloperBuild()) {
+  if (features::ShouldShowCustomAdNotifications()) {
     return true;
   }
 
@@ -81,14 +75,15 @@ bool NotificationHelperWin::ShouldShowNotifications() {
     // significantly amplified the memory and CPU usage. Therefore, Windows 10
     // native notifications in Chromium are only enabled for build 17134 and
     // later
-    LOG(WARNING) << "Native notifications are not supported on Windows prior"
-        " to Windows 10 build 17134 so falling back to Message Center";
+    LOG(WARNING)
+        << "Native notifications are not supported on Windows prior"
+           " to Windows 10 build 17134 so falling back to Message Center";
     return true;
   }
 
-  if (!base::FeatureList::IsEnabled(features::kNativeNotifications)) {
+  if (!base::FeatureList::IsEnabled(::features::kNativeNotifications)) {
     LOG(WARNING) << "Native notification feature is disabled so falling back to"
-        " Message Center";
+                    " Message Center";
     return true;
   }
 
@@ -136,19 +131,17 @@ bool NotificationHelperWin::IsFocusAssistEnabled() const {
   }
 
   // State name for Focus Assist
-  WNF_STATE_NAME WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED {
-    0xA3BF1C75, 0xD83063E
-  };
+  WNF_STATE_NAME WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED{0xA3BF1C75,
+                                                            0xD83063E};
 
-  WNF_CHANGE_STAMP change_stamp = {  // Not used but is required
-    0
-  };
+  WNF_CHANGE_STAMP change_stamp = {// Not used but is required
+                                   0};
 
   DWORD buffer = 0;
   ULONG buffer_size = sizeof(buffer);
 
   if (!NT_SUCCESS(nt_query_wnf_state_data(
-      &WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED, nullptr, nullptr,
+          &WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED, nullptr, nullptr,
           &change_stamp, &buffer, &buffer_size))) {
     LOG(ERROR) << "Failed to get status of Focus Assist";
     return false;
@@ -203,14 +196,12 @@ bool NotificationHelperWin::IsNotificationsEnabled() {
   }
 
   switch (setting) {
-    case ABI::Windows::UI::Notifications::
-        NotificationSetting_Enabled: {
+    case ABI::Windows::UI::Notifications::NotificationSetting_Enabled: {
       LOG(INFO) << "Notifications are enabled";
       return true;
     }
 
-    case ABI::Windows::UI::Notifications::
-        NotificationSetting_DisabledForUser: {
+    case ABI::Windows::UI::Notifications::NotificationSetting_DisabledForUser: {
       LOG(WARNING) << "Notifications disabled for user";
       return false;
     }
@@ -235,17 +226,18 @@ bool NotificationHelperWin::IsNotificationsEnabled() {
   }
 }
 
-base::string16 NotificationHelperWin::GetAppId() const {
+std::wstring NotificationHelperWin::GetAppId() const {
   return ShellUtil::GetBrowserModelId(InstallUtil::IsPerUserInstall());
 }
 
 HRESULT NotificationHelperWin::InitializeToastNotifier() {
-  Microsoft::WRL::ComPtr<ABI::Windows::UI::Notifications::
-      IToastNotificationManagerStatics> manager;
+  Microsoft::WRL::ComPtr<
+      ABI::Windows::UI::Notifications::IToastNotificationManagerStatics>
+      manager;
 
   HRESULT hr = CreateActivationFactory(
       RuntimeClass_Windows_UI_Notifications_ToastNotificationManager,
-          manager.GetAddressOf());
+      manager.GetAddressOf());
 
   if (FAILED(hr)) {
     LOG(ERROR) << "Failed to create activation factory";
@@ -268,10 +260,10 @@ HRESULT NotificationHelperWin::CreateActivationFactory(
     wchar_t const (&class_name)[size],
     T** object) const {
   auto ref_class_name = base::win::ScopedHString::Create(
-      base::StringPiece16(class_name, size - 1));
+      base::WStringPiece(class_name, size - 1));
 
-  return base::win::RoGetActivationFactory(
-      ref_class_name.get(), IID_PPV_ARGS(object));
+  return base::win::RoGetActivationFactory(ref_class_name.get(),
+                                           IID_PPV_ARGS(object));
 }
 
 }  // namespace brave_ads

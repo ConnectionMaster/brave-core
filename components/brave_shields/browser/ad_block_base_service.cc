@@ -17,15 +17,14 @@
 #include "base/memory/ptr_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/task/post_task.h"
-#include "brave/browser/net/url_context.h"
-#include "brave/common/pref_names.h"
+#include "base/task/thread_pool.h"
+#include "brave/components/adblock_rust_ffi/src/wrapper.h"
 #include "brave/components/brave_component_updater/browser/dat_file_util.h"
 #include "brave/components/brave_shields/common/brave_shield_constants.h"
-#include "brave/vendor/adblock_rust_ffi/src/wrapper.hpp"
-#include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
+#include "third_party/abseil-cpp/absl/types/optional.h"
 #include "url/origin.h"
 
 using brave_component_updater::BraveComponent;
@@ -113,11 +112,13 @@ AdBlockBaseService::~AdBlockBaseService() {
   GetTaskRunner()->DeleteSoon(FROM_HERE, ad_block_client_.release());
 }
 
-bool AdBlockBaseService::ShouldStartRequest(
+void AdBlockBaseService::ShouldStartRequest(
     const GURL& url,
     blink::mojom::ResourceType resource_type,
     const std::string& tab_host,
+    bool* did_match_rule,
     bool* did_match_exception,
+    bool* did_match_important,
     std::string* mock_data_url) {
   DCHECK(GetTaskRunner()->RunsTasksInCurrentSequence());
 
@@ -128,27 +129,39 @@ bool AdBlockBaseService::ShouldStartRequest(
       url,
       url::Origin::CreateFromNormalizedTuple("https", tab_host.c_str(), 80),
       INCLUDE_PRIVATE_REGISTRIES);
-  bool saved_from_exception;
-  if (ad_block_client_->matches(url.spec(), url.host(), tab_host,
-                                is_third_party,
-                                ResourceTypeToString(resource_type),
-                                &saved_from_exception, mock_data_url)) {
-    // We'd only possibly match an exception filter if we're returning true.
-    if (did_match_exception) {
-      *did_match_exception = false;
-    }
-    // LOG(ERROR) << "AdBlockBaseService::ShouldStartRequest(), host: "
-    //  << tab_host
-    //  << ", resource type: " << resource_type
-    //  << ", url.spec(): " << url.spec();
-    return false;
-  }
+  ad_block_client_->matches(
+      url.spec(), url.host(), tab_host, is_third_party,
+      ResourceTypeToString(resource_type), did_match_rule,
+      did_match_exception, did_match_important, mock_data_url);
 
-  if (did_match_exception) {
-    *did_match_exception = saved_from_exception;
-  }
+  // LOG(ERROR) << "AdBlockBaseService::ShouldStartRequest(), host: "
+  //  << tab_host
+  //  << ", resource type: " << resource_type
+  //  << ", url.spec(): " << url.spec();
+}
 
-  return true;
+absl::optional<std::string> AdBlockBaseService::GetCspDirectives(
+    const GURL& url,
+    blink::mojom::ResourceType resource_type,
+    const std::string& tab_host) {
+  DCHECK(GetTaskRunner()->RunsTasksInCurrentSequence());
+
+  // Determine third-party here so the library doesn't need to figure it out.
+  // CreateFromNormalizedTuple is needed because SameDomainOrHost needs
+  // a URL or origin and not a string to a host name.
+  bool is_third_party = !SameDomainOrHost(
+      url,
+      url::Origin::CreateFromNormalizedTuple("https", tab_host.c_str(), 80),
+      INCLUDE_PRIVATE_REGISTRIES);
+  const std::string result = ad_block_client_->getCspDirectives(
+      url.spec(), url.host(), tab_host, is_third_party,
+      ResourceTypeToString(resource_type));
+
+  if (result.empty()) {
+    return absl::nullopt;
+  } else {
+    return absl::optional<std::string>(result);
+  }
 }
 
 void AdBlockBaseService::EnableTag(const std::string& tag, bool enabled) {
@@ -188,24 +201,24 @@ bool AdBlockBaseService::TagExists(const std::string& tag) {
   return std::find(tags_.begin(), tags_.end(), tag) != tags_.end();
 }
 
-base::Optional<base::Value> AdBlockBaseService::UrlCosmeticResources(
-        const std::string& url) {
+absl::optional<base::Value> AdBlockBaseService::UrlCosmeticResources(
+    const std::string& url) {
   DCHECK(GetTaskRunner()->RunsTasksInCurrentSequence());
   return base::JSONReader::Read(ad_block_client_->urlCosmeticResources(url));
 }
 
-base::Optional<base::Value> AdBlockBaseService::HiddenClassIdSelectors(
-        const std::vector<std::string>& classes,
-        const std::vector<std::string>& ids,
-        const std::vector<std::string>& exceptions) {
+absl::optional<base::Value> AdBlockBaseService::HiddenClassIdSelectors(
+    const std::vector<std::string>& classes,
+    const std::vector<std::string>& ids,
+    const std::vector<std::string>& exceptions) {
   DCHECK(GetTaskRunner()->RunsTasksInCurrentSequence());
   return base::JSONReader::Read(
       ad_block_client_->hiddenClassIdSelectors(classes, ids, exceptions));
 }
 
 void AdBlockBaseService::GetDATFileData(const base::FilePath& dat_file_path) {
-  base::PostTaskAndReplyWithResult(
-      FROM_HERE, {base::ThreadPool(), base::MayBlock()},
+  base::ThreadPool::PostTaskAndReplyWithResult(
+      FROM_HERE, {base::MayBlock()},
       base::BindOnce(&brave_component_updater::LoadDATFileData<adblock::Engine>,
                      dat_file_path),
       base::BindOnce(&AdBlockBaseService::OnGetDATFileData,

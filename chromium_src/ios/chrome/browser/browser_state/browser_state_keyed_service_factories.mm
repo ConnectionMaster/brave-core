@@ -5,10 +5,12 @@
 
 #include "ios/chrome/browser/browser_state/browser_state_keyed_service_factories.h"
 
+#include "brave/components/brave_wallet/common/buildflags/buildflags.h"
 #include "ios/chrome/browser/autofill/personal_data_manager_factory.h"
 #include "ios/chrome/browser/bookmarks/bookmark_model_factory.h"
 #include "ios/chrome/browser/favicon/favicon_service_factory.h"
 #include "ios/chrome/browser/history/history_service_factory.h"
+#include "ios/chrome/browser/history/web_history_service_factory.h"
 #include "ios/chrome/browser/invalidation/ios_chrome_profile_invalidation_provider_factory.h"
 #include "ios/chrome/browser/passwords/ios_chrome_password_store_factory.h"
 #include "ios/chrome/browser/reading_list/reading_list_model_factory.h"
@@ -28,6 +30,10 @@
 #error "This file requires ARC support."
 #endif
 
+#if BUILDFLAG(BRAVE_WALLET_ENABLED)
+#include "brave/ios/browser/api/wallet/brave_wallet_service_factory.h"
+#endif
+
 void EnsureBrowserStateKeyedServiceFactoriesBuilt() {
   autofill::PersonalDataManagerFactory::GetInstance();
   ConsentAuditorFactory::GetInstance();
@@ -38,6 +44,7 @@ void EnsureBrowserStateKeyedServiceFactoriesBuilt() {
   ios::HistoryServiceFactory::GetInstance();
   ios::TemplateURLServiceFactory::GetInstance();
   ios::WebDataServiceFactory::GetInstance();
+  ios::WebHistoryServiceFactory::GetInstance();
   IdentityManagerFactory::GetInstance();
   IOSChromePasswordStoreFactory::GetInstance();
   IOSChromeProfileInvalidationProviderFactory::GetInstance();
@@ -47,4 +54,7 @@ void EnsureBrowserStateKeyedServiceFactoriesBuilt() {
   ReadingListModelFactory::GetInstance();
   SessionSyncServiceFactory::GetInstance();
   SyncSetupServiceFactory::GetInstance();
+#if BUILDFLAG(BRAVE_WALLET_ENABLED)
+  BraveWalletServiceFactory::GetInstance();
+#endif
 }

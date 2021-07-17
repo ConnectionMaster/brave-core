@@ -5,6 +5,7 @@
 
 #include "bat/ads/internal/database/tables/conversions_database_table.h"
 
+#include <cstdint>
 #include <memory>
 
 #include "bat/ads/internal/container_util.h"
@@ -18,28 +19,22 @@ namespace ads {
 class BatAdsConversionsDatabaseTableTest : public UnitTestBase {
  protected:
   BatAdsConversionsDatabaseTableTest()
-      : database_table_(std::make_unique<database::table::Conversions>()) {
-  }
+      : database_table_(std::make_unique<database::table::Conversions>()) {}
 
   ~BatAdsConversionsDatabaseTableTest() override = default;
 
-  void Save(
-      const ConversionList conversions) {
-    database_table_->Save(conversions, [](
-        const Result result) {
+  void Save(const ConversionList& conversions) {
+    database_table_->Save(conversions, [](const Result result) {
       ASSERT_EQ(Result::SUCCESS, result);
     });
   }
 
   void PurgeExpired() {
-    database_table_->PurgeExpired([](
-        const Result result) {
-      ASSERT_EQ(Result::SUCCESS, result);
-    });
+    database_table_->PurgeExpired(
+        [](const Result result) { ASSERT_EQ(Result::SUCCESS, result); });
   }
 
-  int64_t CalculateExpiryTimestamp(
-      const int observation_window) {
+  int64_t CalculateExpiryTimestamp(const int observation_window) {
     base::Time time = base::Time::Now();
     time += base::TimeDelta::FromDays(observation_window);
     return static_cast<int64_t>(time.ToDoubleT());
@@ -48,8 +43,7 @@ class BatAdsConversionsDatabaseTableTest : public UnitTestBase {
   std::unique_ptr<database::table::Conversions> database_table_;
 };
 
-TEST_F(BatAdsConversionsDatabaseTableTest,
-    EmptySave) {
+TEST_F(BatAdsConversionsDatabaseTableTest, EmptySave) {
   // Arrange
   ConversionList conversions = {};
 
@@ -59,16 +53,15 @@ TEST_F(BatAdsConversionsDatabaseTableTest,
   // Assert
   const ConversionList expected_conversions = conversions;
 
-  database_table_->GetAll([&expected_conversions](
-      const Result result,
-      const ConversionList& conversions) {
-    EXPECT_EQ(Result::SUCCESS, result);
-    EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
-  });
+  database_table_->GetAll(
+      [&expected_conversions](const Result result,
+                              const ConversionList& conversions) {
+        EXPECT_EQ(Result::SUCCESS, result);
+        EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
+      });
 }
 
-TEST_F(BatAdsConversionsDatabaseTableTest,
-    SaveConversions) {
+TEST_F(BatAdsConversionsDatabaseTableTest, SaveConversions) {
   // Arrange
   ConversionList conversions;
 
@@ -94,16 +87,15 @@ TEST_F(BatAdsConversionsDatabaseTableTest,
   // Assert
   const ConversionList expected_conversions = conversions;
 
-  database_table_->GetAll([&expected_conversions](
-      const Result result,
-      const ConversionList& conversions) {
-    EXPECT_EQ(Result::SUCCESS, result);
-    EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
-  });
+  database_table_->GetAll(
+      [&expected_conversions](const Result result,
+                              const ConversionList& conversions) {
+        EXPECT_EQ(Result::SUCCESS, result);
+        EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
+      });
 }
 
-TEST_F(BatAdsConversionsDatabaseTableTest,
-    DoNotSaveDuplicateConversion) {
+TEST_F(BatAdsConversionsDatabaseTableTest, DoNotSaveDuplicateConversion) {
   // Arrange;
   ConversionList conversions;
 
@@ -123,16 +115,15 @@ TEST_F(BatAdsConversionsDatabaseTableTest,
   // Assert
   const ConversionList expected_conversions = conversions;
 
-  database_table_->GetAll([&expected_conversions](
-      const Result result,
-      const ConversionList& conversions) {
-    EXPECT_EQ(Result::SUCCESS, result);
-    EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
-  });
+  database_table_->GetAll(
+      [&expected_conversions](const Result result,
+                              const ConversionList& conversions) {
+        EXPECT_EQ(Result::SUCCESS, result);
+        EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
+      });
 }
 
-TEST_F(BatAdsConversionsDatabaseTableTest,
-    PurgeExpiredConversions) {
+TEST_F(BatAdsConversionsDatabaseTableTest, PurgeExpiredConversions) {
   // Arrange
   ConversionList conversions;
 
@@ -172,16 +163,16 @@ TEST_F(BatAdsConversionsDatabaseTableTest,
   expected_conversions.push_back(info_1);
   expected_conversions.push_back(info_3);
 
-  database_table_->GetAll([&expected_conversions](
-      const Result result,
-      const ConversionList& conversions) {
-    EXPECT_EQ(Result::SUCCESS, result);
-    EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
-  });
+  database_table_->GetAll(
+      [&expected_conversions](const Result result,
+                              const ConversionList& conversions) {
+        EXPECT_EQ(Result::SUCCESS, result);
+        EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
+      });
 }
 
 TEST_F(BatAdsConversionsDatabaseTableTest,
-    SaveConversionWithMatchingCreativeSetIdAndTypeAndUrlPattern) {
+       SaveConversionWithMatchingCreativeSetIdAndTypeAndUrlPattern) {
   // Arrange
   ConversionList conversions;
 
@@ -210,23 +201,22 @@ TEST_F(BatAdsConversionsDatabaseTableTest,
   ConversionList expected_conversions;
   expected_conversions.push_back(info_2);
 
-  database_table_->GetAll([&expected_conversions](
-      const Result result,
-      const ConversionList& conversions) {
-    EXPECT_EQ(Result::SUCCESS, result);
-    EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
-  });
+  database_table_->GetAll(
+      [&expected_conversions](const Result result,
+                              const ConversionList& conversions) {
+        EXPECT_EQ(Result::SUCCESS, result);
+        EXPECT_TRUE(CompareAsSets(expected_conversions, conversions));
+      });
 }
 
-TEST_F(BatAdsConversionsDatabaseTableTest,
-    TableName) {
+TEST_F(BatAdsConversionsDatabaseTableTest, TableName) {
   // Arrange
 
   // Act
   const std::string table_name = database_table_->get_table_name();
 
   // Assert
-  const std::string expected_table_name = "ad_conversions";
+  const std::string expected_table_name = "creative_ad_conversions";
   EXPECT_EQ(expected_table_name, table_name);
 }
 

@@ -22,6 +22,42 @@ public enum ShieldsTooltipEnum {
             R.color.shields_tooltip_arrow_color_2, R.drawable.shields_tooltip_background_2),
     HTTPS_UPGRADE_TOOLTIP(ShieldsTooltipEnumConstants.HTTPS_UPGRADE_TOOLTIP,
             R.string.tooltip_title_4, R.string.tooltip_text_4,
+            R.color.shields_tooltip_arrow_color_2, R.drawable.shields_tooltip_background_2),
+    BRAVE_SHARE_STATS_TIER1_TOOLTIP(ShieldsTooltipEnumConstants.BRAVE_SHARE_STATS_TIER1_TOOLTIP,
+            R.string.brave_stats_share_tooltip_tier1_title,
+            R.string.brave_stats_share_tooltip_special_text, R.color.shields_tooltip_arrow_color_2,
+            R.drawable.shields_tooltip_background_2),
+    BRAVE_SHARE_STATS_TIER2_TOOLTIP(ShieldsTooltipEnumConstants.BRAVE_SHARE_STATS_TIER2_TOOLTIP,
+            R.string.brave_stats_share_tooltip_tier2_title,
+            R.string.brave_stats_share_tooltip_exclusive_text,
+            R.color.shields_tooltip_arrow_color_2, R.drawable.shields_tooltip_background_2),
+    BRAVE_SHARE_STATS_TIER3_TOOLTIP(ShieldsTooltipEnumConstants.BRAVE_SHARE_STATS_TIER3_TOOLTIP,
+            R.string.brave_stats_share_tooltip_tier3_title,
+            R.string.brave_stats_share_tooltip_exclusive_text,
+            R.color.shields_tooltip_arrow_color_2, R.drawable.shields_tooltip_background_2),
+    BRAVE_SHARE_STATS_TIER4_TOOLTIP(ShieldsTooltipEnumConstants.BRAVE_SHARE_STATS_TIER4_TOOLTIP,
+            R.string.brave_stats_share_tooltip_tier4_title,
+            R.string.brave_stats_share_tooltip_exclusive_text,
+            R.color.shields_tooltip_arrow_color_2, R.drawable.shields_tooltip_background_2),
+    BRAVE_SHARE_STATS_TIER5_TOOLTIP(ShieldsTooltipEnumConstants.BRAVE_SHARE_STATS_TIER5_TOOLTIP,
+            R.string.brave_stats_share_tooltip_tier5_title,
+            R.string.brave_stats_share_tooltip_exclusive_text,
+            R.color.shields_tooltip_arrow_color_2, R.drawable.shields_tooltip_background_2),
+    BRAVE_SHARE_STATS_TIER6_TOOLTIP(ShieldsTooltipEnumConstants.BRAVE_SHARE_STATS_TIER6_TOOLTIP,
+            R.string.brave_stats_share_tooltip_tier6_title,
+            R.string.brave_stats_share_tooltip_pro_text, R.color.shields_tooltip_arrow_color_2,
+            R.drawable.shields_tooltip_background_2),
+    BRAVE_SHARE_STATS_TIER7_TOOLTIP(ShieldsTooltipEnumConstants.BRAVE_SHARE_STATS_TIER7_TOOLTIP,
+            R.string.brave_stats_share_tooltip_tier7_title,
+            R.string.brave_stats_share_tooltip_master_text, R.color.shields_tooltip_arrow_color_2,
+            R.drawable.shields_tooltip_background_2),
+    BRAVE_SHARE_STATS_TIER8_TOOLTIP(ShieldsTooltipEnumConstants.BRAVE_SHARE_STATS_TIER8_TOOLTIP,
+            R.string.brave_stats_share_tooltip_tier8_title,
+            R.string.brave_stats_share_tooltip_grandmaster_text,
+            R.color.shields_tooltip_arrow_color_2, R.drawable.shields_tooltip_background_2),
+    BRAVE_SHARE_STATS_TIER9_TOOLTIP(ShieldsTooltipEnumConstants.BRAVE_SHARE_STATS_TIER9_TOOLTIP,
+            R.string.brave_stats_share_tooltip_tier9_title,
+            R.string.brave_stats_share_tooltip_legendary_text,
             R.color.shields_tooltip_arrow_color_2, R.drawable.shields_tooltip_background_2);
 
     private int id;
@@ -63,5 +99,14 @@ public enum ShieldsTooltipEnum {
         static final int VIDEO_ADS_BLOCKED_TOOLTIP = 1;
         static final int ADS_TRACKER_BLOCKED_TOOLTIP = 2;
         static final int HTTPS_UPGRADE_TOOLTIP = 3;
+        static final int BRAVE_SHARE_STATS_TIER1_TOOLTIP = 5;
+        static final int BRAVE_SHARE_STATS_TIER2_TOOLTIP = 6;
+        static final int BRAVE_SHARE_STATS_TIER3_TOOLTIP = 7;
+        static final int BRAVE_SHARE_STATS_TIER4_TOOLTIP = 8;
+        static final int BRAVE_SHARE_STATS_TIER5_TOOLTIP = 9;
+        static final int BRAVE_SHARE_STATS_TIER6_TOOLTIP = 10;
+        static final int BRAVE_SHARE_STATS_TIER7_TOOLTIP = 11;
+        static final int BRAVE_SHARE_STATS_TIER8_TOOLTIP = 12;
+        static final int BRAVE_SHARE_STATS_TIER9_TOOLTIP = 13;
     }
 }

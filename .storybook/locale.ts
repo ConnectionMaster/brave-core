@@ -2,7 +2,7 @@
  * License. v. 2.0. If a copy of the MPL was not distributed with this file.
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const locale: Record<string, string> = {
+let locale: Record<string, string> = {
   about: 'about',
   accept: 'Accept',
   activityCopy: ' Brave Software. Brave is a registered trademark of Brave Software. Site names may be trademarks or registered trademarks of the site owner.',
@@ -14,6 +14,7 @@ const locale: Record<string, string> = {
   addFundsText: 'Be sure to use the address below that matches the type of cryto you own. It will be converted automatically to BAT by Uphold and appear as an increased balance in your Brave Rewards wallet. Please allow up to one hour for your wallet balance to update.',
   addFundsTitle: 'Send cryptocurrency from your external account to your Brave Rewards wallet.',
   ads: 'Ads',
+  ad: 'Ad',
   adsCurrentlyViewing: 'Your setting: maximum ads per hour: ',
   adsEarnings: 'earned from ads',
   adsHistoryFilterAll: 'All',
@@ -32,8 +33,6 @@ const locale: Record<string, string> = {
   backupWalletTitle: 'Backup Wallet',
   balanceUnavailable: 'Unavailable',
   bat: 'BAT',
-  batPoints: 'BAT Points',
-  batPointsMessage: 'can be used in Brave Rewards to contribute to your favorite content creators. BAT Points cannot be exchanged for BAT.',
   braveAdsDesc: 'No action required. Just collect tokens. Your data is safe with our Shields.',
   braveAdsTitle: 'Brave Ads',
   braveAdsLaunchTitle: 'Brave Ads has arrived!',
@@ -140,7 +139,7 @@ const locale: Record<string, string> = {
   off: 'off',
   ok: 'ok',
   on: 'on',
-  oneTime: 'One time',
+  oneTime: 'One-time',
   oneTimeDonation: 'One-time Tips',
   openAdsHistory: 'Show Ads History',
   openBalance: 'Opening Balance',
@@ -324,7 +323,6 @@ const locale: Record<string, string> = {
   whyBraveRewardsDesc1: 'With conventional browsers, you pay to browse the web by viewing ads with your valuable attention, spending your valuable time downloading invasive ad technology, that transmits your valuable private data to advertisers — without your consent.',
   whyBraveRewardsDesc2: 'Well, you\'ve come to the right place. Brave welcomes you to the new internet. One where your time is valued, your personal data is kept private, and you actually get paid for your attention.',
   whyHow: 'Why & How',
-  yourBalance: 'Your Balance',
   yourWallet: 'Your wallet',
   // New Tab Page
   adsTrackersBlocked: 'Ads and Trackers Blocked',
@@ -348,6 +346,19 @@ const locale: Record<string, string> = {
   rewardsWidgetEnableBrandedWallpaperTitle: 'Get paid to view this sponsored background image.',
   tosAndPp: 'By turning on {{title}}, you agree to the $1Terms of Service$2 and $3Privacy Policy$4.',
   braveTodayDisableSourceCommand: 'Disable content from $1',
+  braveTodayIntroTitle: `Today's top stories in a completely private feed, just for you.`,
+  braveTodayIntroDescription: `Brave News is ad-supported with completely private and anonymized ads matched on your device. Your personal information always stays private, per our $1privacy policy$2.`,
+  braveTodayOptInActionLabel: 'Show Brave News',
+  braveTodayOptOutActionLabel: 'No thanks'
 }
 
-export default locale
+export function provideStrings (strings: Record<string, string>) {
+  locale = {
+    ...locale,
+    ...strings
+  }
+}
+
+export function getString (key: string): string {
+  return locale[key] || key
+}

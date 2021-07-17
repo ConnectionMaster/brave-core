@@ -32,6 +32,7 @@ export function SetupForm (props: RewardsTourProps) {
   const acOptions = getAutoContributeOptions(
     props.autoContributeAmountOptions,
     initialAmount)
+
   return (
     <style.root>
       <style.section>
@@ -80,12 +81,8 @@ export function SetupForm (props: RewardsTourProps) {
               }
               return (
                 <button key={amount} onClick={onClick} className={className}>
-                  <style.acAmount>
-                    {amount.toFixed(0)}
-                  </style.acAmount>&nbsp;
-                  <style.acCurrency>
-                    {getString(props.onlyAnonWallet ? 'bap' : 'bat')}
-                  </style.acCurrency>
+                  <style.acAmount>{amount.toFixed(0)}</style.acAmount>&nbsp;
+                  <style.acCurrency>BAT</style.acCurrency>
                 </button>
               )
             })

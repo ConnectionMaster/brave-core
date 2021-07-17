@@ -5,6 +5,11 @@
 
 #include "bat/ads/internal/frequency_capping/permission_rules/user_activity_frequency_cap.h"
 
+#include <vector>
+
+#include "base/feature_list.h"
+#include "base/test/scoped_feature_list.h"
+#include "bat/ads/internal/features/user_activity/user_activity_features.h"
 #include "bat/ads/internal/unittest_base.h"
 #include "bat/ads/internal/unittest_util.h"
 
@@ -17,17 +22,36 @@ class BatAdsUserActivityFrequencyCapTest : public UnitTestBase {
   BatAdsUserActivityFrequencyCapTest() = default;
 
   ~BatAdsUserActivityFrequencyCapTest() override = default;
+
+  void SetUp() override {
+    UnitTestBase::SetUp();
+
+    base::FieldTrialParams parameters;
+    const char kTriggersParameter[] = "triggers";
+    parameters[kTriggersParameter] = "0D=1.0;0E=1.0;08=1.0";
+    const char kTimeWindowParameter[] = "time_window";
+    parameters[kTimeWindowParameter] = "1h";
+    const char kThresholdParameter[] = "threshold";
+    parameters[kThresholdParameter] = "2.0";
+    std::vector<base::test::ScopedFeatureList::FeatureAndParams>
+        enabled_features;
+    enabled_features.push_back({features::user_activity::kFeature, parameters});
+
+    const std::vector<base::Feature> disabled_features;
+
+    scoped_feature_list_.InitWithFeaturesAndParameters(enabled_features,
+                                                       disabled_features);
+  }
+
+  base::test::ScopedFeatureList scoped_feature_list_;
 };
 
 TEST_F(BatAdsUserActivityFrequencyCapTest,
-    AllowAdIfActivityWasReportedForTwoTypes) {
+       AllowAdIfUserActivityScoreIsEqualToTheThreshold) {
   // Arrange
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
+  UserActivity::Get()->RecordEvent(UserActivityEventType::kOpenedNewTab);
   UserActivity::Get()->RecordEvent(UserActivityEventType::kClosedTab);
 
-  FastForwardClockBy(base::TimeDelta::FromMinutes(59));
-
   // Act
   UserActivityFrequencyCap frequency_cap;
   const bool is_allowed = frequency_cap.ShouldAllow();
@@ -37,33 +61,12 @@ TEST_F(BatAdsUserActivityFrequencyCapTest,
 }
 
 TEST_F(BatAdsUserActivityFrequencyCapTest,
-    AllowAdIfActivityWasReportedForTwoOfTheSameType) {
+       AllowAdIfUserActivityScoreIsGreaterThanTheThreshold) {
   // Arrange
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
-
-  FastForwardClockBy(base::TimeDelta::FromMinutes(59));
-
-  // Act
-  UserActivityFrequencyCap frequency_cap;
-  const bool is_allowed = frequency_cap.ShouldAllow();
-
-  // Assert
-  EXPECT_TRUE(is_allowed);
-}
-
-TEST_F(BatAdsUserActivityFrequencyCapTest,
-    AllowAdIfActivityWasReportedForMoreThanTwoTypes) {
-  // Arrange
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
+  UserActivity::Get()->RecordEvent(UserActivityEventType::kOpenedNewTab);
   UserActivity::Get()->RecordEvent(UserActivityEventType::kPlayedMedia);
   UserActivity::Get()->RecordEvent(UserActivityEventType::kClosedTab);
 
-  FastForwardClockBy(base::TimeDelta::FromMinutes(59));
-
   // Act
   UserActivityFrequencyCap frequency_cap;
   const bool is_allowed = frequency_cap.ShouldAllow();
@@ -73,81 +76,9 @@ TEST_F(BatAdsUserActivityFrequencyCapTest,
 }
 
 TEST_F(BatAdsUserActivityFrequencyCapTest,
-    AllowAdIfActivityWasReportedForMoreThanTwoOfTheSameType) {
+       DoNotAllowAdIfUserActivityScoreIsLessThanTheThreshold) {
   // Arrange
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
-
-  FastForwardClockBy(base::TimeDelta::FromMinutes(59));
-
-  // Act
-  UserActivityFrequencyCap frequency_cap;
-  const bool is_allowed = frequency_cap.ShouldAllow();
-
-  // Assert
-  EXPECT_TRUE(is_allowed);
-}
-
-TEST_F(BatAdsUserActivityFrequencyCapTest,
-    AllowAdIfDuplicateActivityWasReportedForMoreThanTwoTypes) {
-  // Arrange
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kClosedTab);
-
-  FastForwardClockBy(base::TimeDelta::FromMinutes(59));
-
-  // Act
-  UserActivityFrequencyCap frequency_cap;
-  const bool is_allowed = frequency_cap.ShouldAllow();
-
-  // Assert
-  EXPECT_TRUE(is_allowed);
-}
-
-TEST_F(BatAdsUserActivityFrequencyCapTest,
-    DoNotAllowAdIfActivityWasReportedForLessThanTwoTypes) {
-  // Arrange
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
-
-  FastForwardClockBy(base::TimeDelta::FromMinutes(59));
-
-  // Act
-  UserActivityFrequencyCap frequency_cap;
-  const bool is_allowed = frequency_cap.ShouldAllow();
-
-  // Assert
-  EXPECT_FALSE(is_allowed);
-}
-
-TEST_F(BatAdsUserActivityFrequencyCapTest,
-    DoNotAllowAdIfNoActivityWasReported) {
-  // Arrange
-
-  // Act
-  UserActivityFrequencyCap frequency_cap;
-  const bool is_allowed = frequency_cap.ShouldAllow();
-
-  // Assert
-  EXPECT_FALSE(is_allowed);
-}
-
-TEST_F(BatAdsUserActivityFrequencyCapTest,
-    DoNotAllowAdIfActivityWasReportedInThePreviousHour) {
-  // Arrange
-  UserActivity::Get()->RecordEvent(
-      UserActivityEventType::kOpenedNewOrFocusedOnExistingTab);
-  UserActivity::Get()->RecordEvent(UserActivityEventType::kClosedTab);
-
-  FastForwardClockBy(base::TimeDelta::FromHours(1));
+  UserActivity::Get()->RecordEvent(UserActivityEventType::kOpenedNewTab);
 
   // Act
   UserActivityFrequencyCap frequency_cap;

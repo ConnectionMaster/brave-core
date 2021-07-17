@@ -7,7 +7,7 @@
 #define BRAVE_CHROMIUM_SRC_NET_COOKIES_COOKIE_MONSTER_H_
 
 #define CookieMonster ChromiumCookieMonster
-#include "../../../../../../net/cookies/cookie_monster.h"
+#include "../../../../net/cookies/cookie_monster.h"
 #undef CookieMonster
 
 namespace net {
@@ -37,15 +37,13 @@ class NET_EXPORT CookieMonster : public ChromiumCookieMonster {
   void SetCookieableSchemes(const std::vector<std::string>& schemes,
                             SetCookieableSchemesCallback callback) override;
 
-  void GetEphemeralCookieListWithOptionsAsync(const GURL& url,
-                                              const GURL& top_frame_url,
-                                              const CookieOptions& options,
-                                              GetCookieListCallback callback);
-  void SetEphemeralCanonicalCookieAsync(std::unique_ptr<CanonicalCookie> cookie,
-                                        const GURL& source_url,
-                                        const GURL& top_frame_url,
-                                        const CookieOptions& options,
-                                        SetCookiesCallback callback);
+  void SetCanonicalCookieAsync(std::unique_ptr<CanonicalCookie> cookie,
+                               const GURL& source_url,
+                               const CookieOptions& options,
+                               SetCookiesCallback callback) override;
+  void GetCookieListWithOptionsAsync(const GURL& url,
+                                     const CookieOptions& options,
+                                     GetCookieListCallback callback) override;
 
  private:
   NetLogWithSource net_log_;

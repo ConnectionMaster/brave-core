@@ -5,7 +5,7 @@
 
 import {html} from 'chrome://resources/polymer/v3_0/polymer/polymer_bundled.min.js'
 import {RegisterStyleOverride,RegisterPolymerTemplateModifications} from 'chrome://brave-resources/polymer_overriding.js'
-import {Router} from '../router.m.js'
+import {Router} from '../router.js'
 import {loadTimeData} from '../i18n_setup.js'
 import {pageVisibility} from './page_visibility.js'
 
@@ -13,6 +13,8 @@ import '../getting_started_page/getting_started.js'
 import '../brave_default_extensions_page/brave_default_extensions_page.m.js'
 import '../default_brave_shields_page/default_brave_shields_page.m.js'
 import '../social_blocking_page/social_blocking_page.m.js'
+import '../brave_ipfs_page/brave_ipfs_page.m.js'
+import '../brave_wallet_page/brave_wallet_page.m.js'
 import '../brave_sync_page/brave_sync_page.js'
 import '../brave_help_tips_page/brave_help_tips_page.m.js'
 import '../brave_new_tab_page/brave_new_tab_page.m.js'
@@ -78,6 +80,15 @@ RegisterPolymerTemplateModifications({
       r.BRAVE_SYNC = r.BASIC.createSection('/braveSync', 'braveSync')
       r.BRAVE_SYNC_SETUP = r.BRAVE_SYNC.createChild('/braveSync/setup');
     }
+    if (pageVisibility.braveIPFS) {
+      r.BRAVE_IPFS = r.BASIC.createSection('/ipfs', 'ipfs')
+      r.BRAVE_IPFS_KEYS = r.BRAVE_IPFS.createChild('/ipfs/keys');
+      r.BRAVE_IPFS_PEERS = r.BRAVE_IPFS.createChild('/ipfs/peers');
+    }
+    if (pageVisibility.braveWallet) {
+      r.BRAVE_WALLET = r.BASIC.createSection('/wallet', 'wallet')
+    }
+
     r.BRAVE_HELP_TIPS = r.BASIC.createSection('/braveHelpTips', 'braveHelpTips')
     r.BRAVE_NEW_TAB = r.BASIC.createSection('/newTab', 'newTab')
     if (r.SITE_SETTINGS) {
@@ -92,12 +103,11 @@ RegisterPolymerTemplateModifications({
     } else if (!isGuest) {
       console.error('[Brave Settings Overrides] Could not move autofill route to advanced route', r)
     }
-    // Privacy route is moved to advanced.
-    if (r.PRIVACY && r.ADVANCED) {
-      r.PRIVACY.parent = r.ADVANCED
-      r.CLEAR_BROWSER_DATA.parent = r.ADVANCED
+    // Safety check route is moved to advanced.
+    if (r.SAFETY_CHECK && r.ADVANCED) {
+      r.SAFETY_CHECK.parent = r.ADVANCED
     } else if (!isGuest) {
-      console.error('[Brave Settings Overrides] Could not move privacy route to advanced route', r)
+      console.error('[Brave Settings Overrides] Could not move safety check route to advanced route', r)
     }
     // Add 'Getting Started' section
     // Entire content is wrapped in another conditional template
@@ -131,6 +141,30 @@ RegisterPolymerTemplateModifications({
         'extensions',
         'braveDefaultExtensions',
         'settings-brave-default-extensions-page',
+        {
+          prefs: '{{prefs}}'
+        }
+      ))
+      const sectionIPFS = document.createElement('template')
+      sectionIPFS.setAttribute('is', 'dom-if')
+      sectionIPFS.setAttribute('restamp', true)
+      sectionIPFS.setAttribute('if', '[[showPage_(pageVisibility.braveIPFS)]]')
+      sectionIPFS.content.appendChild(createSectionElement(
+        'ipfs',
+        'braveIPFS',
+        'settings-brave-ipfs-page',
+        {
+          prefs: '{{prefs}}'
+        }
+      ))
+      const sectionWallet = document.createElement('template')
+      sectionWallet.setAttribute('is', 'dom-if')
+      sectionWallet.setAttribute('restamp', true)
+      sectionWallet.setAttribute('if', '[[showPage_(pageVisibility.braveWallet)]]')
+      sectionWallet.content.appendChild(createSectionElement(
+        'wallet',
+        'braveWallet',
+        'settings-brave-wallet-page',
         {
           prefs: '{{prefs}}'
         }
@@ -201,17 +235,24 @@ RegisterPolymerTemplateModifications({
       sectionGetStarted.insertAdjacentElement('afterend', sectionAppearance)
       // Insert New Tab
       sectionAppearance.insertAdjacentElement('afterend', sectionNewTab)
-      // Insert sync
-      sectionNewTab.insertAdjacentElement('afterend', sectionSync)
       // Insert shields
-      sectionSync.insertAdjacentElement('afterend', sectionShields)
+      sectionNewTab.insertAdjacentElement('afterend', sectionShields)
       // Insert Social Blocking
       sectionShields.insertAdjacentElement('afterend', sectionSocialBlocking)
+      // Move privacy section to after social blocking
+      const sectionPrivacy = getSectionElement(actualTemplate.content, 'privacy')
+      sectionSocialBlocking.insertAdjacentElement('afterend', sectionPrivacy)
+      // Insert sync
+      sectionPrivacy.insertAdjacentElement('afterend', sectionSync)
       // Move search
       const sectionSearch = getSectionElement(actualTemplate.content, 'search')
-      sectionSocialBlocking.insertAdjacentElement('afterend', sectionSearch)
+      sectionSync.insertAdjacentElement('afterend', sectionSearch)
       // Insert extensions
       sectionSearch.insertAdjacentElement('afterend', sectionExtensions)
+      // Insert Wallet
+      sectionExtensions.insertAdjacentElement('afterend', sectionWallet)
+      // Insert IPFS
+      sectionWallet.insertAdjacentElement('afterend', sectionIPFS)
       // Advanced
       const advancedTemplate = templateContent.querySelector('template[if="[[showAdvancedSettings_(pageVisibility.advancedSettings)]]"]')
       if (!advancedTemplate) {
@@ -234,12 +275,12 @@ RegisterPolymerTemplateModifications({
       const sectionAutofill = getSectionElement(actualTemplate.content, 'autofill')
       const sectionLanguages = getSectionElement(advancedSubSectionsTemplate.content, 'languages')
       sectionLanguages.insertAdjacentElement('beforebegin', sectionAutofill)
-      // Move privacy to before autofill
-      const sectionPrivacy = getSectionElement(actualTemplate.content, 'privacy')
-      sectionAutofill.insertAdjacentElement('beforebegin', sectionPrivacy)
-      // Move help tips after downloads
+      // Move safety check after downloads
       const sectionDownloads = getSectionElement(advancedSubSectionsTemplate.content, 'downloads')
-      sectionDownloads.insertAdjacentElement('afterend', sectionHelpTips)
+      const sectionSafetyCheck = getSectionElement(actualTemplate.content, 'safetyCheck')
+      sectionDownloads.insertAdjacentElement('afterend', sectionSafetyCheck)
+      // Move help tips after safety check
+      sectionSafetyCheck.insertAdjacentElement('afterend', sectionHelpTips)
     }
   }
 })

@@ -51,18 +51,6 @@
     "message": "Thông tin chi tiết",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Số dư của bạn",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Điểm BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "có thể sử dụng trong Brave Rewards để đóng góp cho người sáng tạo nội dung yêu thích của bạn. Điểm BAT không thể quy đổi sang BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "trên",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Khoản thưởng Token Đã nhận",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Điểm Tặng Đã Nhận",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Tiền kiếm được từ Quảng cáo",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Vui lòng sao lưu ví Brave của bạn.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Tìm hiểu thêm",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Đã đến Giới hạn về Thiết bị",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Không thể xác thực ví của bạn vì bạn đã dùng hết giới hạn tối đa thiết bị được xác thực.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Tài khoản Tiền thưởng Brave của bạn đang chờ khoản tiền gửi.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Bật Ads",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Khoản thưởng Token Miễn phí",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Tặng Điểm Miễn phí",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Bạn đã nhận được Điểm thưởng Quảng cáo!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Ví đã được xác thực.",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Truy cập tài khoản Uphold của tôi",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Đến tài khoản $provider$ của tôi",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Ngắt kết nối với Brave Rewards",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "điểm",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Tặng Token",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Điểm tài trợ",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Xin chào, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Bạn cần có tối thiểu 25 BAT để tạo tài khoản Uphold. Xin vui lòng thử lại sau.\nNếu bạn đã có tài khoản Uphold được xác minh, hãy tiếp tục đăng nhập.",
-    "description": "Text for login button"
+    "message": "You need to have minimum $amount$ BAT to create an Uphold account. If you already have a verified Uphold account, continue to login.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Đã kết nối",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Lưu ý: Các giao dịch của bạn sẽ hiển thị với Uphold khi bạn cho phép; chẳng hạn, họ sẽ có thể thấy người nhận và số tiền tip của bạn.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Lưu ý: $provider$ sẽ có thể thấy được các giao dịch của bạn sau khi bạn cho phép; ví dụ như họ sẽ có thể thấy người nhận cũng như số tiền boa của bạn.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Kiếm Token & Tặng Lại",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Kiếm token bằng cách xem quảng cáo tôn trọng quyền riêng tư, đồng thời tự động hỗ trợ các website và người sáng tạo nội dung mà bạn yêu thích.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Bạn muốn xem quảng cáo bao lâu một lần?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(quảng cáo mỗi giờ)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Hàng tháng, bạn muốn hỗ trợ bao nhiêu cho những người sáng tạo yêu thích của mình?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(từ thu nhập xem quảng cáo của bạn)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Khi nào bạn nhận được phần thưởng",
+    "message": "Khi nào bạn nhận được phần thưởng?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Bạn có thể sử dụng các token ngoài việc ủng hộ các nhà sáng tạo. Bạn có thể mua nội dung kỹ thuật số và các hàng hóa khác khi các thương gia tham gia.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Cuối cùng, bạn hãy thiết lập các cài đặt cơ bản",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Bạn có thể thay đổi điều này sau.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Tuyệt vời, tất cả đã sẵn sàng rồi!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Khi sử dụng Brave Rewards, bạn đang giúp làm cho trang web trở thành một nơi tốt hơn cho mọi người. Và điều đó thật tuyệt vời!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Xác thực ví của bạn",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Để rút các token mà bạn kiếm được khi xem quảng cáo, bạn sẽ cần phải xác thực ví của mình.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Thực hiện sau",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Xác thực ví của tôi",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Ví bitFlyer là một dịch vụ do bitFlyer, Inc quản lý.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Với việc xác thực ví của bạn và liên kết ví với một tài khoản bitFlyer, bạn sẽ có thể lưu trữ và quản lý các token mà bạn đã kiếm được thông qua Brave Rewards dễ dàng hơn",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Tìm hiểu thêm$link_end$ về cách liên kết trình duyệt Brave với tài khoản bitFlyer của bạn.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

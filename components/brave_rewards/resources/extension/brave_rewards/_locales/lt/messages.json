@@ -51,18 +51,6 @@
     "message": "Išsami informacija",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Jūsų balansas",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "BAT taškai",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "gali būti naudojami „Brave Rewards“ norint prisidėti prie savo mėgstamų turinio kūrėjų. BAT taškų negalima keisti į BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "įjungti",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Atsiimtos žetonų išmokos",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Atsiimti suteikti taškai",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Uždarbis iš reklamos",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Sukurkite savo „Brave“ piniginės atsarginę kopiją.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Sužinokite daugiau",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Pasiektas įrenginių limitas",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Jūsų piniginės nebuvo galima patvirtinti, nes pasiekėte maksimalų patvirtintų įrenginių limitą.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Jūsų „Brave Rewards“ paskyroje laukiama įnašo.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Įjungti reklamas",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Nemokamų žetonų išmoka",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Nemokamas suteikti taškai",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Jūs gavote atlygį už reklamą! ",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Piniginė patvirtinta",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Eiti į mano „Uphold“ paskyrą",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Eiti į mano $provider$ paskyrą",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Atsijungti nuo „Brave Rewards“",
@@ -573,17 +567,9 @@
     "message": "Žetonas",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "taškai",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Atpažinimo ženklo suteikimas",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Suteikti taškai",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Sveiki, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Jums reikia turėti mažiausiai 25 BAT, kad galėtumėte susikurti „Uphold“ paskyrą. Bandykite dar kartą vėliau.\nJei jau turite patvirtintą „Uphold“ paskyrą, tęskite, kad prisijungtumėte.",
-    "description": "Text for login button"
+    "message": "Jums reikia turėti mažiausiai $amount$ BAT, kad galėtumėte susikurti „Uphold“ paskyrą. Jei jau turite patvirtintą „Uphold“ paskyrą, tęskite, kad prisijungtumėte.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Prijungta",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Pastaba. Jūsų operacijos „Uphold“  bus matomos tada, kai duosite leidimą; pavyzdžiui, bus matomas jūsų gavėjas ir arbatpinigių suma.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Pastaba. Jūsų operacijos $provider$ bus matomos tada, kai duosite leidimą; pavyzdžiui, bus matomas jūsų arbatpinigių gavėjas ir suma.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Gaukite žetonų ir atsilyginkite",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Gaukite žetonų žiūrėdami privatumo nepažeidžiančias reklamas ir automatiškai paremkite mėgstamas svetaines bei turinio kūrėjus.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Kaip dažnai norite matyti reklamas?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(reklamų skaičius per valandą)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Kiek paramos per mėnesį norite skirti savo mėgstamiems kūrėjams?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(iš savo uždarbio už reklamą)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Kada gaunate atlygį",
+    "message": "Kada gaunate atlygį?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Žetonus galima naudoti ne tik kūrėjams remti. Galite pirkti skaitmeninį turinį ir kitas prekes, nes mūsų gretas pildo pardavėjai.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Galiausiai nustatykime pagrindines nuostatas",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Tai galite pakeisti vėliau.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Valio! Viskas parengta!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Naudodami „Brave Rewards“ padedate siekti, kad žiniatinklis visiems taptų geresne vieta. Juk tai puiku!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Patvirtinkite savo piniginę",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Norėdami išsiimti žetonus, pelnytus už reklamų peržiūrą, turėsite patvirtinti savo piniginę.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Atlikti vėliau",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Patvirtinti mano piniginę",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "„bitFlyer“ piniginė yra „bitFlyer, Inc.“ valdoma paslauga.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Patvirtindami savo piniginę ir susiedami ją su „bitFlyer“ paskyra, galėsite lengviau laikyti ir tvarkyti žetonus, pelnytus per „Brave Rewards“",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Sužinokite daugiau$link_end$ apie tai, kaip susieti „Brave“ naršyklę su turima „bitFlyer“ sąskaita.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

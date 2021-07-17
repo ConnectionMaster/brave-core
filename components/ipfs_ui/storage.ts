@@ -18,12 +18,40 @@ export const defaultState: IPFS.State = {
   },
   daemonStatus: {
     installed: false,
-    launched: false
+    launched: false,
+    restarting: false,
+    installing: false,
+    error: ''
+  },
+  garbageCollectionStatus: {
+    success: true,
+    error: '',
+    started: false
+  },
+  repoStats: {
+    objects: 0,
+    size: 0,
+    storage: 0,
+    path: '',
+    version: ''
+  },
+  nodeInfo: {
+    id: '',
+    version: ''
+  },
+  installationProgress: {
+    total_bytes: -1,
+    downloaded_bytes: -1
   }
 }
 
 export const getLoadTimeData = (state: IPFS.State): IPFS.State => {
   state = { ...state }
+
+  Object.keys(defaultState).forEach(function (key) {
+    state[key] = Object.assign({}, defaultState[key], state[key])
+  })
+
   return state
 }
 

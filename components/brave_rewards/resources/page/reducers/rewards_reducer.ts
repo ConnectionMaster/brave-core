@@ -26,6 +26,12 @@ const rewardsReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State
       chrome.send('brave_rewards.getAutoContributeProperties')
       break
     }
+    case types.DISCONNECT_WALLET_ERROR: {
+      state = { ...state }
+      let ui = state.ui
+      ui.disconnectWalletError = true
+      break
+    }
     case types.ON_AUTO_CONTRIBUTE_PROPERTIES: {
       state = { ...state }
       let properties = action.payload.properties
@@ -241,9 +247,42 @@ const rewardsReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State
       }
 
       const data = action.payload.data
-      state.adsData.adsEstimatedPendingRewards = data.adsEstimatedPendingRewards
       state.adsData.adsNextPaymentDate = data.adsNextPaymentDate
       state.adsData.adsReceivedThisMonth = data.adsReceivedThisMonth
+      state.adsData.adsEarningsThisMonth = data.adsEarningsThisMonth
+      state.adsData.adsEarningsLastMonth = data.adsEarningsLastMonth
+      break
+    }
+    case types.GET_ENABLED_INLINE_TIPPING_PLATFORMS: {
+      chrome.send('brave_rewards.getEnabledInlineTippingPlatforms')
+      break
+    }
+    case types.ON_ENABLED_INLINE_TIPPING_PLATFORMS: {
+      const inlineTip = {
+        twitter: false,
+        reddit: false,
+        github: false
+      }
+
+      for (const platform of action.payload.platforms) {
+        switch (platform) {
+          case 'github':
+            inlineTip.github = true
+            break
+          case 'reddit':
+            inlineTip.reddit = true
+            break
+          case 'twitter':
+            inlineTip.twitter = true
+            break
+        }
+      }
+
+      state = {
+        ...state,
+        inlineTip
+      }
+
       break
     }
     case types.ON_INLINE_TIP_SETTINGS_CHANGE: {
@@ -274,16 +313,6 @@ const rewardsReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State
 
       break
     }
-    case types.ON_VERIFY_ONBOARDING_DISPLAYED: {
-      let ui = state.ui
-
-      ui.verifyOnboardingDisplayed = true
-      state = {
-        ...state,
-        ui
-      }
-      break
-    }
     case types.PROCESS_REWARDS_PAGE_URL: {
       const path = action.payload.path
       const query = action.payload.query
@@ -302,7 +331,13 @@ const rewardsReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State
       const data = action.payload.data
       const ui = state.ui
 
-      chrome.send('brave_rewards.getExternalWallet', [data.walletType])
+      chrome.send('brave_rewards.getExternalWallet')
+
+      // NOT_FOUND
+      if (data.result === 9) {
+        ui.modalRedirect = 'batLimit'
+        break
+      }
 
       // EXPIRED_TOKEN
       if (data.result === 24) {
@@ -310,14 +345,16 @@ const rewardsReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State
         break
       }
 
+      // BAT_NOT_ALLOWED
       if (data.result === 25) {
         ui.modalRedirect = 'notAllowed'
         break
       }
 
-      // NOT_FOUND
-      if (data.result === 9) {
-        ui.modalRedirect = 'batLimit'
+      // ALREADY_EXISTS
+      if (data.result === 26) {
+        // User has reached device linking limit; no need to show modal, as we
+        // posted a notification for this
         break
       }
 
@@ -326,7 +363,7 @@ const rewardsReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State
         break
       }
 
-      if (data.walletType === 'uphold') {
+      if (data.walletType === 'uphold' || data.walletType === 'bitflyer' || data.walletType === 'gemini') {
         chrome.send('brave_rewards.fetchBalance')
 
         if (data.action === 'authorization') {
@@ -359,22 +396,7 @@ const rewardsReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State
       break
     }
     case types.DISCONNECT_WALLET: {
-      chrome.send('brave_rewards.disconnectWallet', [action.payload.walletType])
-      break
-    }
-    case types.ONLY_ANON_WALLET: {
-      chrome.send('brave_rewards.onlyAnonWallet')
-      break
-    }
-    case types.ON_ONLY_ANON_WALLET: {
-      const ui = state.ui
-
-      ui.onlyAnonWallet = !!action.payload.only
-
-      state = {
-        ...state,
-        ui
-      }
+      chrome.send('brave_rewards.disconnectWallet')
       break
     }
     case types.DISMISS_PROMO_PROMPT: {
@@ -433,10 +455,6 @@ const rewardsReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State
         ...state,
         paymentId: action.payload.paymentId
       }
-      break
-    }
-    case types.SET_FIRST_LOAD: {
-      state.firstLoad = action.payload.firstLoad
       break
     }
     case types.GET_ONBOARDING_STATUS: {

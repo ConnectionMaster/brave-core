@@ -2,39 +2,42 @@
 <!DOCTYPE translationbundle>
 <translationbundle lang="lt">
 <translation id="7307834434086582547">Aktyvinti / išjungti „Brave“ skydus</translation>
-<translation id="6303294677342628402">Skydai</translation>
-<translation id="6132506775968708399">Blokuoti trečiųjų šalių slapukus</translation>
-<translation id="7835726359440951858">Blokuoti reklamas ir sekimą</translation>
 <translation id="3570081523466826008">Pakeisti ryšius į HTTPS</translation>
+<translation id="2278950434998763147">Kai kurios svetainės atveriamos naudojant saugų HTTPS ryšį vietoj paprasto HTTP.</translation>
 <translation id="94154759592465111">Blokuoti scenarijus</translation>
-<translation id="7458422973722236530">Kontrolinio kodo apsauga</translation>
+<translation id="3518266709656143462">Blokuoja „JavaScript“ (svetainės gali neveikti)</translation>
 <translation id="5709627087332022422">Blokuoti kelių svetainių sekiklius</translation>
-<translation id="6754976710186182237">Kontrolinio kodo metodai</translation>
-<translation id="2313532038420432247">HTTPS naujiniai</translation>
-<translation id="7461425058443653485">Užblokuoti scenarijai</translation>
 <translation id="6052725679982758334">Socialinės žiniasklaidos blokavimas</translation>
 <translation id="7498695072878479744">Trečiųjų šalių svetainėse leisti „Google“ prisijungimo mygtukus</translation>
 <translation id="863171915776379000">Leisti rodyti prisijungimo per „Facebook“ formą ir įterptuosius įrašus</translation>
 <translation id="5165042248369837294">Leisti rodyti įterptąsias „Twitter“ žinutes</translation>
 <translation id="958971637207126733">Leisti rodyti įterptuosius „LinkedIn“ įrašus</translation>
-<translation id="3834924998750356151">Blokavimo monitorius</translation>
-<translation id="1713450908129883784">Individualūs valdikliai</translation>
 <translation id="6302422639282249274">Tvarkyti „Brave Rewards“</translation>
-<translation id="1506061864768559482">Paieškos variklis</translation>
+<translation id="8877432762827303535">Atsiskaitymas internetu</translation>
+<translation id="6583902294974160967">Palaikymas</translation>
+<translation id="1799030480311994998">Funkcijos</translation>
+<translation id="5345505584130165588">„Brave“ skydai ir privatumas</translation>
+<translation id="4692623383562244444">Paieškos sistemos</translation>
 <translation id="1468415711258933398">Standartinis skirtukas</translation>
 <translation id="3377025655491224618">Inkognito skirtukas</translation>
 <translation id="9148058034647219655">Išeiti</translation>
-<translation id="520895744850022668">HTTPS visur</translation>
-<translation id="8710614491157212477">Kai įmanoma, palaikomos svetainės atveriamos naudojant HTTPS vietoj HTTP</translation>
-<translation id="8387201461264842096">Reklamos blokavimas</translation>
-<translation id="1934885595886623674">Neleidžiama įkelti reklamų</translation>
+<translation id="4022987104439075738">IPFS tinklų sietuvas</translation>
+<translation id="2688519859165248360">Leidžia į IPFS išteklius patekti per IPFS tinklų sietuvą</translation>
+<translation id="7534079972563542000">„Unstoppable Domains“</translation>
+<translation id="6513892817556267573">Eterio pavadinimų paslauga</translation>
+<translation id="3894650624018948468">Sprendimo būdas</translation>
+<translation id="2356070529366658676">Paklausti</translation>
+<translation id="4176463684765177261">Pasyvinta</translation>
+<translation id="2218918398178303658">DNS per HTTPS</translation>
+<translation id="1448289340149908413">Eteris</translation>
 <translation id="5787084571334399599">Naršyklei neleidžia naudoti kontrolinių kodų</translation>
 <translation id="7459000603787995422">Išeinant uždaryti skirtukus</translation>
+<translation id="4448697385961650078">Blokuoti sekiklius ir reklamas</translation>
+<translation id="2448893613530489637">Neleidžia įkelti ir tinklalapiuose rodyti sekiklių ir reklamų</translation>
 <translation id="1680858055899097121">Nepalikti skirtukų tarp naršymo seansų</translation>
-<translation id="6469509880167172749">Automatiškai siųskite visiškai privačią produktų analizę „Brave“</translation>
-<translation id="7090566321964540749">Ši anoniminė informacija leidžia „Brave“ įvertinti tik bendrą tam tikrų funkcijų naudojimą.</translation>
-<translation id="453601949003770390">Sekiklių ir reklamos blokavimas</translation>
-<translation id="347604927162577559">Duomenys\nįrašyti</translation>
+<translation id="7142548388914389999">Leisti privatumo nepažeidžiančią produktų analizę (P3A)</translation>
+<translation id="5469408008145872264">Ši visiškai nuasmeninta informacija padeda „Brave“ įvertinti bendrą tam tikrų funkcijų naudojimą ir jas patobulinti.</translation>
+<translation id="7977176350719484850">Numatomi sutaupyti\nduomenys</translation>
 <translation id="9008534313521214777">Numatomas sutaupytas\nlaikas</translation>
 <translation id="6572660632052512096">Stalinio kompiuterio režimas</translation>
 <translation id="1340503115760585811">Naujiems skirtukams įjungti stalinio kompiuterio rodinį</translation>
@@ -43,43 +46,40 @@
 <translation id="4479934682648362332">Pirmenybę teikti svetainių stalinio kompiuterio versijoms</translation>
 <translation id="1842747674580016420">Vaizdo įrašų atkūrimas naršyklėje „Brave“</translation>
 <translation id="5368992950177874750">Įjungus vaizdo įrašai bus leidžiami naršyklėje „Brave“, o ne per atitinkamą programą</translation>
-<translation id="2645380101799517405">Valdikliai</translation>
+<translation id="181905442828471321">„Brave“ numatytieji visuotiniai skydai</translation>
+<translation id="2675679258824361492">Kitos privatumo nuostatos</translation>
+<translation id="8026334261755873520">Išvalyti naršymo duomenis</translation>
 <translation id="5965081608816406060">Vaizdo įrašo atkūrimas fone</translation>
 <translation id="6332924730165919598">Užveriant visus skirtukus užveriama „Brave“</translation>
 <translation id="1580125697191336644">Eksperimentinė funkcija. Įgalinamas garso leidimas iš fone leidžiamo vaizdo įrašo, kai skirtukas neaktyvus arba įrenginio ekranas išjungtas. Jei ši funkcija neveikia, pabandykite perjungti į stalinio kompiuterio režimą.</translation>
 <translation id="59174027418879706">Aktyvinta</translation>
-<translation id="4176463684765177261">Pasyvinta</translation>
 <translation id="4150201353443180367">Pateiktis</translation>
 <translation id="2433507940547922241">Išvaizda</translation>
 <translation id="2804710924397009224">Slėpti „Brave Rewards“ piktogramą</translation>
+<translation id="7289740269305509613">Paslepia „Brave Rewards“ piktogramą</translation>
 <translation id="8495235435594442882">Įjungti apatinę įrankių juostą</translation>
 <translation id="6587448235155023666">Pakeitimai įsigalios kitą kartą iš naujo paleidus „Brave“</translation>
 <translation id="8701563696941209024">IŠ NAUJO PALEISTI DABAR</translation>
 <translation id="834487290629916192">VĖLIAU</translation>
 <translation id="8281886186245836920">Praleisti</translation>
-<translation id="316832010181763471">Paieškos sistemos įtraukimas</translation>
 <translation id="986879628471635371">Trikčių šalinimo įtraukimas</translation>
 <translation id="5808759341041733958">Pasirinkite numatytąją paieškos sistemą</translation>
 <translation id="1331593888918588693">Pageidavimus visada galite pakeisti vėliau programos nustatymuose.</translation>
-<translation id="7053983685419859001">Blokuoti</translation>
 <translation id="5806601733251372221">„Brave“ skydai</translation>
-<translation id="2880356288762235261">nuo privatumą pažeidžiančių reklamų ir sekiklių, kad galėtumėte žiniatinklyje naršyti nesekami.</translation>
 <translation id="8537217141725709400">Uždirbkite <ph name="TOKEN"/>s</translation>
 <translation id="3333887201479867589">„Brave Rewards“</translation>
 <translation id="5870330605209713397">žiūrėdami privatumo nepažeidžiančias reklamas ir paremkite numatytąsias mėgstamas svetaines ir kūrėjus.</translation>
-<translation id="821707262661492716">už privatumo nepažeidžiančių reklamų peržiūrą.</translation>
+<translation id="5302488867897327287">Bakstelėdami „Pradėti naudotis „Brave Rewards“ sutinkate su</translation>
 <translation id="4281844954008187215">Paslaugų teikimo sąlygos</translation>
 <translation id="6871397658902960384">Pradėti naršymą</translation>
 <translation id="454386012157232640">Nematau reklamos</translation>
 <translation id="1448877943847791441">Pirmąją reklamą „Brave“ parodys po</translation>
 <translation id="4410793187232041318">Dabar už „Brave Ads“ peržiūrą galite gauti žetonų.</translation>
 <translation id="6511854390690723657">Tai jūsų pirmoji „Brave“ reklama. Bakstelėkite, jei norite sužinoti daugiau.</translation>
-<translation id="4930714375720679147">Įjungti</translation>
-<translation id="2453860139492968684">Užbaigti</translation>
 <translation id="2070991379950719711">Pradėti naudotis „Brave Rewards“</translation>
 <translation id="48520986898237073">Tęsti su pinigine</translation>
 <translation id="3570367516044491911">Nustatyti kaip numatytąją naršyklę</translation>
-<translation id="7493053924837150477">Pasirinkite naršyklę „Brave“ iš sąrašo ir bakstelėkite „Visada“</translation>
+<translation id="19715420010996093">Pasirinkite naršyklę „Brave“ ir bakstelėkite „Visada“</translation>
 <translation id="3546439402724649282">„Brave“ jau nustatyta kaip jūsų numatytoji naršyklė.</translation>
 <translation id="8389661903259423907">Jau nustatėte numatytąją naršyklę. Numatytąją naršyklę galite keisti programos nuostatose.</translation>
 <translation id="7091885296442320770">„Brave“ veikia žaibo greičiu</translation>
@@ -115,28 +115,13 @@
 <translation id="8220228041552340594">SPALIS</translation>
 <translation id="8280223431922155812">LAPKRITIS</translation>
 <translation id="4254029385847607686">GRUODIS</translation>
-<translation id="1916285746997567466">Pasirenkite išbandyti
-naująjį internetą.</translation>
-<translation id="3540580927110899945">Dabar už privatumo nepažeidžiančių reklamų peržiūrą galite gauti <ph name="TOKEN"/>s žetonų.</translation>
-<translation id="1327938628925645979">PRISIJUNGTI PRIE „REWARDS“</translation>
-<translation id="5567439033041178034">SUŽINOTI DAUGIAU</translation>
 <translation id="3780605330121608425">Jūsų piniginė</translation>
-<translation id="8845154268466251503">BAT</translation>
 <translation id="7837083325641186736"><ph name="VALUE"/></translation>
 <translation id="3826081199286264109">USD</translation>
-<translation id="2104073734684466851">Išmokos</translation>
 <translation id="1165667598801520610">Pridėti lėšų</translation>
 <translation id="8428213095426709021">Nustatymai</translation>
-<translation id="2012723204723845092">Sveiki sugrįžę!</translation>
-<translation id="7669994301500276741">Gaukite atlygį už naršymą.</translation>
-<translation id="8203529727745387785">Užsidirbkite peržiūrėdami privatumo nepažeidžiančias reklamas
-ir savo uždarbiu paremkite
-jums patinkančius turinio kūrėjus.</translation>
-<translation id="5148719990624240755">ĮJUNGTI „BRAVE REWARDS“</translation>
 <translation id="8772672608371898774">„Brave“ patvirtintas leidėjas</translation>
 <translation id="1397683270551078781">Dar nepatvirtinta</translation>
-<translation id="5727208111992260840">Šis kūrėjas dar neužsiregistravo, kad gautų „Brave“ naudotojų aukas.
-Visi jūsų išsiųsti arbatpinigiai liks jūsų piniginėje, kol galiausiai jis patvirtins.</translation>
 <translation id="8918760045046434238">Siųsti arbatpinigių...</translation>
 <translation id="1978261665418056203">Šį mėnesį veiklos
 dar nebuvo...</translation>
@@ -150,9 +135,8 @@ dar nebuvo...</translation>
 <translation id="13853865024308201">Atsiimti</translation>
 <translation id="7335371657242627509">Įtraukti į automatinį indėlį</translation>
 <translation id="5463954686005964104">Duoti arbatpinigių šiai svetainei kas mėnesį</translation>
-<translation id="7530570094705720669">Kuriama piniginė</translation>
 <translation id="937392350501765664"><ph name="MONTH"/> <ph name="YEAR"/></translation>
-<translation id="4751553692764711651">Paaukojote <ph name="BAT_VALUE"/> <ph name="BAT_TEXT"/>.</translation>
+<translation id="4781696154289395607">Paaukojote <ph name="BAT_VALUE"/> BAT.</translation>
 <translation id="7997676409547731821">Jūsų suplanuotas automatinio indėlio mėnesinis mokėjimas ir mėnesiniai arbatpinigiai nesumokėti, nes nepakako lėšų. Bandysime dar kartą po 30 dienų.</translation>
 <translation id="5306913077198665897">Apdorojant jūsų arbatpinigius iškilo problema, bandykite dar kartą.</translation>
 <translation id="2429828319207652823">Apdorojant jūsų indėlį iškilo problema.</translation>
@@ -166,20 +150,18 @@ dar nebuvo...</translation>
 <translation id="1713542052890184975">Sukurkite savo „Brave“ piniginės atsarginę kopiją.</translation>
 <translation id="2323069945529668668">Oi!</translation>
 <translation id="7510166204621526816">„Brave Rewards“ serveris neatsako. Išspręsime tai kuo greičiau.</translation>
-<translation id="7117228822971127758">Vėliau bandykite dar kartą</translation>
-<translation id="3068742524072211213">baigia galioti <ph name="DATE"/></translation>
-<translation id="4292832015778676417">uždirbta iš reklamos</translation>
 <translation id="683765328936486920">per „YouTube“</translation>
 <translation id="8969049974285901797">per „Twitch“</translation>
-<translation id="4376933248999950592">Paskyrėte <ph name="BAT_VALUE"/> <ph name="BAT_TEXT"/> kūrėjams, kurie dar neužsiregistravo, kad gautų aukas. Jūsų naršyklė mėgins paaukoti, kol jie patvirtins, arba ne ilgiau nei 90 dienų.</translation>
+<translation id="3692362746128814480">Paskyrėte <ph name="BAT_VALUE"/> BAT kūrėjams, kurie dar neužsiregistravo, kad gautų aukas.
+Jūsų naršyklė mėgins paaukoti, kol jie patvirtins,
+arba ne ilgiau nei 90 dienų.</translation>
 <translation id="3101693828171454453">nepakanka <ph name="TOKEN"/>s</translation>
 <translation id="6940273954212603510">prašom</translation>
 <translation id="1036277985068412734">pridėti lėšų</translation>
 <translation id="3492491948683276944">nustatyti mėnesinius arbatpinigius</translation>
-<translation id="4162066325465825185">Deja, atrodo, kad „Brave Rewards“ jūsų įrenginyje nepasiekiama</translation>
 <translation id="8038539967102225446">„Brave Ads“ jau čia!</translation>
-<translation id="8985635554450124959">Sinchronizavimo nustatyti nepavyko</translation>
 <translation id="222883304157347087">(šis įrenginys)</translation>
+<translation id="4157741509680155021">SINCHRONIZAVIMO GRANDINĖS ĮRENGINIAI</translation>
 <translation id="279635009973773843">ĮKELIAMI ĮRENGINIAI...</translation>
 <translation id="6394333525003604181">PALIEKAMA SINCHRONIZAVIMO GRANDINĖ...</translation>
 <translation id="2569646144216067185">Žodžių skaičius: <ph name="WORD_COUNT"/></translation>
@@ -189,9 +171,11 @@ dar nebuvo...</translation>
 <translation id="3149880132460839085">„Brave Sync“</translation>
 <translation id="3680755684186855422">„Brave Sync“ skirta žymių duomenims privačiai sinchronizuoti tarp įvairiuose įrenginiuose įdiegtų „Brave“ naršyklių.</translation>
 <translation id="3735228155296883311">Tiesiog nuskaitykite kodą iš savo sinchronizavimo grandinės, kurią sukūrėte kitame įrenginyje. Taip pat galite pradėti naują sinchronizavimo grandinę.</translation>
+<translation id="2614069607859982576">Naudodami esamą sinchronizuotą įrenginį, atverkite „Brave“ nuostatas ir nueikite į „Nuostatos“ &gt; „Sinchronizavimas“. Pasirinkite „Pridėti naują įrenginį“ ir nuskaitykite ekrane rodomą QR kodą.</translation>
 <translation id="5241263629636958324">Nukopijuota į iškarpinę</translation>
 <translation id="5817918615728894473">Susieti</translation>
 <translation id="7090325819305486658">Pageidaujamos duomenų nuostatos</translation>
+<translation id="728334460283296316">Pašalinti įrenginį</translation>
 <translation id="1178128181015923849">Ar tikrai norite panaikinti įrenginį „<ph name="DEVICE_NAME"/>“?</translation>
 <translation id="7745082336226088126">Nuskaitykite arba įveskite sinchronizavimo kodą</translation>
 <translation id="1602067095281698985">Sudaryti naują sinchronizavimo grandinę</translation>
@@ -212,6 +196,7 @@ dar nebuvo...</translation>
 <translation id="6776430845975754238">Nuostatų pakeitimas turės įtakos tik duomenims, kuriuos šis įrenginys bendrina kitiems.</translation>
 <translation id="1061533051865606843">Pridėti naują prietaisą</translation>
 <translation id="7539985410310934287">Įveskite kodinius žodžius</translation>
+<translation id="2886391679017857869">Naudodami esamą sinchronizuotą įrenginį, atverkite „Brave“ nuostatas ir nueikite į „Nuostatos“ &gt; „Sinchronizavimas“. Pasirinkite „Pridėti naują įrenginį“ ir „Rodyti kodo žodžius“.</translation>
 <translation id="8131740175452115882">Patvirtinti</translation>
 <translation id="4973653569293835178">Naudosiu savo kamerą...</translation>
 <translation id="326454632686131209">Sinchronizuoti įrenginį</translation>
@@ -227,10 +212,11 @@ dar nebuvo...</translation>
 <translation id="6810078320346589989">Kurti žymę</translation>
 <translation id="3396347744975515056">„Brave Sync“ buvo atnaujinta ir reikia atlikti sąranką</translation>
 <translation id="7473245612074035141">Pradėti sąranką</translation>
-<translation id="1872784258300710671">„Brave“ naudoja visiškai privačią produktų analizę bendram tam tikrų funkcijų naudojimui įvertinti</translation>
-<translation id="8712637175834984815">Supratau</translation>
-<translation id="4394049700291259645">Neleisti</translation>
-<translation id="8446884382197647889">Sužinokite daugiau</translation>
+<translation id="8985635554450124959">Sinchronizavimo nustatyti nepavyko</translation>
+<translation id="2514300153301737214">Nustatėme, kad įjungėte „Brave Sync“, tačiau jūsų sistemos sinchronizavimas išjungtas, todėl „Brave“ sinchronizuoti negalės. Paspauskite, kad atvertumėte nustatymus</translation>
+<translation id="7173114856073700355">Atidaryti nustatymus</translation>
+<translation id="6965382102122355670">Gerai</translation>
+<translation id="4450893287417543264">Neberodyti</translation>
 <translation id="597993392929850353">„Brave“ licencija</translation>
 <translation id="6336451774241870485">Naujas inkognito skirtukas</translation>
 <translation id="6199596294742117349">Tai inkognito skirtukas</translation>
@@ -243,16 +229,7 @@ dar nebuvo...</translation>
 <translation id="7541582550122501404">Laukiama indėlių</translation>
 <translation id="8520059774736886747">Kūrėjas <ph name="PUBLISHER_NAME"/> neseniai patvirtintas</translation>
 <translation id="7924320838799747606">Jūsų likutis</translation>
-<translation id="6160106411363856968">BAP</translation>
-<translation id="1081826981536899387">BAT taškai</translation>
-<translation id="9212459913845238740">Atsiimti suteikti taškai</translation>
-<translation id="2132683977638223450">Nemokamas suteikti taškai</translation>
-<translation id="4522570452068850558">Išsami informacija</translation>
 <translation id="1486343603936278248">žetonas</translation>
-<translation id="8713995420537272453">taškas</translation>
-<translation id="2802462801862186499">1 000 <ph name="TIP"/></translation>
-<translation id="3215472762156924589">5 000 <ph name="TIP"/></translation>
-<translation id="487252517537426371">10 000 <ph name="TIP"/></translation>
 <translation id="7781069478569868053">Naujo skirtuko puslapis</translation>
 <translation id="8522669544471808198">Rodyti foninius vaizdus</translation>
 <translation id="3870475560794762985">Rodyti remiamus vaizdus</translation>
@@ -295,6 +272,8 @@ dar nebuvo...</translation>
 <translation id="9132378787893584761">Pasidalykite „Brave“ su draugais!</translation>
 <translation id="717952606991220586">Oi, kažkas negerai. Bandykite dar kartą vėliau.</translation>
 <translation id="2524310205387880526">Įvertinti „Brave“</translation>
+<translation id="987264212798334818">Bendra</translation>
+<translation id="1116694919640316211">Apie</translation>
 <translation id="6680650203439190394">Kursas</translation>
 <translation id="2635089463885398597">Kaip įvertintumėte savo patirtį naudojant „Brave“?</translation>
 <translation id="141901961143729572">Palikite atsiliepimą</translation>
@@ -309,18 +288,21 @@ dar nebuvo...</translation>
 <translation id="1465733111003593696">Už šio vaizdo peržiūrą uždirbate žetonų.</translation>
 <translation id="7877201489035217175">Sužinoti daugiau apie remiamus vaizdus</translation>
 <translation id="828092975561478703">Už kiekvieną savo peržiūrėtą remiamą vaizdą gaunate 70 % pajamų žetonais. Su „Brave Ads“ visada galite kontroliuoti savo matomas reklamas.</translation>
+<translation id="3624048886326677117">Blokuoti sekiklius ir reklamas (agresyvus)</translation>
+<translation id="7151914815476509258">Blokuoti sekiklius ir reklamas (standartinis)</translation>
+<translation id="7384778069178817075">Leisti visus sekiklius ir reklamas</translation>
 <translation id="4941539331405513605">Blokuoti kelių svetainių slapukus</translation>
 <translation id="3763681089644577874">Blokuoti slapukus</translation>
 <translation id="614747795780742163">Neleidžia svetainėms laikyti informacijos apie jūsų ankstesnius apsilankymus</translation>
 <translation id="6883611015375728278">Blokuoti visus slapukus</translation>
 <translation id="5657156137487675418">Leisti visus slapukus</translation>
-<translation id="5963670684159057574">Blokuoti kontrolinių kodų tarp kelių svetainių kūrimo funkciją</translation>
 <translation id="3895527457258986253">Blokuoti kontrolinius kodus</translation>
+<translation id="7854108565842971747">Tai numatytosios skydo nuostatos naujoms svetainėms. Atlikus tokius pakeitimus nustatytos kitoms svetainėms nuostatos išliks tokios pačios.</translation>
 <translation id="184568144098869637">Neleidžia naršyklei atpažinti jūsų įrenginio</translation>
-<translation id="7396366757003005317">Kontrolinių kodų kūrimas blokuojamas (griežtai, gali neveikti svetainės)</translation>
-<translation id="700453611199558021">Kontrolinių kodų kūrimas blokuojamas (standartiškai)</translation>
+<translation id="7445306466605902444">Kontrolinių kodų kūrimas blokuojamas (griežtai, gali neveikti svetainės)</translation>
+<translation id="5582686930349810484">Kontrolinių kodų kūrimas blokuojamas (standartiškai)</translation>
 <translation id="769702552748212954">Leisti visus kontrolinius kodus</translation>
-<translation id="5142293891785304489">Sekimo programų, reklamų ir\nkt. blokavimas</translation>
+<translation id="876424292214881779">Reklamos ir kiti baisūs dalykai užblokuoti</translation>
 <translation id="6930134873084561197">Svetainėse dažnai būna slapukų ir scenarijų, kurie bando identifikuoti jus ir jūsų įrenginį. Jais siekiama išsiaiškinti, kas jūs esate, ir sekti jus žiniatinklyje – stebėti, ką veikiate kiekvienoje svetainėje.\n\n„Brave“ blokuoja tokius dalykus, kad galėtumėte naršyti nesekami.</translation>
 <translation id="8553998445606452168">Apie „Brave“ skydus</translation>
 <translation id="8912304686498704084">AUKŠTYN</translation>
@@ -333,14 +315,35 @@ dar nebuvo...</translation>
 <translation id="5299848999918506028">Dėkojame!</translation>
 <translation id="76550953340008122">Dėkojame, kad pranešėte „Brave“ kūrėjams, jog su šia svetaine kažkas negerai. Pasistengsime ją sutvarkyti!</translation>
 <translation id="650318023204990401">Išplėstiniai valdikliai</translation>
-<translation id="7182293319417450928">Kad būtų galima patvirtinti, reikalingas ne mažesnis nei 25 BAT likutis.</translation>
 <translation id="1275664486910646411">Rodyti populiariausias svetaines automatiškai užpildant</translation>
 <translation id="5516010970279932133">Rodyti siūlomas svetaines automatiškai užpildant</translation>
 <translation id="5370478469168390143">Įrašyti duomenis internete</translation>
 <translation id="1118508688433541158">Naršykite sparčiau ir blokuokite reklamas naudodami „Brave“</translation>
-<translation id="915835519491851291">Ką tik užblokavote keletą sekiklių ir reklamų.</translation>
+<translation id="6589609065569680305">Sekikliai ir reklamos šiame puslapyje užblokuoti.</translation>
+<translation id="1283922192221545319">„Brave Shields“ ką tik apsaugojo jūsų privatumą.</translation>
 <translation id="3286927551967858325">Pasižiūrėkite</translation>
-<translation id="2929661208078053609">Puiku!</translation>
+<translation id="6227291358910554399">Kai šioje svetainėje žiūrite vaizdo įrašus, reklamos blokuojamos.</translation>
+<translation id="7802980684512102010">Vaizdo įrašams be reklamos naudojama mažiau duomenų.</translation>
+<translation id="2046475855484346614">Šiame puslapyje užblokuota daugiau nei 10 sekiklių ir reklamų.</translation>
+<translation id="5806208250835099572">„Brave Shields“ saugo jūsų privatumą kiekvienoje svetainėje.</translation>
+<translation id="5617673581653540121">Dabar jūsų ryšys šifruojamas.</translation>
+<translation id="4055107796760496928">Jei galima, „Brave“ automatiškai užmezga jums saugų ryšį.</translation>
+<translation id="8869714780588464835">Pasidalykite naujienomis</translation>
+<translation id="5372054974373489308">Užblokuota 1 000 sekiklių ir reklamų!</translation>
+<translation id="2338952568654182692">Užblokuota 5 000 sekiklių ir reklamų!</translation>
+<translation id="5289711064670408815">Užblokuota 10 000 sekiklių ir reklamų!</translation>
+<translation id="7150609425870119925">Užblokuota 25 000 sekiklių ir reklamų!</translation>
+<translation id="7856423737692274943">Užblokuota 75 000 sekiklių ir reklamų!</translation>
+<translation id="7252948690584461484">Užblokuota 100 000 sekiklių ir reklamų!</translation>
+<translation id="7579633043057546002">Užblokuota 250 000 sekiklių ir reklamų!</translation>
+<translation id="8710984962087186365">Užblokuota 500 000 sekiklių ir reklamų!</translation>
+<translation id="4383614608366907253">Užblokuota 1 000 000 sekiklių ir reklamų!</translation>
+<translation id="6819535527112707811">Sveikiname, jūs išskirtinis.</translation>
+<translation id="5819231438994979709">Sveikiname. Priklausote išskirtiniam klubui.</translation>
+<translation id="5174835622895450943">Sveikiname. Prisijungėte prie profesionalų.</translation>
+<translation id="4625546020186631261">Sveikiname. Tapote meistru.</translation>
+<translation id="4288835546846020774">Sveikiname. Tapote didžiuoju meistru.</translation>
+<translation id="6863752373888328811">Sveikiname. Jūs – legenda.</translation>
 <translation id="4776948189086901857">„Brave“ veikia visur</translation>
 <translation id="1606322780901645965">Atsisiųskite „Brave“ iš brave.com į savo nešiojamąjį ar planšetinį kompiuterį ir naršykite žiniatinklyje sparčiau bei privačiau</translation>
 <translation id="8374242949413616101">Privatumo apsauga</translation>
@@ -357,6 +360,7 @@ dar nebuvo...</translation>
 <translation id="4302754476737420523">3 mėnesiai</translation>
 <translation id="8248593573177859437">Privatumo ataskaita</translation>
 <translation id="1274039301958114163">Pranešimas apie privatumo ataskaitą</translation>
+<translation id="453601949003770390">Sekiklių ir reklamos blokavimas</translation>
 <translation id="1581614543353331529">Dar nėra duomenų, kuriuos reikėtų rodyti</translation>
 <translation id="2401984885421380890">Sekikliai ir reklamos\nužblokuoti</translation>
 <translation id="2662183408296991265">Duomenys įrašyti\n(<ph name="DATA_SAVED"/>)</translation>
@@ -378,9 +382,11 @@ dar nebuvo...</translation>
 <translation id="1880168210969863408">Puiku! Naudodami „Brave“ naršyklę sutaupėte 10 minučių įkėlimo laiko.&#128168;&#128168;</translation>
 <translation id="7408493389591475748">Pradėkite naršyti, kad pamatytumėte privatumo ataskaitas</translation>
 <translation id="9080777565335515917">Nustatykite „Brave“ kaip numatytąją naršyklę, kad galėtumėte naršyti privačiai ir saugiai.</translation>
-<translation id="7801488941710395275">Suteikia „Brave“ galimybę rodyti jūsų privatumo statistiką</translation>
+<translation id="1390943217516275883">Suteikia „Brave“ galimybę rodyti jūsų privatumo statistiką</translation>
 <translation id="1763352720905582220">Siunčia savaitinę privatumo ataskaitą</translation>
 <translation id="1811691435325545066">Išvalyti visų privatumo ataskaitų duomenis</translation>
+<translation id="5966003059662780423">Išvalyti duomenis išeinant</translation>
+<translation id="3980704343258720102">Išvalomi visi naršymo duomenis</translation>
 <translation id="8089997572759938512">Nustato jūsų privatumo ataskaitas iki nulio</translation>
 <translation id="2718046830255553131">Privatumo ataskaitų duomenys išvalyti.</translation>
 <translation id="7559243474426790340">Atnaujinti būseną</translation>
@@ -388,6 +394,7 @@ dar nebuvo...</translation>
 <translation id="1383876407941801731">Ieškoti</translation>
 <translation id="1972589975368876259">Redaguoti dėklą</translation>
 <translation id="2490330380242414851">Pašalinti valdiklį</translation>
+<translation id="8446884382197647889">Sužinokite daugiau</translation>
 <translation id="7384441892795736634">Atnaujinti duomenis</translation>
 <translation id="4804818685124855865">Atsijungti</translation>
 <translation id="4789438578712143420">≈ $<ph name="USD_BALANCE"/></translation>
@@ -445,13 +452,15 @@ dar nebuvo...</translation>
 <translation id="5876169128756792273">Žetonus galima naudoti ne tik kūrėjams remti. Galite pirkti skaitmeninį turinį ir kitas prekes, nes mūsų gretas pildo pardavėjai.</translation>
 <translation id="1402530520078693620">Galiausiai nustatykime pagrindines nuostatas</translation>
 <translation id="3494356595346329740">Tai galite pakeisti vėliau.</translation>
-<translation id="6462814326662189004">Kaip dažnai norite matyti reklamas?\n(Reklamų skaičius per valandą)</translation>
-<translation id="2134244432345596331">Kiek paramos norite skirti savo mėgstamiems kūrėjams?\n(Iš uždarbio už reklamą)</translation>
+<translation id="3115702351969988294">Kaip dažnai norite matyti reklamas?</translation>
+<translation id="3474670199029510295">(Reklamų skaičius per valandą)</translation>
+<translation id="66599604460581068">Kiek paramos norite skirti savo mėgstamiems kūrėjams?</translation>
+<translation id="3164498053837913829">(iš savo uždarbio už reklamą)</translation>
 <translation id="827315274423079662">Valio! Viskas parengta!</translation>
 <translation id="3895246934788932488">Naudodami „Brave Rewards“, saugote savo privatumą ir padedate padaryti, kad žiniatinklis būtų geresnė vieta visiems. Juk tai puiku!</translation>
 <translation id="5705882733397021510">Grįžti</translation>
 <translation id="5140321319944305531">Peržiūrėkite trumpą apžvalgą</translation>
-<translation id="3808131693704413134">Gavę pirmąją išmoką už reklamas galite grįžti ir skirti arbatpinigių šiam kūrėjui!</translation>
+<translation id="2434574859640694129">Gavę pirmąją išmoką už reklamas galite grįžti ir skirti arbatpinigių šiam kūrėjui!</translation>
 <translation id="207242986925259074">Trumpa priminimo apžvalga</translation>
 <translation id="8342862030112839977">Pirmojo atlygio išmoką gausite:</translation>
 <translation id="3769645103175790584">Naršydami gaukite žetonų ir atlyginkite kūrėjams už puikų turinį. <ph name="QUICK_TOUR"/>.</translation>
@@ -462,7 +471,6 @@ dar nebuvo...</translation>
 <translation id="7889432931837317731">Kai galima, atverti automatiškai</translation>
 <translation id="8967385052772844086">Peržiūrėti visą privatumo ataskaitą</translation>
 <translation id="6864343534748973390">Populiariausia</translation>
-<translation id="1622983732360473885">Pritaikyta „Brave“</translation>
 <translation id="4608192160278975831">Privatu ir jokio sekimo</translation>
 <translation id="7208522820527289601">Privatu, jokio sekimo, veikia ES teritorijoje</translation>
 <translation id="1161008391729450974">„Google“ rezultatai be sekimo programų</translation>
@@ -477,4 +485,32 @@ dar nebuvo...</translation>
 <translation id="6478996494082389936">privačią produkto analizę.</translation>
 <translation id="5187052478998910855">Galbūt jums reikia prisiminti, kaip veikia „Rewards“?</translation>
 <translation id="8622329973403382303">Žinioms apie veikimą atnaujinti peržiūrėkite trumpą apžvalgą ir tapkite „Rewards“ žvaigžde!</translation>
+<translation id="8401711613788729448">Visas nuorodas atverkite per „Brave“, kad apsaugotumėte savo privatumą</translation>
+<translation id="3184805785843994538">„Brave Shields“ blokuoja sekiklius ir reklamas, įrašo duomenis ir taupo jūsų laiką kiekvienoje svetainėje, kurioje lankotės.</translation>
+<translation id="8722651357687610395">Nustatyti „Brave“ kaip numatytąją</translation>
+<translation id="3479552764303398839">Ne dabar</translation>
+<translation id="4956847150856741762">1</translation>
+<translation id="5196716972587102051">2</translation>
+<translation id="7839580021124293374">3</translation>
+<translation id="2918322085844739869">4</translation>
+<translation id="7267186368513450821">5</translation>
+<translation id="6972003925509023890">1 BAT</translation>
+<translation id="8867821173176188875">5 BAT</translation>
+<translation id="8762169086048682708">10 BAT</translation>
+<translation id="7921571842056754133">15 BAT</translation>
+<translation id="3605291544485823713">25 BAT</translation>
+<translation id="817946134291678509">50 BAT</translation>
+<translation id="4548973860489847866">0,00 BAT</translation>
+<translation id="4193129043743994339">0,00 USD</translation>
+<translation id="8792121506918889955">„WebRTC“ IP tvarkymo politika</translation>
+<translation id="8798099450830957504">Numatytasis</translation>
+<translation id="1822560017823072927">Numatytosios viešos ir privačios sąsajos</translation>
+<translation id="5825943197137337319">Tik numatytoji vieša sąsaja</translation>
+<translation id="1689062823386843231">Išjungti neįgaliotąjį UDP</translation>
+<translation id="3171931580569169744">Įjungti skirtukų grupes</translation>
+<translation id="5587305863196367357">Kai jūsų piniginė bus patvirtinta, galėsite lengvai tvarkyti savo pinigus, jų pridėti ar juos išsigryninti</translation>
+<translation id="5760671211380791582">Neturite pakankamai BAT.</translation>
+<translation id="6960458596933484861">Jums reikia mažiausiai 15 BAT, kad galėtumėte susikurti patvirtintą „Uphold“ piniginę. Bandykite dar kartą vėliau.</translation>
+<translation id="4389085954549744469">Jei jau turite patvirtintą „Uphold“ paskyrą, <ph name="CONTINUE_TO_LOGIN"/>.</translation>
+<translation id="6146966915297143881">pereikite prie prisijungimo</translation>
 </translationbundle>

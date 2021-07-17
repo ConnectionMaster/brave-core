@@ -49,7 +49,8 @@ SkColor GetLocationBarBackground(bool dark, bool priv, bool hover) {
 SkColor GetOmniboxResultBackground(int id, bool dark, bool priv) {
   // For high contrast, selected rows use inverted colors to stand out more.
   ui::NativeTheme* native_theme = ui::NativeTheme::GetInstanceForNativeUi();
-  bool high_contrast = native_theme && native_theme->UsesHighContrastColors();
+  bool high_contrast =
+      native_theme && native_theme->UserHasContrastPreference();
   OmniboxPartState state = OmniboxPartState::NORMAL;
   if (id == ThemeProperties::COLOR_OMNIBOX_RESULTS_BG_HOVERED) {
     state = OmniboxPartState::HOVERED;
@@ -105,7 +106,7 @@ SkColor BraveThemeHelper::GetDefaultColor(
   }
   const dark_mode::BraveDarkModeType type =
       dark_mode::GetActiveBraveDarkModeType();
-  const base::Optional<SkColor> braveColor =
+  const absl::optional<SkColor> braveColor =
       MaybeGetDefaultColorForBraveUi(id, incognito, is_tor_, type);
   if (braveColor) {
     return braveColor.value();
@@ -119,7 +120,7 @@ SkColor BraveThemeHelper::GetDefaultColor(
   return ThemeHelper::GetDefaultColor(id, incognito, theme_supplier);
 }
 
-base::Optional<SkColor> BraveThemeHelper::GetOmniboxColor(
+absl::optional<SkColor> BraveThemeHelper::GetOmniboxColor(
     int id,
     bool incognito,
     const CustomThemeSupplier* theme_supplier,

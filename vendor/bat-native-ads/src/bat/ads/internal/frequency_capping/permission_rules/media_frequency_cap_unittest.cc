@@ -5,6 +5,10 @@
 
 #include "bat/ads/internal/frequency_capping/permission_rules/media_frequency_cap.h"
 
+#include <vector>
+
+#include "base/test/scoped_feature_list.h"
+#include "bat/ads/internal/frequency_capping/frequency_capping_features.h"
 #include "bat/ads/internal/unittest_base.h"
 #include "bat/ads/internal/unittest_util.h"
 
@@ -19,8 +23,7 @@ class BatAdsMediaFrequencyCapTest : public UnitTestBase {
   ~BatAdsMediaFrequencyCapTest() override = default;
 };
 
-TEST_F(BatAdsMediaFrequencyCapTest,
-    AllowAdIfMediaIsNotPlaying) {
+TEST_F(BatAdsMediaFrequencyCapTest, AllowAdIfMediaIsNotPlaying) {
   // Arrange
 
   // Act
@@ -31,8 +34,7 @@ TEST_F(BatAdsMediaFrequencyCapTest,
   EXPECT_TRUE(is_allowed);
 }
 
-TEST_F(BatAdsMediaFrequencyCapTest,
-    AllowAdIfMediaIsStoppedForSingleTab) {
+TEST_F(BatAdsMediaFrequencyCapTest, AllowAdIfMediaIsStoppedForSingleTab) {
   // Arrange
   TabManager::Get()->OnUpdated(1, "https://brave.com", true, false);
 
@@ -47,8 +49,7 @@ TEST_F(BatAdsMediaFrequencyCapTest,
   EXPECT_TRUE(is_allowed);
 }
 
-TEST_F(BatAdsMediaFrequencyCapTest,
-    AllowAdIfMediaIsStoppedOnMultipleTabs) {
+TEST_F(BatAdsMediaFrequencyCapTest, AllowAdIfMediaIsStoppedOnMultipleTabs) {
   // Arrange
   TabManager::Get()->OnUpdated(1, "https://brave.com", true, false);
 
@@ -66,7 +67,7 @@ TEST_F(BatAdsMediaFrequencyCapTest,
 }
 
 TEST_F(BatAdsMediaFrequencyCapTest,
-    AllowAdIfMediaIsPlayingOnMultipleTabsButStoppedForVisibleTab) {
+       AllowAdIfMediaIsPlayingOnMultipleTabsButStoppedForVisibleTab) {
   // Arrange
   TabManager::Get()->OnUpdated(1, "https://brave.com", true, false);
 
@@ -82,8 +83,7 @@ TEST_F(BatAdsMediaFrequencyCapTest,
   EXPECT_TRUE(is_allowed);
 }
 
-TEST_F(BatAdsMediaFrequencyCapTest,
-    DoNotAllowAdIfMediaIsPlayingOnVisibleTab) {
+TEST_F(BatAdsMediaFrequencyCapTest, DoNotAllowAdIfMediaIsPlayingOnVisibleTab) {
   // Arrange
   TabManager::Get()->OnUpdated(1, "https://brave.com", true, false);
 
@@ -98,7 +98,34 @@ TEST_F(BatAdsMediaFrequencyCapTest,
 }
 
 TEST_F(BatAdsMediaFrequencyCapTest,
-    DoNotAllowAdIfMediaIsPlayingOnMultipleTabs) {
+       AlwaysAllowAdIfMediaIsPlayingOnVisibleTabIfFrequencyCapIsDisabled) {
+  // Arrange
+  base::FieldTrialParams kParameters;
+  kParameters["should_only_serve_ads_if_media_is_not_playing"] = "false";
+  std::vector<base::test::ScopedFeatureList::FeatureAndParams> enabled_features;
+  enabled_features.push_back(
+      {features::frequency_capping::kFeature, kParameters});
+
+  const std::vector<base::Feature> disabled_features;
+
+  base::test::ScopedFeatureList scoped_feature_list;
+  scoped_feature_list.InitWithFeaturesAndParameters(enabled_features,
+                                                    disabled_features);
+
+  TabManager::Get()->OnUpdated(1, "https://brave.com", true, false);
+
+  TabManager::Get()->OnMediaPlaying(1);
+
+  // Act
+  MediaFrequencyCap frequency_cap;
+  const bool is_allowed = frequency_cap.ShouldAllow();
+
+  // Assert
+  EXPECT_TRUE(is_allowed);
+}
+
+TEST_F(BatAdsMediaFrequencyCapTest,
+       DoNotAllowAdIfMediaIsPlayingOnMultipleTabs) {
   // Arrange
   TabManager::Get()->OnUpdated(1, "https://brave.com", true, false);
 
@@ -114,7 +141,7 @@ TEST_F(BatAdsMediaFrequencyCapTest,
 }
 
 TEST_F(BatAdsMediaFrequencyCapTest,
-    DoNotAllowAdIfMediaIsPlayingOnMultipleTabsButStoppedForOccludedTab) {
+       DoNotAllowAdIfMediaIsPlayingOnMultipleTabsButStoppedForOccludedTab) {
   // Arrange
   TabManager::Get()->OnUpdated(1, "https://brave.com", true, false);
 

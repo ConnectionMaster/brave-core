@@ -70,7 +70,8 @@ IN_PROC_BROWSER_TEST_F(IpfsExtensionApiTest, ExecutableAvailChangeIsReflected) {
       "executableAvailableChangeIsReflected(false)"));
   ASSERT_TRUE(catcher.GetNextResult()) << message_;
 
-  GetPrefs()->SetBoolean(kIPFSBinaryAvailable, true);
+  GetPrefs()->SetFilePath(kIPFSBinaryPath,
+                          base::FilePath(FILE_PATH_LITERAL("some_path")));
   ASSERT_TRUE(extension);
   ASSERT_TRUE(browsertest_util::ExecuteScriptInBackgroundPageNoWait(
       browser()->profile(), ipfs_companion_extension_id,
@@ -141,8 +142,10 @@ IN_PROC_BROWSER_TEST_F(IpfsExtensionApiTest, LaunchShutdownSuccess) {
           browser()->profile());
   ASSERT_TRUE(service);
 
-  GetPrefs()->SetBoolean(kIPFSBinaryAvailable, true);
+  GetPrefs()->SetFilePath(kIPFSBinaryPath,
+                          base::FilePath(FILE_PATH_LITERAL("some_path")));
   service->SetAllowIpfsLaunchForTest(true);
+
   ASSERT_TRUE(browsertest_util::ExecuteScriptInBackgroundPageNoWait(
       browser()->profile(), ipfs_companion_extension_id, "launchSuccess()"));
   ASSERT_TRUE(catcher.GetNextResult()) << message_;
@@ -164,7 +167,7 @@ IN_PROC_BROWSER_TEST_F(IpfsExtensionApiTest, LaunchFailWhenNotInstalled) {
   ASSERT_TRUE(service);
 
   service->SetAllowIpfsLaunchForTest(true);
-  GetPrefs()->SetBoolean(kIPFSBinaryAvailable, false);
+  GetPrefs()->SetFilePath(kIPFSBinaryPath, base::FilePath());
   ASSERT_TRUE(browsertest_util::ExecuteScriptInBackgroundPageNoWait(
       browser()->profile(), ipfs_companion_extension_id, "launchFail()"));
   ASSERT_TRUE(catcher.GetNextResult()) << message_;
@@ -175,6 +178,35 @@ IN_PROC_BROWSER_TEST_F(IpfsExtensionApiTest, IpfsAPINotAvailable) {
   const Extension* extension =
       LoadExtension(extension_dir_.AppendASCII("notIpfsCompanion"));
   ASSERT_TRUE(extension);
+  ASSERT_TRUE(catcher.GetNextResult()) << message_;
+}
+
+IN_PROC_BROWSER_TEST_F(IpfsExtensionApiTest, ResolveIPFSURIMatches) {
+  ResultCatcher catcher;
+  const Extension* extension =
+      LoadExtension(extension_dir_.AppendASCII("ipfsCompanion"));
+  ASSERT_TRUE(extension);
+  ipfs::IpfsService* service =
+      ipfs::IpfsServiceFactory::GetInstance()->GetForContext(
+          browser()->profile());
+  ASSERT_TRUE(service);
+
+  ASSERT_TRUE(browsertest_util::ExecuteScriptInBackgroundPageNoWait(
+      browser()->profile(), ipfs_companion_extension_id,
+      "resolveIPFSURIMatches("
+      "'ipfs://bafybeifk6th5qhox7pffjqjerbjxkpmsmufdcswdgacnmyv3fn53z2wgwe',"
+      "'https://bafybeifk6th5qhox7pffjqjerbjxkpmsmufdcswdgacnmyv3fn53z2wgwe"
+      ".ipfs.dweb.link/')"));
+  ASSERT_TRUE(catcher.GetNextResult()) << message_;
+}
+
+IN_PROC_BROWSER_TEST_F(IpfsExtensionApiTest, IpfsPermissionAPIAccess) {
+  ResultCatcher catcher;
+  const Extension* extension =
+      LoadExtension(extension_dir_.AppendASCII("ExtensionWithIpfsPermission"));
+  ASSERT_TRUE(extension);
+  ASSERT_TRUE(browsertest_util::ExecuteScriptInBackgroundPageNoWait(
+      browser()->profile(), ipfs_persmission_extension_id, "testBasics()"));
   ASSERT_TRUE(catcher.GetNextResult()) << message_;
 }
 

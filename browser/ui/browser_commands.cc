@@ -6,6 +6,7 @@
 #include "brave/browser/ui/browser_commands.h"
 
 #include "base/files/file_path.h"
+#include "brave/components/brave_wallet/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/buildflags.h"
 #include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/browser_process.h"
@@ -15,14 +16,19 @@
 #include "chrome/browser/profiles/profile_window.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
+#include "chrome/browser/ui/profile_picker.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
-#include "chrome/browser/ui/user_manager.h"
 #include "chrome/common/pref_names.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/web_contents.h"
 
+#if defined(TOOLKIT_VIEWS)
+#include "brave/browser/ui/views/frame/brave_browser_view.h"
+#endif
+
 #if BUILDFLAG(ENABLE_SPEEDREADER)
 #include "brave/browser/speedreader/speedreader_service_factory.h"
+#include "brave/browser/speedreader/speedreader_tab_helper.h"
 #include "brave/components/speedreader/speedreader_service.h"
 #endif
 
@@ -65,8 +71,7 @@ void NewTorConnectionForSite(Browser* browser) {
 }
 
 void AddNewProfile() {
-  UserManager::Show(/*profile_path_to_focus=*/base::FilePath(),
-                    profiles::USER_MANAGER_OPEN_CREATE_USER_PAGE);
+  ProfilePicker::Show(ProfilePicker::EntryPoint::kProfileMenuAddNewProfile);
 }
 
 void OpenGuestProfile() {
@@ -76,20 +81,46 @@ void OpenGuestProfile() {
   profiles::SwitchToGuestProfile(ProfileManager::CreateCallback());
 }
 
-void ToggleSpeedreader(Browser* browser) {
+void MaybeDistillAndShowSpeedreaderBubble(Browser* browser) {
 #if BUILDFLAG(ENABLE_SPEEDREADER)
-  speedreader::SpeedreaderService* service =
-      speedreader::SpeedreaderServiceFactory::GetForProfile(browser->profile());
-  if (service) {
-    // This will trigger a button update via a pref change subscribition.
-    service->ToggleSpeedreader();
+  using DistillState = speedreader::SpeedreaderTabHelper::DistillState;
+  WebContents* contents = browser->tab_strip_model()->GetActiveWebContents();
+  if (contents) {
+    auto* tab_helper =
+        speedreader::SpeedreaderTabHelper::FromWebContents(contents);
+    if (!tab_helper)
+      return;
 
-    WebContents* contents = browser->tab_strip_model()->GetActiveWebContents();
-    if (contents) {
-      contents->GetController().Reload(content::ReloadType::NORMAL, false);
+    const DistillState state = tab_helper->PageDistillState();
+    switch (state) {
+      case DistillState::kSpeedreaderMode:
+      case DistillState::kSpeedreaderOnDisabledPage:
+        tab_helper->ShowSpeedreaderBubble();
+        break;
+      case DistillState::kReaderMode:
+        // Refresh the page (toggles off Speedreader)
+        contents->GetController().Reload(content::ReloadType::NORMAL, false);
+        break;
+      case DistillState::kPageProbablyReadable:
+        tab_helper->SingleShotSpeedreader();
+        break;
+      default:
+        NOTREACHED();
     }
   }
 #endif  // BUILDFLAG(ENABLE_SPEEDREADER)
+}
+
+void ShowWalletBubble(Browser* browser) {
+#if BUILDFLAG(BRAVE_WALLET_ENABLED) && defined(TOOLKIT_VIEWS)
+  static_cast<BraveBrowserView*>(browser->window())->CreateWalletBubble();
+#endif
+}
+
+void CloseWalletBubble(Browser* browser) {
+#if BUILDFLAG(BRAVE_WALLET_ENABLED) && defined(TOOLKIT_VIEWS)
+  static_cast<BraveBrowserView*>(browser->window())->CloseWalletBubble();
+#endif
 }
 
 }  // namespace brave

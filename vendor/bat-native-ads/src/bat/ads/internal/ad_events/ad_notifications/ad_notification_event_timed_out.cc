@@ -16,12 +16,12 @@ AdEventTimedOut::AdEventTimedOut() = default;
 
 AdEventTimedOut::~AdEventTimedOut() = default;
 
-void AdEventTimedOut::FireEvent(
-    const AdNotificationInfo& ad) {
+void AdEventTimedOut::FireEvent(const AdNotificationInfo& ad) {
   BLOG(3, "Timed out ad notification with uuid " << ad.uuid
-      << " and creative instance id " << ad.creative_instance_id);
+                                                 << " and creative instance id "
+                                                 << ad.creative_instance_id);
 
-  AdNotifications::Get()->Remove(ad.uuid, /* should dismiss */ false);
+  AdNotifications::Get()->Remove(ad.uuid);
 }
 
 }  // namespace ad_notifications

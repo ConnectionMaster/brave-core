@@ -13,10 +13,13 @@ namespace net {
 namespace features {
 
 NET_EXPORT extern const base::Feature kBraveEphemeralStorage;
+NET_EXPORT extern const base::Feature kBraveEphemeralStorageKeepAlive;
+NET_EXPORT extern const base::FeatureParam<int>
+    kBraveEphemeralStorageKeepAliveTimeInSeconds;
 
 }  // namespace features
 }  // namespace net
 
-#include "../../../../../../net/base/features.h"
+#include "../../../../net/base/features.h"
 
 #endif  // BRAVE_CHROMIUM_SRC_NET_BASE_FEATURES_H_

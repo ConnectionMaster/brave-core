@@ -10,6 +10,7 @@
 #include "base/json/json_reader.h"
 #include "base/strings/stringprintf.h"
 #include "bat/ledger/global_constants.h"
+#include "bat/ledger/internal/common/random_util.h"
 #include "bat/ledger/internal/ledger_impl.h"
 #include "bat/ledger/internal/logging/event_log_keys.h"
 #include "bat/ledger/internal/uphold/uphold_util.h"
@@ -31,7 +32,7 @@ UpholdAuthorization::~UpholdAuthorization() = default;
 void UpholdAuthorization::Authorize(
     const base::flat_map<std::string, std::string>& args,
     ledger::ExternalWalletAuthorizationCallback callback) {
-  auto wallet = GetWallet(ledger_);
+  auto wallet = ledger_->uphold()->GetWallet();
 
   if (!wallet) {
     BLOG(0, "Wallet is null");
@@ -41,7 +42,7 @@ void UpholdAuthorization::Authorize(
   const auto current_one_time = wallet->one_time_string;
 
   // we need to generate new string as soon as authorization is triggered
-  wallet->one_time_string = GenerateRandomString(ledger::is_testing);
+  wallet->one_time_string = util::GenerateRandomHexString();
   const bool success = ledger_->uphold()->SetWallet(wallet->Clone());
 
   if (!success) {
@@ -130,7 +131,7 @@ void UpholdAuthorization::OnAuthorize(
     return;
   }
 
-  auto wallet_ptr = GetWallet(ledger_);
+  auto wallet_ptr = ledger_->uphold()->GetWallet();
 
   wallet_ptr->token = token;
 
@@ -151,6 +152,11 @@ void UpholdAuthorization::OnAuthorize(
       break;
   }
 
+  // After a login, we want to attempt to relink the user's payment ID to their
+  // Uphold wallet address. Clear the flag that will cause relinking to be
+  // skipped.
+  ledger_->state()->SetAnonTransferChecked(false);
+
   ledger_->uphold()->SetWallet(wallet_ptr->Clone());
 
   auto user_callback = std::bind(&UpholdAuthorization::OnGetUser,
@@ -165,7 +171,7 @@ void UpholdAuthorization::OnGetUser(
     const type::Result result,
     const User& user,
     ledger::ExternalWalletAuthorizationCallback callback) {
-  auto wallet_ptr = GetWallet(ledger_);
+  auto wallet_ptr = ledger_->uphold()->GetWallet();
   base::flat_map<std::string, std::string> args;
 
   if (user.bat_not_allowed || !wallet_ptr) {
@@ -212,7 +218,7 @@ void UpholdAuthorization::OnCardCreate(
     return;
   }
 
-  auto wallet_ptr = GetWallet(ledger_);
+  auto wallet_ptr = ledger_->uphold()->GetWallet();
   wallet_ptr->address = address;
   ledger_->uphold()->SetWallet(wallet_ptr->Clone());
 

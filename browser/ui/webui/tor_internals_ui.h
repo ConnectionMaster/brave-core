@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "brave/browser/ui/webui/basic_ui.h"
 #include "brave/components/tor/tor_launcher_observer.h"
+#include "content/public/browser/web_ui_controller.h"
 #include "content/public/browser/web_ui_message_handler.h"
 
 class TorLauncherFactory;
@@ -35,6 +35,7 @@ class TorInternalsDOMHandler : public content::WebUIMessageHandler,
   void OnTorCircuitEstablished(bool result) override;
   void OnTorInitializing(const std::string& percentage) override;
   void OnTorControlEvent(const std::string& event) override;
+  void OnTorLogUpdated() override;
 
   TorLauncherFactory* tor_launcher_factory_ = nullptr;
 
@@ -43,13 +44,12 @@ class TorInternalsDOMHandler : public content::WebUIMessageHandler,
   DISALLOW_COPY_AND_ASSIGN(TorInternalsDOMHandler);
 };
 
-class TorInternalsUI : public BasicUI {
+class TorInternalsUI : public content::WebUIController {
  public:
   TorInternalsUI(content::WebUI* web_ui, const std::string& host);
   ~TorInternalsUI() override;
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(TorInternalsUI);
+  TorInternalsUI(const TorInternalsUI&) = delete;
+  TorInternalsUI& operator=(const TorInternalsUI&) = delete;
 };
 
 #endif  // BRAVE_BROWSER_UI_WEBUI_TOR_INTERNALS_UI_H_

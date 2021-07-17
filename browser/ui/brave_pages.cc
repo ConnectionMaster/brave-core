@@ -7,31 +7,35 @@
 
 #include "brave/browser/webcompat_reporter/webcompat_reporter_dialog.h"
 #include "brave/common/webui_url_constants.h"
+#include "brave/components/ipfs/buildflags/buildflags.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/chrome_pages.h"
 #include "chrome/browser/ui/singleton_tabs.h"
 #include "chrome/common/webui_url_constants.h"
 #include "url/gurl.h"
 
+#if BUILDFLAG(IPFS_ENABLED)
+#include "brave/browser/ipfs/ipfs_tab_helper.h"
+#endif
+
 namespace brave {
 
 void ShowBraveRewards(Browser* browser) {
-  ShowSingletonTabOverwritingNTP(
-      browser,
+  NavigateParams params(
       GetSingletonTabNavigateParams(browser, GURL(kBraveUIRewardsURL)));
+  ShowSingletonTabOverwritingNTP(browser, &params);
 }
 
 void ShowBraveAdblock(Browser* browser) {
-  ShowSingletonTabOverwritingNTP(
-      browser,
+  NavigateParams params(
       GetSingletonTabNavigateParams(browser, GURL(kBraveUIAdblockURL)));
+  ShowSingletonTabOverwritingNTP(browser, &params);
 }
 
 void ShowSync(Browser* browser) {
   auto url = chrome::GetSettingsUrl(chrome::kSyncSetupSubPage);
-  ShowSingletonTabOverwritingNTP(
-      browser,
-      GetSingletonTabNavigateParams(browser, url));
+  NavigateParams params(GetSingletonTabNavigateParams(browser, url));
+  ShowSingletonTabOverwritingNTP(browser, &params);
 }
 
 void ShowWebcompatReporter(Browser* browser) {
@@ -44,21 +48,27 @@ void ShowWebcompatReporter(Browser* browser) {
 }
 
 void ShowBraveWallet(Browser* browser) {
-  ShowSingletonTabOverwritingNTP(
-      browser,
+  NavigateParams params(
       GetSingletonTabNavigateParams(browser, GURL(kBraveUIWalletURL)));
+  ShowSingletonTabOverwritingNTP(browser, &params);
 }
 
 void ShowExtensionSettings(Browser* browser) {
-  ShowSingletonTabOverwritingNTP(
-      browser,
+  NavigateParams params(
       GetSingletonTabNavigateParams(browser, GURL(kExtensionSettingsURL)));
+  ShowSingletonTabOverwritingNTP(browser, &params);
+}
+
+void ShowWalletSettings(Browser* browser) {
+  NavigateParams params(
+      GetSingletonTabNavigateParams(browser, GURL(kWalletSettingsURL)));
+  ShowSingletonTabOverwritingNTP(browser, &params);
 }
 
 void ShowIPFS(Browser* browser) {
-  ShowSingletonTabOverwritingNTP(
-      browser,
-      GetSingletonTabNavigateParams(browser, GURL(kBraveUIIPFSURL)));
+  NavigateParams params(
+      GetSingletonTabNavigateParams(browser, GURL(kIPFSWebUIURL)));
+  ShowSingletonTabOverwritingNTP(browser, &params);
 }
 
 }  // namespace brave

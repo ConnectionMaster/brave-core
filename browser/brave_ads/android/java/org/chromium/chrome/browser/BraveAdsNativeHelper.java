@@ -7,17 +7,50 @@
 package org.chromium.chrome.browser;
 
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.base.annotations.NativeMethods;
 import org.chromium.chrome.browser.profiles.Profile;
 
 @JNINamespace("brave_ads")
 public class BraveAdsNativeHelper {
     private BraveAdsNativeHelper() {}
 
-    public static native boolean nativeIsBraveAdsEnabled(Profile profile);
-    public static native boolean nativeIsLocaleValid(Profile profile);
-    public static native void nativeSetAdsEnabled(Profile profile);
-    public static native boolean nativeIsNewlySupportedLocale(Profile profile);
-    public static native boolean nativeIsSupportedLocale(Profile profile);
-    public static native void nativeAdNotificationClicked(Profile profile, String j_notification_id);
-    public static native void nativeAdNotificationDismissed(Profile profile, String j_notification_id, boolean j_by_user);
+    public static boolean nativeIsBraveAdsEnabled(Profile profile) {
+        return BraveAdsNativeHelperJni.get().isBraveAdsEnabled(profile);
+    };
+
+    public static void nativeSetAdsEnabled(Profile profile) {
+        BraveAdsNativeHelperJni.get().setAdsEnabled(profile);
+    };
+
+    public static boolean nativeIsNewlySupportedLocale(Profile profile) {
+        return BraveAdsNativeHelperJni.get().isNewlySupportedLocale(profile);
+    };
+
+    public static boolean nativeIsSupportedLocale(Profile profile) {
+        return BraveAdsNativeHelperJni.get().isSupportedLocale(profile);
+    };
+
+    public static void nativeOnShowAdNotification(Profile profile, String j_notification_id) {
+        BraveAdsNativeHelperJni.get().onShowAdNotification(profile, j_notification_id);
+    };
+
+    public static void nativeOnCloseAdNotification(
+            Profile profile, String j_notification_id, boolean j_by_user) {
+        BraveAdsNativeHelperJni.get().onCloseAdNotification(profile, j_notification_id, j_by_user);
+    };
+
+    public static void nativeOnClickAdNotification(Profile profile, String j_notification_id) {
+        BraveAdsNativeHelperJni.get().onClickAdNotification(profile, j_notification_id);
+    };
+
+    @NativeMethods
+    interface Natives {
+        boolean isBraveAdsEnabled(Profile profile);
+        void setAdsEnabled(Profile profile);
+        boolean isSupportedLocale(Profile profile);
+        boolean isNewlySupportedLocale(Profile profile);
+        void onShowAdNotification(Profile profile, String j_notification_id);
+        void onCloseAdNotification(Profile profile, String j_notification_id, boolean j_by_user);
+        void onClickAdNotification(Profile profile, String j_notification_id);
+    }
 }

@@ -51,18 +51,6 @@
     "message": "جزئیات",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "موجودی شما",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "امتیازهای BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "می‌تواند در «پاداش‌های Brave» برای کمک مالی به پدیدآورندگان محتوای محبوب شما استفاده شود. «امتیازهای BAT» را نمی‌توان با BAT معاوضه کرد.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "روشن",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "امتیازهای توکن مطالبه شد",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "هدایای امتیاز مطالبه شد",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "درآمد از آگهی‌ها",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "لطفاً از کیف پول Brave‌ خود پشتیبان‌گیری کنید.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "بیشتر بدانید",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "دستگاه به حداکثر مجاز رسیده است",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "کیف پول شما تأیید نشد زیرا به حداکثر مجاز دستگاه تأییدشده رسیده‌اید.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "حساب «پاداش‌های Brave» منتظر سپرده است.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "روشن کردن آگهی‌ها",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "امتیاز توکن رایگان",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "امتیاز هدیه رایگان",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "شما «پاداش آگهی‌ها» را کسب کرده‌اید.",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "کیف پول تأیید شد!‍",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "رفتن به حساب Uphold من",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "رفتن به حساب $provider$ من",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "قطع ارتباط از پاداش‌های Brave",
@@ -573,17 +567,9 @@
     "message": "توکن",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "امتیازها",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "امتیازهای توکن",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "هدایای امتیاز",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "سلام، $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "برای ایجاد حساب Uphold، به حداقل 25 BAT نیاز دارید. لطفاً بعداً دوباره امتحان کنید. \nدر صورتی که ازقبل یک حساب تأییدشده Uphold دارید، ورود به سیستم را ادامه دهید.",
-    "description": "Text for login button"
+    "message": "برای ایجاد حساب Uphold، باید حداقل $amount$BAT داشته باشید. اگر ازقبل حساب Uphold تأییدشده‌ای دارید، ورود به سیستم را ادامه دهید.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "متصل",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "توجه: تراکنش‌های شما به‌محض این‌که اجازه دهید برای Uphold قابل‌مشاهده خواهد بود؛ برای مثال، آن‌ها قادر به دیدن گیرنده و مقدار انعام‌های شما خواهند بود.",
-    "description": "Displayed in login modal for uphold"
+    "message": "توجه: بعدازاینکه مجوز دهید، تراکنش‌هایتان برای $provider$ قابل مشاهده خواهند بود؛ برای مثال، Uphold می‌تواند گیرنده و مقدار انعام را ببیند.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "کسب توکن و برگرداندن",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "با مشاهده آگهی‌هایی که به حریم خصوصی احترام می‌گذارند، توکن کسب کنید و به‌طور خودکار از سایت‌ها و سازندگان محتوای دلخواهتان پشتیبانی کنید.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "چندوقت یکبار می‌خواهید آگهی‌ها را ببینید؟",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(آگهی در هر ساعت)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "ماهانه چقدر می‌خواهید از تولیدکنندگان محتوای دلخواهتان حمایت مالی کنید؟",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(از درآمد آگهی‌هایتان)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "چه زمانی پاداش دریافت می‌کنید",
+    "message": "چه زمانی پاداش دریافت می‌کنید؟",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "توکن‌ها را فراتر از پشتیبانی از سازندگان می‌توان استفاده کرد. با پیوستن فروشندگان به تیم، می‌توانید محتوای دیجیتال و کالاهای دیگر خریداری کنید.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "در آخر، بیایید تنظیمات اصلی را انجام دهیم",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "بعداً می‌توانید این مورد را تغییر دهید.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "وو هوو، کاملاً آماده هستید!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "با استفاده از Brave Rewards کمک می‌کنید وب به مکانی بهتر برای همه تبدیل شود. و این فوق‌العاده است!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "تأیید کیف پول",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "برای برداشت کردن توکن‌هایی که بابت تماشای آگهی کسب می‌کنید، باید کیف پول خود را تأیید کنید.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "بعداً انجام می‌دهم",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "تأیید کیف پول",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "کیف پول bitFlyer سرویسی است که توسط bitFlyer Inc مدیریت می‌شود.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "با تأیید کیف پول و پیوند دادن آن به حساب bitFlyer، می‌توانید توکن‌هایی را که ازطریق «پاداش‌های Brave» کسب کرده‌اید آسان‌تر ذخیره و مدیریت کنید.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "درباره نحوه پیوند دادن مرورگر Brave خود با حساب bitFlyer، ‍$link_begin$بیشتر بدانید$link_end$.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

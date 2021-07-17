@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 The Brave Authors. All rights reserved.
+/* Copyright (c) 2021 The Brave Authors. All rights reserved.
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,6 +12,7 @@
 #include "base/memory/weak_ptr.h"
 #include "brave/components/brave_component_updater/browser/brave_component.h"
 #include "brave/components/brave_component_updater/browser/dat_file_util.h"
+#include "brave/components/speedreader/rust/ffi/speedreader.h"
 #include "brave/components/speedreader/speedreader_component.h"
 
 namespace base {
@@ -52,6 +53,9 @@ class SpeedreaderRewriterService : public SpeedreaderComponent::Observer {
 
   void OnLoadDATFileData(GetDATFileDataResult result);
   void OnLoadStylesheet(std::string stylesheet);
+
+  // Default backend is an Arc90 implementation.
+  RewriterType backend_ = RewriterType::RewriterReadability;
 
   std::string content_stylesheet_;
   std::unique_ptr<speedreader::SpeedreaderComponent> component_;

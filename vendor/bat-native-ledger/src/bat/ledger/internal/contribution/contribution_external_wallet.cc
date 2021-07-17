@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "bat/ledger/global_constants.h"
+#include "bat/ledger/internal/bitflyer/bitflyer_util.h"
 #include "bat/ledger/internal/contribution/contribution_external_wallet.h"
 #include "bat/ledger/internal/ledger_impl.h"
 #include "bat/ledger/internal/uphold/uphold_util.h"
@@ -48,11 +49,21 @@ void ContributionExternalWallet::ContributionInfo(
     return;
   }
 
-  // In this phase we only support one wallet
-  // so we will just always pick uphold.
-  // In the future we will allow user to pick which wallet to use via UI
-  // and then we will extend this function
-  const auto wallet = ledger_->uphold()->GetWallet();
+  type::ExternalWalletPtr wallet;
+  switch (contribution->processor) {
+    case type::ContributionProcessor::UPHOLD:
+      wallet = ledger_->uphold()->GetWallet();
+      break;
+    case type::ContributionProcessor::BITFLYER:
+      wallet = ledger_->bitflyer()->GetWallet();
+      break;
+    case type::ContributionProcessor::GEMINI:
+      wallet = ledger_->gemini()->GetWallet();
+      break;
+    default:
+      break;
+  }
+
   if (!wallet) {
     BLOG(0, "Wallet is null");
     callback(type::Result::LEDGER_ERROR);
@@ -68,10 +79,8 @@ void ContributionExternalWallet::ContributionInfo(
   }
 
   if (contribution->type == type::RewardsType::AUTO_CONTRIBUTE) {
-    ledger_->contribution()->SKUAutoContribution(
-        contribution->contribution_id,
-        constant::kWalletUphold,
-        callback);
+    ledger_->contribution()->SKUAutoContribution(contribution->contribution_id,
+                                                 wallet->type, callback);
     return;
   }
 
@@ -83,14 +92,10 @@ void ContributionExternalWallet::ContributionInfo(
     }
 
     auto get_callback =
-        std::bind(&ContributionExternalWallet::OnServerPublisherInfo,
-          this,
-          _1,
-          contribution->contribution_id,
-          publisher->total_amount,
-          contribution->type,
-          single_publisher,
-          callback);
+        std::bind(&ContributionExternalWallet::OnServerPublisherInfo, this, _1,
+                  contribution->contribution_id, publisher->total_amount,
+                  contribution->type, contribution->processor, single_publisher,
+                  callback);
 
     ledger_->publisher()->GetServerPublisherInfo(
         publisher->publisher_key,
@@ -115,6 +120,7 @@ void ContributionExternalWallet::OnServerPublisherInfo(
     const std::string& contribution_id,
     const double amount,
     const type::RewardsType type,
+    const type::ContributionProcessor processor,
     const bool single_publisher,
     ledger::ResultCallback callback) {
   if (!info) {
@@ -123,7 +129,29 @@ void ContributionExternalWallet::OnServerPublisherInfo(
     return;
   }
 
-  if (info->status != type::PublisherStatus::VERIFIED) {
+  bool publisher_verified = false;
+  switch (info->status) {
+    case type::PublisherStatus::UPHOLD_VERIFIED:
+      publisher_verified = processor == type::ContributionProcessor::UPHOLD;
+      break;
+    case type::PublisherStatus::BITFLYER_VERIFIED:
+      publisher_verified = processor == type::ContributionProcessor::BITFLYER;
+      break;
+    case type::PublisherStatus::GEMINI_VERIFIED:
+      publisher_verified = processor == type::ContributionProcessor::GEMINI;
+      break;
+    default:
+      break;
+  }
+
+  if (!publisher_verified) {
+    // NOTE: At this point we assume that the user has a connected wallet for
+    // the specified |provider| and that the wallet balance is non-zero. We also
+    // assume that the user cannot have two connected wallets at the same time.
+    // We can then infer that no other external wallet will be able to service
+    // this contribution item, and we can safely put the contribution into the
+    // pending list.
+
     BLOG(1, "Publisher not verified");
 
     auto save_callback =
@@ -135,6 +163,7 @@ void ContributionExternalWallet::OnServerPublisherInfo(
     contribution->publisher_key = info->publisher_key;
     contribution->amount = amount;
     contribution->type = type;
+    contribution->processor = processor;
 
     type::PendingContributionList list;
     list.push_back(std::move(contribution));
@@ -146,17 +175,27 @@ void ContributionExternalWallet::OnServerPublisherInfo(
     return;
   }
 
-  auto uphold_callback = std::bind(&ContributionExternalWallet::Completed,
-      this,
-      _1,
-      single_publisher,
-      callback);
+  auto start_callback = std::bind(&ContributionExternalWallet::Completed, this,
+                                  _1, single_publisher, callback);
 
-  ledger_->uphold()->StartContribution(
-      contribution_id,
-      std::move(info),
-      amount,
-      uphold_callback);
+  switch (processor) {
+    case type::ContributionProcessor::UPHOLD:
+      ledger_->uphold()->StartContribution(contribution_id, std::move(info),
+                                           amount, start_callback);
+      break;
+    case type::ContributionProcessor::BITFLYER:
+      ledger_->bitflyer()->StartContribution(contribution_id, std::move(info),
+                                             amount, start_callback);
+      break;
+    case type::ContributionProcessor::GEMINI:
+      ledger_->gemini()->StartContribution(contribution_id, std::move(info),
+                                           amount, start_callback);
+      break;
+    default:
+      NOTREACHED();
+      BLOG(0, "Contribution processor not supported");
+      break;
+  }
 }
 
 void ContributionExternalWallet::Completed(

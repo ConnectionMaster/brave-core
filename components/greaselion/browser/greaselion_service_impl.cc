@@ -27,10 +27,10 @@
 #include "base/task_runner_util.h"
 #include "base/values.h"
 #include "base/version.h"
-#include "brave/browser/version_info.h"
 #include "brave/components/brave_component_updater/browser/features.h"
 #include "brave/components/brave_component_updater/browser/switches.h"
 #include "brave/components/greaselion/browser/greaselion_download_service.h"
+#include "brave/components/version_info//version_info.h"
 #include "chrome/browser/extensions/extension_service.h"
 #include "components/version_info/version_info.h"
 #include "crypto/sha2.h"
@@ -41,10 +41,12 @@
 #include "extensions/common/extension.h"
 #include "extensions/common/file_util.h"
 #include "extensions/common/manifest_constants.h"
+#include "extensions/common/mojom/manifest.mojom.h"
+#include "third_party/abseil-cpp/absl/types/optional.h"
 #include "url/gurl.h"
 
 using extensions::Extension;
-using extensions::Manifest;
+using extensions::mojom::ManifestLocation;
 
 namespace {
 
@@ -57,21 +59,21 @@ constexpr char kRunAtDocumentStart[] = "document_start";
 // NOTE: This function does file IO and should not be called on the UI thread.
 // NOTE: The caller takes ownership of the directory at extension->path() on the
 // returned object.
-scoped_refptr<Extension> ConvertGreaselionRuleToExtensionOnTaskRunner(
-    greaselion::GreaselionRule* rule,
-    const base::FilePath& install_dir,
-    std::vector<base::ScopedTempDir>* extension_dirs) {
+absl::optional<greaselion::GreaselionServiceImpl::GreaselionConvertedExtension>
+ConvertGreaselionRuleToExtensionOnTaskRunner(
+    const greaselion::GreaselionRule& rule,
+    const base::FilePath& install_dir) {
   base::FilePath install_temp_dir =
       extensions::file_util::GetInstallTempDir(install_dir);
   if (install_temp_dir.empty()) {
     LOG(ERROR) << "Could not get path to profile temp directory";
-    return nullptr;
+    return absl::nullopt;
   }
 
   base::ScopedTempDir temp_dir;
   if (!temp_dir.CreateUniqueTempDirUnderPath(install_temp_dir)) {
     LOG(ERROR) << "Could not create Greaselion temp directory";
-    return nullptr;
+    return absl::nullopt;
   }
 
   // Create the manifest
@@ -88,7 +90,7 @@ scoped_refptr<Extension> ConvertGreaselionRuleToExtensionOnTaskRunner(
   // public key.
   char raw[crypto::kSHA256Length] = {0};
   std::string key;
-  std::string script_name = rule->name();
+  std::string script_name = rule.name();
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
   if (!command_line.HasSwitch(brave_component_updater::kUseGoUpdateDev) &&
@@ -112,24 +114,24 @@ scoped_refptr<Extension> ConvertGreaselionRuleToExtensionOnTaskRunner(
                       extensions::manifest_values::kIncognitoNotAllowed);
 
   std::vector<std::string> matches;
-  matches.reserve(rule->url_patterns().size());
-  for (auto url_pattern : rule->url_patterns())
+  matches.reserve(rule.url_patterns().size());
+  for (auto url_pattern : rule.url_patterns())
     matches.push_back(url_pattern);
 
   extensions::api::content_scripts::ContentScript content_script;
   content_script.matches = std::move(matches);
 
   content_script.js = std::make_unique<std::vector<std::string>>();
-  for (auto script : rule->scripts())
+  for (auto script : rule.scripts())
     content_script.js->push_back(script.BaseName().AsUTF8Unsafe());
 
   // All Greaselion scripts default to document end.
   content_script.run_at =
-      rule->run_at() == kRunAtDocumentStart
+      rule.run_at() == kRunAtDocumentStart
           ? extensions::api::content_scripts::RUN_AT_DOCUMENT_START
           : extensions::api::content_scripts::RUN_AT_DOCUMENT_END;
 
-  if (!rule->messages().empty()) {
+  if (!rule.messages().empty()) {
     root->SetStringPath(extensions::manifest_keys::kDefaultLocale, "en_US");
   }
 
@@ -149,45 +151,43 @@ scoped_refptr<Extension> ConvertGreaselionRuleToExtensionOnTaskRunner(
   // files to disk.
   if (!serializer.Serialize(*root)) {
     LOG(ERROR) << "Could not write Greaselion manifest";
-    return nullptr;
+    return absl::nullopt;
   }
 
   // Copy the messages directory to our extension directory.
-  if (!rule->messages().empty()) {
+  if (!rule.messages().empty()) {
     if (!base::CopyDirectory(
-            rule->messages(),
+            rule.messages(),
             temp_dir.GetPath().AppendASCII("_locales"), true)) {
       LOG(ERROR) << "Could not copy Greaselion messages directory at path: "
-                 << rule->messages().LossyDisplayName();
-      return nullptr;
+                 << rule.messages().LossyDisplayName();
+      return absl::nullopt;
     }
   }
 
   // Copy the script files to our extension directory.
-  for (auto script : rule->scripts()) {
-    if (!base::CopyFile(script, temp_dir.GetPath().Append(script.BaseName()))) {
+  for (auto script : rule.scripts()) {
+    if (!base::CopyFile(script,
+                        temp_dir.GetPath().Append(script.BaseName()))) {
       LOG(ERROR) << "Could not copy Greaselion script at path: "
           << script.LossyDisplayName();
-      return nullptr;
+      return absl::nullopt;
     }
   }
 
   std::string error;
   scoped_refptr<Extension> extension = extensions::file_util::LoadExtension(
-      temp_dir.GetPath(), Manifest::COMPONENT, Extension::NO_FLAGS, &error);
+      temp_dir.GetPath(), ManifestLocation::kComponent, Extension::NO_FLAGS,
+      &error);
   if (!extension.get()) {
     LOG(ERROR) << "Could not load Greaselion extension";
     LOG(ERROR) << error;
-    return nullptr;
+    return absl::nullopt;
   }
 
   // Take ownership of this temporary directory so it's deleted when
   // the service exits
-  if (extension_dirs) {
-    extension_dirs->push_back(std::move(temp_dir));
-  }
-
-  return extension;
+  return std::make_pair(extension, std::move(temp_dir));
 }
 }  // namespace
 
@@ -282,10 +282,11 @@ void GreaselionServiceImpl::CreateAndInstallExtensions() {
         rule->has_unknown_preconditions() == false) {
       // Convert script file to component extension. This must run on extension
       // file task runner, which was passed in in the constructor.
+      GreaselionRule rule_copy(*rule);
       base::PostTaskAndReplyWithResult(
           task_runner_.get(), FROM_HERE,
           base::BindOnce(&ConvertGreaselionRuleToExtensionOnTaskRunner,
-                         rule.get(), install_directory_, &extension_dirs_),
+                         rule_copy, install_directory_),
           base::BindOnce(&GreaselionServiceImpl::PostConvert,
                          weak_factory_.GetWeakPtr()));
     }
@@ -293,18 +294,19 @@ void GreaselionServiceImpl::CreateAndInstallExtensions() {
 }
 
 void GreaselionServiceImpl::PostConvert(
-    scoped_refptr<extensions::Extension> extension) {
-  if (!extension.get()) {
+    absl::optional<GreaselionConvertedExtension> converted_extension) {
+  if (!converted_extension) {
     all_rules_installed_successfully_ = false;
     pending_installs_ -= 1;
     MaybeNotifyObservers();
     LOG(ERROR) << "Could not load Greaselion script";
   } else {
-    greaselion_extensions_.push_back(extension->id());
+    greaselion_extensions_.push_back(converted_extension->first->id());
+    extension_dirs_.push_back(std::move(converted_extension->second));
     extension_system_->ready().Post(
-        FROM_HERE,
-        base::BindOnce(&GreaselionServiceImpl::Install,
-                       weak_factory_.GetWeakPtr(), base::Passed(&extension)));
+        FROM_HERE, base::BindOnce(&GreaselionServiceImpl::Install,
+                                  weak_factory_.GetWeakPtr(),
+                                  std::move(converted_extension->first)));
   }
 }
 

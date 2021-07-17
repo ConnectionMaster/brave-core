@@ -1,20 +1,20 @@
 diff --git a/build/config/android/rules.gni b/build/config/android/rules.gni
-index 78d1eb7155739ef2986bac6485f7a3acee4c272a..5eb3b051385de1a0c2b01cf0ddc49024dbeb0fc6 100644
+index b411f154af3bce93ec00d7deb12c8be9ea2f510b..59268075871a10a13169e34d633b49c804fb83b7 100644
 --- a/build/config/android/rules.gni
 +++ b/build/config/android/rules.gni
-@@ -472,6 +472,7 @@ if (enable_java_templates) {
+@@ -476,6 +476,7 @@ if (enable_java_templates) {
    #     ]
    #   }
    template("java_cpp_enum") {
 +    foreach(source, invoker.sources) { foreach(filter, brave_java_cpp_enum_filter) { if(source == filter) { invoker.sources -= [filter] }}}
      action_with_pydeps(target_name) {
-       forward_variables_from(invoker,
-                              [
-@@ -658,6 +659,7 @@ if (enable_java_templates) {
+       forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "sources" ])
+ 
+@@ -647,6 +648,7 @@ if (enable_java_templates) {
    #     output = "$target_gen_dir/AndroidManifest.xml"
    #   }
    template("jinja_template") {
 +    if (defined(invoker.includes)) { invoker.includes += brave_android_manifest_includes } else { invoker.includes = brave_android_manifest_includes }
      action_with_pydeps(target_name) {
-       # TODO(crbug.com/1112471): Get this to run cleanly under Python 3.
-       run_under_python2 = true
+       forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "deps" ])
+       inputs = [ invoker.input ]

@@ -6,6 +6,8 @@
 #ifndef BRAVE_BROWSER_UI_BRAVE_PAGES_H_
 #define BRAVE_BROWSER_UI_BRAVE_PAGES_H_
 
+#include "brave/components/ipfs/buildflags/buildflags.h"
+
 class Browser;
 
 namespace brave {
@@ -15,6 +17,7 @@ void ShowWebcompatReporter(Browser* browser);
 void ShowBraveRewards(Browser* browser);
 void ShowBraveWallet(Browser* browser);
 void ShowExtensionSettings(Browser* browser);
+void ShowWalletSettings(Browser* browser);
 void ShowSync(Browser* browser);
 
 }  // namespace brave

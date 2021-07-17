@@ -16,15 +16,12 @@ namespace ads {
 
 class BatAdsPaymentsTest : public UnitTestBase {
  protected:
-  BatAdsPaymentsTest() :
-      payments_(std::make_unique<Payments>()) {
-  }
+  BatAdsPaymentsTest() : payments_(std::make_unique<Payments>()) {}
 
   ~BatAdsPaymentsTest() override = default;
 
-  base::Time GetNextPaymentDate(
-      const std::string& date,
-      const std::string& next_token_redemption_date) {
+  base::Time GetNextPaymentDate(const std::string& date,
+                                const std::string& next_token_redemption_date) {
     const base::Time time = TimeFromDateString(date);
 
     const base::Time token_redemption_time =
@@ -36,8 +33,7 @@ class BatAdsPaymentsTest : public UnitTestBase {
   std::unique_ptr<Payments> payments_;
 };
 
-TEST_F(BatAdsPaymentsTest,
-    InvalidJson) {
+TEST_F(BatAdsPaymentsTest, InvalidJson) {
   // Arrange
   const std::string json = "[{FOOBAR}]";
 
@@ -48,8 +44,7 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_FALSE(success);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    Balance) {
+TEST_F(BatAdsPaymentsTest, Balance) {
   // Arrange
   const std::string json = R"(
     [
@@ -70,8 +65,7 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(0.5, balance);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    BalanceAsInteger) {
+TEST_F(BatAdsPaymentsTest, BalanceAsInteger) {
   // Arrange
   const std::string json = R"(
     [
@@ -92,112 +86,7 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(5, balance);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    DidReconcileBalanceForZeroUnreconciledEstimatedPendingRewards) {
-  // Arrange
-  const std::string json = R"(
-    [
-      {
-        "balance" : "0.0",
-        "month" : "2019-06",
-        "transactionCount" : "0"
-      }
-    ]
-  )";
-
-  payments_->SetFromJson(json);
-
-  const double last_balance = 0.0;
-  const double unreconciled_estimated_pending_rewards = 0.0;
-
-  // Act
-  const bool did_reconcile = payments_->DidReconcileBalance(last_balance,
-      unreconciled_estimated_pending_rewards);
-
-  // Assert
-  EXPECT_TRUE(did_reconcile);
-}
-
-TEST_F(BatAdsPaymentsTest,
-    DidReconcileBalanceEqualToUnreconciledEstimatedPendingRewards) {
-  // Arrange
-  const std::string json = R"(
-    [
-      {
-        "balance" : "0.5",
-        "month" : "2019-06",
-        "transactionCount" : "10"
-      }
-    ]
-  )";
-
-  payments_->SetFromJson(json);
-
-  const double last_balance = 0.3;
-  const double unreconciled_estimated_pending_rewards = 0.2;
-
-  // Act
-  const bool did_reconcile = payments_->DidReconcileBalance(last_balance,
-      unreconciled_estimated_pending_rewards);
-
-  // Assert
-  EXPECT_TRUE(did_reconcile);
-}
-
-TEST_F(BatAdsPaymentsTest,
-    DidReconcileBalanceGreaterThanUnreconciledEstimatedPendingRewards) {
-  // Arrange
-  const std::string json = R"(
-    [
-      {
-        "balance" : "0.6",
-        "month" : "2019-06",
-        "transactionCount" : "10"
-      }
-    ]
-  )";
-
-  payments_->SetFromJson(json);
-
-  const double last_balance = 0.3;
-  const double unreconciled_estimated_pending_rewards = 0.2;
-
-  // Act
-  const bool did_reconcile = payments_->DidReconcileBalance(last_balance,
-      unreconciled_estimated_pending_rewards);
-
-  // Assert
-  EXPECT_TRUE(did_reconcile);
-}
-
-TEST_F(BatAdsPaymentsTest,
-    DidNotReconcileBalanceLessThanUnreconciledEstimatedPendingRewards) {
-  // Arrange
-  const std::string json = R"(
-    [
-      {
-        "balance" : "0.3",
-        "month" : "2019-06",
-        "transactionCount" : "5"
-      }
-    ]
-  )";
-
-  payments_->SetFromJson(json);
-
-  const double last_balance = 0.3;
-  const double unreconciled_estimated_pending_rewards = 0.2;
-
-  // Act
-  const bool did_reconcile = payments_->DidReconcileBalance(last_balance,
-      unreconciled_estimated_pending_rewards);
-
-  // Assert
-  EXPECT_FALSE(did_reconcile);
-}
-
-TEST_F(BatAdsPaymentsTest,
-    BalanceForMultiplePayments) {
+TEST_F(BatAdsPaymentsTest, BalanceForMultiplePayments) {
   // Arrange
   const std::string json = R"(
     [
@@ -223,8 +112,7 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(0.75, balance);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    BalanceForMultiplePaymentsInAscendingOrder) {
+TEST_F(BatAdsPaymentsTest, BalanceForMultiplePaymentsInAscendingOrder) {
   // Arrange
   const std::string json = R"(
     [
@@ -250,8 +138,7 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(0.75, balance);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    InvalidStringForBalance) {
+TEST_F(BatAdsPaymentsTest, InvalidStringForBalance) {
   // Arrange
   const std::string json = R"(
     [
@@ -272,8 +159,7 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(0.0, balance);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    InvalidTypeForBalance) {
+TEST_F(BatAdsPaymentsTest, InvalidTypeForBalance) {
   // Arrange
   const std::string json = R"(
     [
@@ -294,7 +180,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(0.0, balance);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsBefore5thAndRedeemedTokensThisMonthWithBalanceLastMonth) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -328,7 +215,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsBefore5thAndRedeemedTokensThisMonthWithBalanceLastMonthInAscendingOrder) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -362,7 +250,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsBefore5thAndRedeemedTokensThisMonthWithMissingBalanceLastMonth) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -391,7 +280,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsBefore5thAndRedeemedTokensThisMonthWithZeroBalanceLastMonth) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -425,7 +315,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsBefore5thAndRedeemedTokensThisMonthWithZeroBalanceLastMonthInAscendingOrder) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -459,8 +350,9 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    NextPaymentDateIfDayIs5thAndRedeemedTokensThisMonthWithBalanceLastMonth) {  // NOLINT
+TEST_F(
+    BatAdsPaymentsTest,
+    NextPaymentDateIfDayIs5thAndRedeemedTokensThisMonthWithBalanceLastMonth) {
   // Arrange
   const std::string json = R"(
     [
@@ -493,7 +385,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIs5thAndRedeemedTokensThisMonthWithBalanceLastMonthInAscendingOrder) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -527,7 +420,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIs5thAndRedeemedTokensThisMonthWithMissingBalanceLastMonth) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -556,7 +450,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIs5thAndRedeemedTokensThisMonthWithZeroBalanceLastMonth) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -590,7 +485,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIs5thAndRedeemedTokensThisMonthWithZeroBalanceLastMonthInAscendingOrder) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -624,7 +520,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsAfter5thAndRedeemedTokensThisMonthWithBalanceThisMonth) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -658,7 +555,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsAfter5thAndRedeemedTokensThisMonthWithBalanceThisMonthInAscendingOrder) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -692,7 +590,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsAfter5thAndRedeemedTokensThisMonthWithMissingBalanceThisMonth) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -721,7 +620,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsAfter5thAndRedeemedTokensThisMonthWithZeroBalanceThisMonth) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -755,7 +655,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsAfter5thAndRedeemedTokensThisMonthWithZeroBalanceThisMonthInAscendingOrder) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -789,7 +690,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsAfter5thAndRedeemedTokensNextMonthWithZeroBalanceThisMonth) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -823,7 +725,8 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
+TEST_F(
+    BatAdsPaymentsTest,
     NextPaymentDateIfDayIsAfter5thAndRedeemedTokensNextMonthWithZeroBalanceThisMonthInAscendingOrder) {  // NOLINT
   // Arrange
   const std::string json = R"(
@@ -857,8 +760,7 @@ TEST_F(BatAdsPaymentsTest,
   EXPECT_EQ(expected_next_payment_date, next_payment_date);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    TransactionCountForThisMonth) {
+TEST_F(BatAdsPaymentsTest, TransactionCountForThisMonth) {
   // Arrange
   const std::string json = R"(
     [
@@ -875,14 +777,13 @@ TEST_F(BatAdsPaymentsTest,
   const base::Time time = TimeFromDateString("6 June 2019");
 
   // Act
-  const PaymentInfo payment = payments_->GetForThisMonth(time);
+  const PaymentInfo payment = payments_->GetForMonth(time);
 
   // Assert
   EXPECT_EQ(10UL, payment.transaction_count);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    TransactionCountForThisMonthWithMultiplePayments) {
+TEST_F(BatAdsPaymentsTest, TransactionCountForThisMonthWithMultiplePayments) {
   // Arrange
   const std::string json = R"(
     [
@@ -904,14 +805,14 @@ TEST_F(BatAdsPaymentsTest,
   const base::Time time = TimeFromDateString("6 June 2019");
 
   // Act
-  const PaymentInfo payment = payments_->GetForThisMonth(time);
+  const PaymentInfo payment = payments_->GetForMonth(time);
 
   // Assert
   EXPECT_EQ(10UL, payment.transaction_count);
 }
 
 TEST_F(BatAdsPaymentsTest,
-    TransactionCountForThisMonthWithMultiplePaymentsInAscendingOrder) {
+       TransactionCountForThisMonthWithMultiplePaymentsInAscendingOrder) {
   // Arrange
   const std::string json = R"(
     [
@@ -933,14 +834,13 @@ TEST_F(BatAdsPaymentsTest,
   const base::Time time = TimeFromDateString("6 June 2019");
 
   // Act
-  const PaymentInfo payment = payments_->GetForThisMonth(time);
+  const PaymentInfo payment = payments_->GetForMonth(time);
 
   // Assert
   EXPECT_EQ(10UL, payment.transaction_count);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    InvalidValueForTransactionCount) {
+TEST_F(BatAdsPaymentsTest, InvalidValueForTransactionCount) {
   // Arrange
   const std::string json = R"(
     [
@@ -957,14 +857,13 @@ TEST_F(BatAdsPaymentsTest,
   const base::Time time = TimeFromDateString("6 July 2019");
 
   // Act
-  const PaymentInfo payment = payments_->GetForThisMonth(time);
+  const PaymentInfo payment = payments_->GetForMonth(time);
 
   // Assert
   EXPECT_EQ(0UL, payment.transaction_count);
 }
 
-TEST_F(BatAdsPaymentsTest,
-    InvalidTypeForTransactionCount) {
+TEST_F(BatAdsPaymentsTest, InvalidTypeForTransactionCount) {
   // Arrange
   const std::string json = R"(
     [
@@ -981,7 +880,7 @@ TEST_F(BatAdsPaymentsTest,
   const base::Time time = TimeFromDateString("6 July 2019");
 
   // Act
-  const PaymentInfo payment = payments_->GetForThisMonth(time);
+  const PaymentInfo payment = payments_->GetForMonth(time);
 
   // Assert
   EXPECT_EQ(0UL, payment.transaction_count);

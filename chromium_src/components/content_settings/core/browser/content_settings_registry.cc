@@ -8,6 +8,7 @@
 #undef BRAVE_INIT
 
 #include "brave/components/brave_shields/common/brave_shield_constants.h"
+
 namespace content_settings {
 
 namespace {
@@ -64,20 +65,15 @@ void ContentSettingsRegistry::BraveInit() {
            ContentSettingsInfo::PERSISTENT,
            ContentSettingsInfo::EXCEPTIONS_ON_SECURE_AND_INSECURE_ORIGINS);
 
-  // Change plugins default to CONTENT_SETTING_BLOCK
-  content_settings_info_.erase(ContentSettingsType::PLUGINS);
-  website_settings_registry_->UnRegister(ContentSettingsType::PLUGINS);
-  Register(ContentSettingsType::PLUGINS, "plugins", CONTENT_SETTING_BLOCK,
-           WebsiteSettingsInfo::SYNCABLE,
-           AllowlistedSchemes(kChromeUIScheme, kChromeDevToolsScheme),
-           ValidSettings(CONTENT_SETTING_ALLOW, CONTENT_SETTING_BLOCK,
-                         CONTENT_SETTING_ASK,
-                         CONTENT_SETTING_DETECT_IMPORTANT_CONTENT),
-           WebsiteSettingsInfo::SINGLE_ORIGIN_WITH_EMBEDDED_EXCEPTIONS_SCOPE,
+  Register(ContentSettingsType::BRAVE_SPEEDREADER, "braveSpeedreader",
+           CONTENT_SETTING_ALLOW, WebsiteSettingsInfo::SYNCABLE,
+           AllowlistedSchemes(),
+           ValidSettings(CONTENT_SETTING_ALLOW, CONTENT_SETTING_BLOCK),
+           WebsiteSettingsInfo::SINGLE_ORIGIN_ONLY_SCOPE,
            WebsiteSettingsRegistry::DESKTOP |
                WebsiteSettingsRegistry::PLATFORM_ANDROID,
            ContentSettingsInfo::INHERIT_IN_INCOGNITO,
-           ContentSettingsInfo::EPHEMERAL,
+           ContentSettingsInfo::PERSISTENT,
            ContentSettingsInfo::EXCEPTIONS_ON_SECURE_AND_INSECURE_ORIGINS);
 
   // Register Brave-specific types, defaulting them to CONTENT_SETTING_BLOCK.

@@ -20,8 +20,7 @@ class BatAdsCatalogUtilTest : public UnitTestBase {
   ~BatAdsCatalogUtilTest() override = default;
 };
 
-TEST_F(BatAdsCatalogUtilTest,
-    CatalogExists) {
+TEST_F(BatAdsCatalogUtilTest, CatalogExists) {
   // Arrange
   AdsClientHelper::Get()->SetIntegerPref(prefs::kCatalogVersion, 1);
 
@@ -32,8 +31,7 @@ TEST_F(BatAdsCatalogUtilTest,
   EXPECT_TRUE(does_exist);
 }
 
-TEST_F(BatAdsCatalogUtilTest,
-    CatalogDoesNotExist) {
+TEST_F(BatAdsCatalogUtilTest, CatalogDoesNotExist) {
   // Arrange
   AdsClientHelper::Get()->SetIntegerPref(prefs::kCatalogVersion, 0);
 
@@ -44,10 +42,10 @@ TEST_F(BatAdsCatalogUtilTest,
   EXPECT_FALSE(does_exist);
 }
 
-TEST_F(BatAdsCatalogUtilTest,
-    CatalogHasExpired) {
+TEST_F(BatAdsCatalogUtilTest, CatalogHasExpired) {
   // Arrange
-  AdsClientHelper::Get()->SetInt64Pref(prefs::kCatalogLastUpdated, Now());
+  AdsClientHelper::Get()->SetInt64Pref(prefs::kCatalogLastUpdated,
+                                       NowAsTimestamp());
 
   // Act
   AdvanceClock(base::TimeDelta::FromDays(1));
@@ -57,10 +55,10 @@ TEST_F(BatAdsCatalogUtilTest,
   EXPECT_TRUE(has_expired);
 }
 
-TEST_F(BatAdsCatalogUtilTest,
-    CatalogHasNotExpired) {
+TEST_F(BatAdsCatalogUtilTest, CatalogHasNotExpired) {
   // Arrange
-  AdsClientHelper::Get()->SetInt64Pref(prefs::kCatalogLastUpdated, Now());
+  AdsClientHelper::Get()->SetInt64Pref(prefs::kCatalogLastUpdated,
+                                       NowAsTimestamp());
 
   // Act
   AdvanceClock(base::TimeDelta::FromDays(1) - base::TimeDelta::FromSeconds(1));

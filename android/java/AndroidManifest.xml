@@ -38,7 +38,12 @@
     android:screenOrientation="sensorPortrait"/>
 
 <activity
-    android:name="org.chromium.chrome.browser.onboarding.P3aOnboardingActivity"
+    android:name="org.chromium.chrome.browser.firstrun.P3aOnboardingActivity"
+    android:theme="@style/Theme.Chromium.Activity.Fullscreen"
+    android:screenOrientation="sensorPortrait"/>
+
+<activity
+    android:name="org.chromium.chrome.browser.SetDefaultBrowserActivity"
     android:theme="@style/Theme.Chromium.Activity.Fullscreen"
     android:screenOrientation="sensorPortrait"/>
 
@@ -49,6 +54,18 @@
 
 </activity>
 
+<activity android:name="org.chromium.chrome.browser.crypto_wallet.CryptoWalletActivity"
+    android:theme="@style/Theme.Chromium.Activity"
+    android:screenOrientation="sensorPortrait"/>
+
+<activity android:name="org.chromium.chrome.browser.crypto_wallet.BraveWalletActivity"
+    android:theme="@style/Theme.Chromium.Activity"
+    android:screenOrientation="sensorPortrait"/>
+
+<activity android:name="org.chromium.chrome.browser.crypto_wallet.AssetDetailActivity"
+    android:theme="@style/Theme.Chromium.Activity"
+    android:screenOrientation="sensorPortrait"/>
+
 <activity
     android:name="org.chromium.chrome.browser.widget.crypto.binance.BinanceActivity"
     android:theme="@style/Theme.Chromium.Activity.Fullscreen">
@@ -58,6 +75,13 @@
         <category android:name="android.intent.category.DEFAULT" />
         <data android:scheme="com.brave.binance" />
     </intent-filter>
+</activity>
+
+<activity android:name="org.chromium.chrome.browser.settings.BraveSettingsActivity"
+    android:theme="@style/Theme.Chromium.Settings"
+    android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize"
+    android:label="@string/settings"
+    android:exported="false">
 </activity>
 
 <!-- Upgrade related -->

@@ -13,6 +13,7 @@
 #include "components/omnibox/browser/location_bar_model_impl.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/url_loader_interceptor.h"
+#include "mojo/public/cpp/system/data_pipe.h"
 #include "net/cert/ct_policy_status.h"
 #include "net/ssl/ssl_info.h"
 #include "net/test/cert_test_util.h"
@@ -25,7 +26,7 @@ struct SecurityIndicatorTestParams {
   net::CertStatus cert_status;
   security_state::SecurityLevel security_level;
   bool should_show_text;
-  base::string16 indicator_text;
+  std::u16string indicator_text;
 };
 
 class SecurityIndicatorTest
@@ -69,8 +70,11 @@ class SecurityIndicatorTest
     resource_response->ssl_info = ssl_info;
     params->client->OnReceiveResponse(std::move(resource_response));
     // Send an empty response's body. This pipe is not filled with data.
-    mojo::DataPipe pipe;
-    params->client->OnStartLoadingResponseBody(std::move(pipe.consumer_handle));
+    mojo::ScopedDataPipeProducerHandle producer_handle;
+    mojo::ScopedDataPipeConsumerHandle consumer_handle;
+    mojo::CreateDataPipe(nullptr, producer_handle, consumer_handle);
+
+    params->client->OnStartLoadingResponseBody(std::move(consumer_handle));
     network::URLLoaderCompletionStatus completion_status;
     completion_status.ssl_info = ssl_info;
     params->client->OnComplete(completion_status);
@@ -109,7 +113,7 @@ IN_PROC_BROWSER_TEST_P(SecurityIndicatorTest, CheckIndicatorText) {
   ResetInterceptor();
 }
 
-const base::string16 kEmptyString = base::string16();
+const std::u16string kEmptyString = std::u16string();
 INSTANTIATE_TEST_SUITE_P(
     /* no prefix */,
     SecurityIndicatorTest,

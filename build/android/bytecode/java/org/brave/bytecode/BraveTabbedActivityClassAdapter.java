@@ -13,8 +13,6 @@ public class BraveTabbedActivityClassAdapter extends BraveClassVisitor {
     static String sBraveActivityClassName = "org/chromium/chrome/browser/app/BraveActivity";
     static String sTabbedRootUiCoordinatorClassName =
             "org/chromium/chrome/browser/tabbed_mode/TabbedRootUiCoordinator";
-    static String sBraveTabbedRootUiCoordinatorClassName =
-            "org/chromium/chrome/browser/tabbed_mode/BraveTabbedRootUiCoordinator";
     static String sTabbedAppMenuPropertiesDelegateClassName =
             "org/chromium/chrome/browser/tabbed_mode/TabbedAppMenuPropertiesDelegate";
     static String sBraveTabbedAppMenuPropertiesDelegateClassName =
@@ -23,17 +21,29 @@ public class BraveTabbedActivityClassAdapter extends BraveClassVisitor {
             "org/chromium/chrome/browser/tabmodel/ChromeTabCreator";
     static String sBraveTabCreatorClassName =
             "org/chromium/chrome/browser/tabmodel/BraveTabCreator";
+    static String sAppMenuPropertiesDelegateImplClassName =
+            "org/chromium/chrome/browser/app/appmenu/AppMenuPropertiesDelegateImpl";
+    static String sBraveAppMenuPropertiesDelegateImplClassName =
+            "org/chromium/chrome/browser/app/appmenu/BraveAppMenuPropertiesDelegateImpl";
+    static String sCustomTabAppMenuPropertiesDelegateClassName =
+            "org/chromium/chrome/browser/customtabs/CustomTabAppMenuPropertiesDelegate";
 
     public BraveTabbedActivityClassAdapter(ClassVisitor visitor) {
         super(visitor);
 
         changeSuperName(sChromeTabbedActivityClassName, sBraveActivityClassName);
 
-        redirectConstructor(
-                sTabbedRootUiCoordinatorClassName, sBraveTabbedRootUiCoordinatorClassName);
+        changeSuperName(sTabbedAppMenuPropertiesDelegateClassName,
+                sBraveAppMenuPropertiesDelegateImplClassName);
+
+        changeSuperName(sCustomTabAppMenuPropertiesDelegateClassName,
+                sBraveAppMenuPropertiesDelegateImplClassName);
 
         redirectConstructor(sTabbedAppMenuPropertiesDelegateClassName,
                 sBraveTabbedAppMenuPropertiesDelegateClassName);
+
+        redirectConstructor(sAppMenuPropertiesDelegateImplClassName,
+                sBraveAppMenuPropertiesDelegateImplClassName);
 
         redirectConstructor(sChromeTabCreatorClassName, sBraveTabCreatorClassName);
 

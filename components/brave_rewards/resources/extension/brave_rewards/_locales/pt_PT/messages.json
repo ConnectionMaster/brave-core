@@ -51,18 +51,6 @@
     "message": "Detalhes",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "O seu saldo",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Pontos BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "pode ser usado no Brave Rewards para dar contribuições aos seus criadores de conteúdos favoritos. Não é possível trocar Pontos BAT por BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "ligar",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Doações Token Reivindicadas",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Atribuições de pontos reivindicadas",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Ganhos de Anúncios",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Crie uma cópia de segurança da sua carteira Brave.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Obter mais informações",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Limite do Dispositivo Alcançado ",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Não é possível verificar a sua wallet, porque atingiu limite máximo verificado de dispositivos.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "A sua conta de «Recompensas Brave» está à espera de um depósito.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Ative os anúncios",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Doação de Token Gratuita",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Atribuição de pontos gratuita",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Ganhou uma recompensa de anúncios!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Wallet Verificada",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Aceder à minha conta Upload",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Ir para a minha conta $provider$ ",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Desligar de «Recompensas Brave»",
@@ -573,17 +567,9 @@
     "message": "Símbolo ",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "pontos",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Token de Ajudas",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Subsídios Pontuais",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Olá, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Necessita de ter um mínimo de 25 BAT para criar uma conta Uphold. Por favor, tente novamente mais tarde. \n Se já tem uma conta Uphold verificada, continue para o login.",
-    "description": "Text for login button"
+    "message": "Precisa de um mínimo de $amount$ BAT para criar uma conta Uphold. Se já tiver uma conta Uphold verificada, inicie sessão.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Ligado",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Nota: As suas transações serão visíveis para a Uphold assim que autorizar; poderão, por exemplo, ver o destinatário e o valor das suas contribuições.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Nota: Assim que autorizar, as suas transições ficarão visíveis para $provider$; por exemplo, poderão ver o destinatário e o valor das suas gorjetas.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Ganhe Tokens & Contribua",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Ganhe tokens ao visualizar anúncios que respeitam a sua privacidade e apoie os seus sites preferidos e os criadores de conteúdo automaticamente. ",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Com que frequência visa visualizar anúncios?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(anúncios por hora)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Qual o apoio mensal com que visa presentear os seus criadores preferidos? ",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(a partir dos ganhos com os seus anúncios) ",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Quando recebe as recompensas",
+    "message": "Quando recebe recompensas?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Os tokens podem ser usados para além do apoio aos criadores.  Pode comprar conteúdo e outros bens à medida que os comerciantes aderem. ",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Por fim, procedamos às definições das suas configurações básicas ",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Pode alterar isto mais tarde.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Pronto, já está!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Ao usar os Brave Rewards está a ajudar a fazer da net um melhor lugar para todos.  E isso é fantástico!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Verifique a carteira",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Tem de verificar a carteira para retirar os tokens que recebe por ver anúncios.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Mais tarde",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Verificar carteira",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "A carteira bitFlyer é um serviço gerido pela bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Ao verificar e associar a carteira a uma conta bitFlyer, poderá guardar e gerir mais facilmente os tokens que tiver recebido com Brave Rewards",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Saiba mais$link_end$ sobre como ligar o seu navegador Brave à sua conta bitFlyer.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

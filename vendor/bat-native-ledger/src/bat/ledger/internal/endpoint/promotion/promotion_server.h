@@ -3,19 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVELEDGER_ENDPOINT_PROMOTION_PROMOTION_SERVER_H_
-#define BRAVELEDGER_ENDPOINT_PROMOTION_PROMOTION_SERVER_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_ENDPOINT_PROMOTION_PROMOTION_SERVER_H_
+#define BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_ENDPOINT_PROMOTION_PROMOTION_SERVER_H_
 
 #include <memory>
 
+#include "bat/ledger/internal/endpoint/promotion/delete_claim/delete_claim.h"
 #include "bat/ledger/internal/endpoint/promotion/get_available/get_available.h"
 #include "bat/ledger/internal/endpoint/promotion/get_captcha/get_captcha.h"
+#include "bat/ledger/internal/endpoint/promotion/get_drain/get_drain.h"
 #include "bat/ledger/internal/endpoint/promotion/get_recover_wallet/get_recover_wallet.h"
 #include "bat/ledger/internal/endpoint/promotion/get_signed_creds/get_signed_creds.h"
 #include "bat/ledger/internal/endpoint/promotion/get_wallet_balance/get_wallet_balance.h"
 #include "bat/ledger/internal/endpoint/promotion/post_bat_loss/post_bat_loss.h"
 #include "bat/ledger/internal/endpoint/promotion/post_captcha/post_captcha.h"
+#include "bat/ledger/internal/endpoint/promotion/post_claim_bitflyer/post_claim_bitflyer.h"
 #include "bat/ledger/internal/endpoint/promotion/post_claim_brave/post_claim_brave.h"
+#include "bat/ledger/internal/endpoint/promotion/post_claim_gemini/post_claim_gemini.h"
 #include "bat/ledger/internal/endpoint/promotion/post_claim_uphold/post_claim_uphold.h"
 #include "bat/ledger/internal/endpoint/promotion/post_clobbered_claims/post_clobbered_claims.h"
 #include "bat/ledger/internal/endpoint/promotion/post_creds/post_creds.h"
@@ -53,6 +57,10 @@ class PromotionServer {
 
   promotion::GetRecoverWallet* get_recover_wallet() const;
 
+  promotion::PostClaimBitflyer* post_claim_bitflyer() const;
+
+  promotion::PostClaimGemini* post_claim_gemini() const;
+
   promotion::PostClaimUphold* post_claim_uphold() const;
 
   promotion::GetWalletBalance* get_wallet_balance() const;
@@ -77,7 +85,12 @@ class PromotionServer {
 
   promotion::PostClaimBrave* post_claim_brave() const;
 
+  promotion::GetDrain* get_drain() const;
+
+  promotion::DeleteClaim* delete_claim() const;
+
  private:
+  std::unique_ptr<promotion::DeleteClaim> delete_claim_;
   std::unique_ptr<promotion::GetAvailable> get_available_;
   std::unique_ptr<promotion::PostCreds> post_creds_;
   std::unique_ptr<promotion::GetSignedCreds> get_signed_creds_;
@@ -85,6 +98,8 @@ class PromotionServer {
   std::unique_ptr<promotion::PostBatLoss> post_bat_loss_;
   std::unique_ptr<promotion::PostWalletBrave> post_wallet_brave_;
   std::unique_ptr<promotion::GetRecoverWallet> get_recover_wallet_;
+  std::unique_ptr<promotion::PostClaimBitflyer> post_claim_bitflyer_;
+  std::unique_ptr<promotion::PostClaimGemini> post_claim_gemini_;
   std::unique_ptr<promotion::PostClaimUphold> post_claim_uphold_;
   std::unique_ptr<promotion::GetWalletBalance> get_wallet_balance_;
   std::unique_ptr<promotion::PostCaptcha> post_captcha_;
@@ -97,9 +112,10 @@ class PromotionServer {
   std::unique_ptr<promotion::PostSuggestions> post_suggestions_;
   std::unique_ptr<promotion::PostSuggestionsClaim> post_suggestions_claim_;
   std::unique_ptr<promotion::PostClaimBrave> post_claim_brave_;
+  std::unique_ptr<promotion::GetDrain> get_drain_;
 };
 
 }  // namespace endpoint
 }  // namespace ledger
 
-#endif  // BRAVELEDGER_ENDPOINT_PROMOTION_PROMOTION_SERVER_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_ENDPOINT_PROMOTION_PROMOTION_SERVER_H_

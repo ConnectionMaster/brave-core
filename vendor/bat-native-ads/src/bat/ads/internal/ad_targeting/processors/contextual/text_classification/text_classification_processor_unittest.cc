@@ -14,10 +14,6 @@
 namespace ads {
 namespace ad_targeting {
 
-namespace {
-const char kEnLanguageCode[] = "emgmepnebbddgnkhfmhdhmjifkglkamo";
-}  // namespace
-
 class BatAdsTextClassificationProcessorTest : public UnitTestBase {
  protected:
   BatAdsTextClassificationProcessorTest() = default;
@@ -26,7 +22,7 @@ class BatAdsTextClassificationProcessorTest : public UnitTestBase {
 };
 
 TEST_F(BatAdsTextClassificationProcessorTest,
-    DoNotProcessIfResourceIsNotInitialized) {
+       DoNotProcessIfResourceIsNotInitialized) {
   // Arrange
   resource::TextClassification resource;
 
@@ -42,29 +38,10 @@ TEST_F(BatAdsTextClassificationProcessorTest,
   EXPECT_TRUE(list.empty());
 }
 
-TEST_F(BatAdsTextClassificationProcessorTest,
-    DoNotProcessForUntargetedLocale) {
+TEST_F(BatAdsTextClassificationProcessorTest, DoNotProcessForEmptyText) {
   // Arrange
   resource::TextClassification resource;
-  resource.LoadForLocale("ja-JP");
-
-  // Act
-  const std::string text = "一部のコンテンツ";
-  processor::TextClassification processor(&resource);
-  processor.Process(text);
-
-  // Assert
-  const TextClassificationProbabilitiesList list =
-      Client::Get()->GetTextClassificationProbabilitiesHistory();
-
-  EXPECT_TRUE(list.empty());
-}
-
-TEST_F(BatAdsTextClassificationProcessorTest,
-    DoNotProcessForEmptyText) {
-  // Arrange
-  resource::TextClassification resource;
-  resource.LoadForLocale("en-US");
+  resource.Load();
 
   // Act
   const std::string text = "";
@@ -78,11 +55,10 @@ TEST_F(BatAdsTextClassificationProcessorTest,
   EXPECT_TRUE(list.empty());
 }
 
-TEST_F(BatAdsTextClassificationProcessorTest,
-    NeverProcessed) {
+TEST_F(BatAdsTextClassificationProcessorTest, NeverProcessed) {
   // Arrange
   resource::TextClassification resource;
-  resource.LoadForLocale("en-US");
+  resource.Load();
 
   // Act
   model::TextClassification model;
@@ -95,11 +71,10 @@ TEST_F(BatAdsTextClassificationProcessorTest,
   EXPECT_TRUE(list.empty());
 }
 
-TEST_F(BatAdsTextClassificationProcessorTest,
-    ProcessText) {
+TEST_F(BatAdsTextClassificationProcessorTest, ProcessText) {
   // Arrange
   resource::TextClassification resource;
-  resource.LoadForLocale("en-US");
+  resource.Load();
 
   // Act
   const std::string text = "Some content about technology & computing";
@@ -113,11 +88,10 @@ TEST_F(BatAdsTextClassificationProcessorTest,
   EXPECT_EQ(1UL, list.size());
 }
 
-TEST_F(BatAdsTextClassificationProcessorTest,
-    ProcessMultipleText) {
+TEST_F(BatAdsTextClassificationProcessorTest, ProcessMultipleText) {
   // Arrange
   resource::TextClassification resource;
-  resource.LoadForId(kEnLanguageCode);
+  resource.Load();
 
   // Act
   processor::TextClassification processor(&resource);

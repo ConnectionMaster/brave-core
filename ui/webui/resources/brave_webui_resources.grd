@@ -18,6 +18,9 @@
       <if expr="not is_android and not is_ios">
         <part file="br_elements_resources_v3.grdp" />
       </if>
+      <if expr="not is_android">
+        <include name="IDR_ETHEREUM_REMOTE_CLIENT_HTML" file="../../../browser/ui/webui/ethereum_remote_client/ethereum_remote_client_page.html" type="BINDATA" />
+      </if>
     </includes>
 
     <structures>
@@ -27,8 +30,8 @@
       </if>
       <structure name="IDR_BRAVE_WEBUI_CSS_MD_COLORS"
              file="css/md_colors.css" type="chrome_html" compress="gzip" />
-      <structure name="IDR_BRAVE_WEBUI_CSS_TEXT_DEFAULTS"
-             file="css/text_defaults.css" type="chrome_html" compress="gzip" />
+      <structure name="IDR_BRAVE_WEBUI_CSS_TEXT_DEFAULTS_MD"
+             file="css/text_defaults_md.css" type="chrome_html" compress="gzip" />
       <structure name="IDR_BRAVE_WEBUI_CSS_RESET"
              file="css/reset.css" type="chrome_html" compress="gzip" />
       <structure name="IDR_BRAVE_WEBUI_POLYMER_OVERRIDING_JS"

@@ -4,7 +4,7 @@
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import * as React from 'react'
-import styled from 'brave-ui/theme'
+import styled from 'styled-components'
 import { getLocale } from '../../../../../common/locale'
 import { OnSetPublisherPref } from '../'
 
@@ -66,6 +66,7 @@ const Text = styled('span')`
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: ${p => p.theme.fontFamily.heading};
 `
 
 const Menu = styled('ul')`
@@ -111,7 +112,7 @@ export default function PublisherMetaComponent (props: Props) {
 
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
 
-  const triggerElementRef = React.useRef<HTMLElement>(null)
+  const triggerElementRef = React.useRef<HTMLButtonElement>(null)
 
   const onClickCloseMenu = React.useCallback((e: MouseEvent) => {
     const triggerElement = triggerElementRef.current
@@ -177,7 +178,7 @@ export default function PublisherMetaComponent (props: Props) {
       <Trigger
         className={isMenuOpen ? isOpenClassName : undefined}
         onClick={toggleMenu}
-        innerRef={triggerElementRef}
+        ref={triggerElementRef}
         aria-haspopup='true'
         aria-expanded={isMenuOpen ? 'true' : 'false'}
       >

@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "base/values.h"
-#include "brave/vendor/adblock_rust_ffi/src/wrapper.hpp"
+#include "brave/components/adblock_rust_ffi/src/wrapper.h"
 
 namespace brave_shields {
 
@@ -24,6 +24,9 @@ std::vector<adblock::FilterList>::const_iterator FindAdBlockFilterListByLocale(
 
 std::vector<adblock::FilterList> RegionalCatalogFromJSON(
     const std::string& catalog_json);
+
+void MergeCspDirectiveInto(absl::optional<std::string> from,
+                           absl::optional<std::string>* into);
 
 void MergeResourcesInto(base::Value from, base::Value* into, bool force_hide);
 

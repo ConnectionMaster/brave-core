@@ -5,11 +5,12 @@
 
 import {RegisterPolymerTemplateModifications} from 'chrome://brave-resources/polymer_overriding.js'
 import {I18nBehavior} from 'chrome://resources/js/i18n_behavior.m.js'
-import {Router} from '../router.m.js'
+import {Router} from '../router.js'
 import {loadTimeData} from '../i18n_setup.js'
 
 import '../brave_appearance_page/super_referral.js'
 import '../brave_appearance_page/brave_theme.js'
+import '../brave_appearance_page/sidebar.js'
 import '../brave_appearance_page/toolbar.js'
 
 const superReferralStringId = 'superReferralThemeName'
@@ -50,6 +51,9 @@ RegisterPolymerTemplateModifications({
     if (!bookmarkBarToggle) {
       console.error(`[Brave Settings Overrides] Couldn't find bookmark bar toggle`)
     } else {
+      bookmarkBarToggle.insertAdjacentHTML('beforebegin', `
+        <settings-brave-appearance-sidebar prefs="{{prefs}}"></settings-brave-appearance-sidebar>
+      `)
       bookmarkBarToggle.insertAdjacentHTML('afterend', `
         <settings-brave-appearance-toolbar prefs="{{prefs}}"></settings-brave-appearance-toolbar>
       `)
@@ -65,6 +69,18 @@ RegisterPolymerTemplateModifications({
           label="${I18nBehavior.i18n('mruCyclingSettingLabel')}">
         </settings-toggle-button>
       `)
+      const isSpeedreaderEnabled = loadTimeData.getBoolean('isSpeedreaderFeatureEnabled')
+      if (isSpeedreaderEnabled) {
+        zoomLevel.parentNode.insertAdjacentHTML('afterend', `
+          <settings-toggle-button
+            class="hr"
+            pref="{{prefs.brave.speedreader.enabled}}"
+            label="${I18nBehavior.i18n('speedreaderSettingLabel')}"
+            sub-label="${I18nBehavior.i18n('speedreaderSettingSubLabel')}"
+            learn-more-url="${I18nBehavior.i18n('speedreaderLearnMoreURL')}">
+          </settings-toggle-button>
+      `)
+      }
     }
     // Super referral themes prefs
     const pages = templateContent.getElementById('pages')

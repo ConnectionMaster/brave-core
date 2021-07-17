@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_STATEMENT_INFO_
-#define BAT_ADS_STATEMENT_INFO_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_INCLUDE_BAT_ADS_STATEMENT_INFO_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_INCLUDE_BAT_ADS_STATEMENT_INFO_H_
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <string>
 
 #include "base/values.h"
@@ -18,31 +17,23 @@ namespace ads {
 
 struct ADS_EXPORT StatementInfo {
   StatementInfo();
-  StatementInfo(
-      const StatementInfo& info);
+  StatementInfo(const StatementInfo& info);
   ~StatementInfo();
 
-  bool operator==(
-      const StatementInfo& rhs) const;
-  bool operator!=(
-      const StatementInfo& rhs) const;
+  bool operator==(const StatementInfo& rhs) const;
+  bool operator!=(const StatementInfo& rhs) const;
 
   std::string ToJson() const;
-  bool FromJson(
-      const std::string& json);
+  bool FromJson(const std::string& json);
 
-  double estimated_pending_rewards = 0.0;
-  uint64_t next_payment_date = 0;
-  uint64_t ads_received_this_month = 0;
+  int64_t next_payment_date = 0;
+  int ads_received_this_month = 0;
   double earnings_this_month = 0.0;
   double earnings_last_month = 0.0;
-  TransactionList transactions;
+  TransactionList cleared_transactions;
   TransactionList uncleared_transactions;
 
  private:
-  double GetEstimatedPendingRewardsFromDictionary(
-      base::DictionaryValue* dictionary) const;
-
   uint64_t GetNextPaymentDateFromDictionary(
       base::DictionaryValue* dictionary) const;
 
@@ -51,14 +42,12 @@ struct ADS_EXPORT StatementInfo {
 
   double GetEarningsThisMonthFromDictionary(
       base::DictionaryValue* dictionary) const;
-
   double GetEarningsLastMonthFromDictionary(
       base::DictionaryValue* dictionary) const;
 
-  base::Value GetTransactionsAsList() const;
-  TransactionList GetTransactionsFromDictionary(
+  base::Value GetClearedTransactionsAsList() const;
+  TransactionList GetClearedTransactionsFromDictionary(
       base::DictionaryValue* dictionary) const;
-
   base::Value GetUnclearedTransactionsAsList() const;
   TransactionList GetUnclearedTransactionsFromDictionary(
       base::DictionaryValue* dictionary) const;
@@ -66,4 +55,4 @@ struct ADS_EXPORT StatementInfo {
 
 }  // namespace ads
 
-#endif  // BAT_ADS_TRANSACTIONS_INFO_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_INCLUDE_BAT_ADS_STATEMENT_INFO_H_

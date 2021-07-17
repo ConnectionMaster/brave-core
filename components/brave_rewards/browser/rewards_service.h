@@ -39,17 +39,17 @@ class RewardsServiceObserver;
 class RewardsServicePrivateObserver;
 
 using GetPublisherInfoListCallback =
-    base::Callback<void(ledger::type::PublisherInfoList list)>;
-using GetAutoContributionAmountCallback = base::Callback<void(double)>;
-using GetAutoContributePropertiesCallback = base::Callback<void(
-    ledger::type::AutoContributePropertiesPtr)>;
-using GetPublisherMinVisitTimeCallback = base::Callback<void(int)>;
-using GetPublisherMinVisitsCallback = base::Callback<void(int)>;
-using GetPublisherAllowNonVerifiedCallback = base::Callback<void(bool)>;
-using GetPublisherAllowVideosCallback = base::Callback<void(bool)>;
+    base::OnceCallback<void(ledger::type::PublisherInfoList list)>;
+using GetAutoContributionAmountCallback = base::OnceCallback<void(double)>;
+using GetAutoContributePropertiesCallback =
+    base::OnceCallback<void(ledger::type::AutoContributePropertiesPtr)>;
+using GetPublisherMinVisitTimeCallback = base::OnceCallback<void(int)>;
+using GetPublisherMinVisitsCallback = base::OnceCallback<void(int)>;
+using GetPublisherAllowNonVerifiedCallback = base::OnceCallback<void(bool)>;
+using GetPublisherAllowVideosCallback = base::OnceCallback<void(bool)>;
 using GetAutoContributeEnabledCallback = base::OnceCallback<void(bool)>;
-using GetReconcileStampCallback = base::Callback<void(uint64_t)>;
-using GetPendingContributionsTotalCallback = base::Callback<void(double)>;
+using GetReconcileStampCallback = base::OnceCallback<void(uint64_t)>;
+using GetPendingContributionsTotalCallback = base::OnceCallback<void(double)>;
 using GetRewardsInternalsInfoCallback =
     base::OnceCallback<void(ledger::type::RewardsInternalsInfoPtr info)>;
 using SaveRecurringTipCallback = base::OnceCallback<void(bool)>;
@@ -78,9 +78,9 @@ using GetCurrentCountryCallback = base::OnceCallback<void(const std::string&)>;
 using FetchBalanceCallback = base::OnceCallback<void(
     const ledger::type::Result,
     ledger::type::BalancePtr)>;
-using GetUpholdWalletCallback = base::OnceCallback<void(
-    const ledger::type::Result result,
-    ledger::type::UpholdWalletPtr wallet)>;
+using GetExternalWalletCallback =
+    base::OnceCallback<void(const ledger::type::Result result,
+                            ledger::type::ExternalWalletPtr wallet)>;
 using ProcessRewardsPageUrlCallback = base::OnceCallback<void(
     const ledger::type::Result result,
     const std::string&,
@@ -130,15 +130,8 @@ using GetEventLogsCallback =
 using GetBraveWalletCallback =
     base::OnceCallback<void(ledger::type::BraveWalletPtr wallet)>;
 
-using StartProcessCallback =
-    base::OnceCallback<void(ledger::type::Result result)>;
-
-using GetWalletPassphraseCallback = base::Callback<void(const std::string&)>;
-
-enum class OnboardingResult {
-  kOptedIn,
-  kDismissed
-};
+using GetWalletPassphraseCallback =
+    base::OnceCallback<void(const std::string&)>;
 
 class RewardsService : public KeyedService {
  public:
@@ -149,13 +142,11 @@ class RewardsService : public KeyedService {
 
   virtual void CreateWallet(CreateWalletCallback callback) = 0;
   virtual void GetRewardsParameters(GetRewardsParametersCallback callback) = 0;
-  virtual void GetActivityInfoList(
-      const uint32_t start,
-      const uint32_t limit,
-      ledger::type::ActivityInfoFilterPtr filter,
-      const GetPublisherInfoListCallback& callback) = 0;
-  virtual void GetExcludedList(
-      const GetPublisherInfoListCallback& callback) = 0;
+  virtual void GetActivityInfoList(const uint32_t start,
+                                   const uint32_t limit,
+                                   ledger::type::ActivityInfoFilterPtr filter,
+                                   GetPublisherInfoListCallback callback) = 0;
+  virtual void GetExcludedList(GetPublisherInfoListCallback callback) = 0;
   virtual void FetchPromotions() = 0;
   // Used by desktop
   virtual void ClaimPromotion(
@@ -187,26 +178,30 @@ class RewardsService : public KeyedService {
                           const GURL& referrer,
                           const std::string& post_data) = 0;
 
-  virtual void GetReconcileStamp(
-      const GetReconcileStampCallback& callback) = 0;
+  virtual void GetReconcileStamp(GetReconcileStampCallback callback) = 0;
   virtual void GetPublisherMinVisitTime(
-      const GetPublisherMinVisitTimeCallback& callback) = 0;
+      GetPublisherMinVisitTimeCallback callback) = 0;
   virtual void SetPublisherMinVisitTime(int duration_in_seconds) const = 0;
   virtual void GetPublisherMinVisits(
-      const GetPublisherMinVisitsCallback& callback) = 0;
+      GetPublisherMinVisitsCallback callback) = 0;
   virtual void SetPublisherMinVisits(int visits) const = 0;
   virtual void GetPublisherAllowNonVerified(
-      const GetPublisherAllowNonVerifiedCallback& callback) = 0;
+      GetPublisherAllowNonVerifiedCallback callback) = 0;
   virtual void SetPublisherAllowNonVerified(bool allow) const = 0;
   virtual void GetPublisherAllowVideos(
-      const GetPublisherAllowVideosCallback& callback) = 0;
+      GetPublisherAllowVideosCallback callback) = 0;
   virtual void SetPublisherAllowVideos(bool allow) const = 0;
   virtual void SetAutoContributionAmount(double amount) const = 0;
   virtual void GetAutoContributeEnabled(
       GetAutoContributeEnabledCallback callback) = 0;
   virtual void SetAutoContributeEnabled(bool enabled) = 0;
   virtual bool ShouldShowOnboarding() const = 0;
-  virtual void SaveOnboardingResult(OnboardingResult result) = 0;
+
+  // Enables Rewards for the current profile. Enabling Rewards for the first
+  // time will turn on both Ads and auto-contribute. Subsequent calls will only
+  // turn on Ads.
+  virtual void EnableRewards() = 0;
+
   virtual void GetBalanceReport(
       const uint32_t month,
       const uint32_t year,
@@ -217,7 +212,7 @@ class RewardsService : public KeyedService {
       const std::string& favicon_url,
       const std::string& publisher_blob) = 0;
   virtual void GetAutoContributionAmount(
-      const GetAutoContributionAmountCallback& callback) = 0;
+      GetAutoContributionAmountCallback callback) = 0;
   virtual void GetPublisherBanner(const std::string& publisher_id,
                                   GetPublisherBannerCallback callback) = 0;
   virtual void OnTip(
@@ -241,9 +236,9 @@ class RewardsService : public KeyedService {
   virtual RewardsNotificationService* GetNotificationService() const = 0;
   virtual void SetBackupCompleted() = 0;
   virtual void GetAutoContributeProperties(
-    const GetAutoContributePropertiesCallback& callback) = 0;
+      GetAutoContributePropertiesCallback callback) = 0;
   virtual void GetPendingContributionsTotal(
-    const GetPendingContributionsTotalCallback& callback) = 0;
+      GetPendingContributionsTotalCallback callback) = 0;
   virtual void GetRewardsInternalsInfo(
       GetRewardsInternalsInfoCallback callback) = 0;
   virtual void AddPrivateObserver(
@@ -313,16 +308,16 @@ class RewardsService : public KeyedService {
 
   virtual void FetchBalance(FetchBalanceCallback callback) = 0;
 
-  virtual void GetUpholdWallet(GetUpholdWalletCallback callback) = 0;
+  virtual void GetExternalWallet(GetExternalWalletCallback callback) = 0;
+
+  virtual const std::vector<std::string> GetExternalWalletProviders() const = 0;
 
   virtual void ProcessRewardsPageUrl(
       const std::string& path,
       const std::string& query,
       ProcessRewardsPageUrlCallback callback) = 0;
 
-  virtual void DisconnectWallet(const std::string& wallet_type) = 0;
-
-  virtual bool OnlyAnonWallet() = 0;
+  virtual void DisconnectWallet() = 0;
 
   virtual void GetAnonWalletStatus(GetAnonWalletStatusCallback callback) = 0;
 
@@ -340,11 +335,10 @@ class RewardsService : public KeyedService {
   virtual void GetAllPromotions(
       GetAllPromotionsCallback callback) = 0;
 
-  virtual void DiagnosticLog(
-      const std::string& file,
-      const int line,
-      const int verbose_level,
-      const std::string& message) = 0;
+  virtual void WriteDiagnosticLog(const std::string& file,
+                                  const int line,
+                                  const int verbose_level,
+                                  const std::string& message) = 0;
 
   virtual void LoadDiagnosticLog(
       const int num_lines,
@@ -365,11 +359,15 @@ class RewardsService : public KeyedService {
 
   virtual void GetBraveWallet(GetBraveWalletCallback callback) = 0;
 
-  virtual void StartProcess(StartProcessCallback callback) = 0;
+  virtual void StartProcess(base::OnceClosure callback) = 0;
 
   virtual void GetWalletPassphrase(GetWalletPassphraseCallback callback) = 0;
 
   virtual void SetAdsEnabled(const bool is_enabled) = 0;
+
+  virtual bool IsRewardsEnabled() const = 0;
+
+  virtual void SetExternalWalletType(const std::string& wallet_type) = 0;
 
  protected:
   base::ObserverList<RewardsServiceObserver> observers_;

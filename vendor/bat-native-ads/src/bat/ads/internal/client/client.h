@@ -3,10 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_CLIENT_CLIENT_H_
-#define BAT_ADS_INTERNAL_CLIENT_CLIENT_H_
-
-#include <stdint.h>
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_CLIENT_CLIENT_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_CLIENT_CLIENT_H_
 
 #include <deque>
 #include <map>
@@ -30,6 +28,7 @@ namespace ads {
 
 struct AdContentInfo;
 struct AdHistoryInfo;
+struct AdInfo;
 struct CategoryContentInfo;
 
 class Client {
@@ -42,15 +41,13 @@ class Client {
 
   static bool HasInstance();
 
-  void Initialize(
-      InitializeCallback callback);
+  void Initialize(InitializeCallback callback);
 
   FilteredAdList get_filtered_ads() const;
   FilteredCategoryList get_filtered_categories() const;
   FlaggedAdList get_flagged_ads() const;
 
-  void AppendAdHistoryToAdsHistory(
-      const AdHistoryInfo& ad_history);
+  void AppendAdHistoryToAdsHistory(const AdHistoryInfo& ad_history);
   const std::deque<AdHistoryInfo>& GetAdsHistory() const;
   void AppendToPurchaseIntentSignalHistoryForSegment(
       const std::string& segment,
@@ -71,39 +68,33 @@ class Client {
   CategoryContentInfo::OptAction ToggleAdOptOutAction(
       const std::string& category,
       const CategoryContentInfo::OptAction action);
-  bool ToggleSaveAd(
-      const std::string& creative_instance_id,
-      const std::string& creative_set_id,
-      const bool saved);
-  bool ToggleFlagAd(
-      const std::string& creative_instance_id,
-      const std::string& creative_set_id,
-      const bool flagged);
+  bool ToggleSaveAd(const std::string& creative_instance_id,
+                    const std::string& creative_set_id,
+                    const bool saved);
+  bool ToggleFlagAd(const std::string& creative_instance_id,
+                    const std::string& creative_set_id,
+                    const bool flagged);
 
-  void UpdateSeenAdNotification(
-      const std::string& creative_instance_id);
-  const std::map<std::string, uint64_t>& GetSeenAdNotifications();
-  void ResetSeenAdNotifications(
-      const CreativeAdNotificationList& ads);
+  void UpdateSeenAd(const AdInfo& ad);
+  const std::map<std::string, bool>& GetSeenAdsForType(const AdType& type);
+  void ResetSeenAdsForType(const CreativeAdList& ads, const AdType& type);
+  void ResetAllSeenAdsForType(const AdType& type);
+  const std::map<std::string, bool>& GetSeenAdvertisersForType(
+      const AdType& type);
+  void ResetSeenAdvertisersForType(const CreativeAdList& ads,
+                                   const AdType& type);
+  void ResetAllSeenAdvertisersForType(const AdType& type);
 
-  void UpdateSeenAdvertiser(
-      const std::string& advertiser_id);
-  const std::map<std::string, uint64_t>& GetSeenAdvertisers();
-  void ResetSeenAdvertisers(
-      const CreativeAdNotificationList& ads);
-
-  void SetNextAdServingInterval(
-      const base::Time& next_check_serve_ad_date);
+  void SetNextAdServingInterval(const base::Time& next_check_serve_ad_date);
   base::Time GetNextAdServingInterval();
 
   void AppendTextClassificationProbabilitiesToHistory(
       const TextClassificationProbabilitiesMap& probabilities);
   const TextClassificationProbabilitiesList&
-      GetTextClassificationProbabilitiesHistory();
+  GetTextClassificationProbabilitiesHistory();
 
   std::string GetVersionCode() const;
-  void SetVersionCode(
-      const std::string& value);
+  void SetVersionCode(const std::string& value);
 
   void RemoveAllHistory();
 
@@ -125,4 +116,4 @@ class Client {
 
 }  // namespace ads
 
-#endif  // BAT_ADS_INTERNAL_CLIENT_CLIENT_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_CLIENT_CLIENT_H_

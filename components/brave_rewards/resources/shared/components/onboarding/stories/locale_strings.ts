@@ -1,7 +1,4 @@
 export const localeStrings = {
-  bat: 'BAT',
-  bap: 'BAP',
-
   onboardingBraveRewards: 'Brave Rewards',
   onboardingDetailLinks: '$1Take a quick tour$2 or $3learn more$4 for details.',
   onboardingEarnHeader: 'Earn Tokens & Give Back',
@@ -30,7 +27,7 @@ export const localeStrings = {
   onboardingPanelWelcomeText: 'Brave Private Ads reward you with tokens to support content creators unlike traditional ads, all while keeping your personal information private.',
   onboardingPanelAdsHeader: 'Where do ads show up?',
   onboardingPanelAdsText: 'Brave Private Ads will appear as a normal notification. You control how often you see these ads in settings.',
-  onboardingPanelScheduleHeader: 'When do you receive rewards',
+  onboardingPanelScheduleHeader: 'When do you receive rewards?',
   onboardingPanelScheduleText: 'Your earned tokens from Brave Private Ads throughout the current month will arrive on the 5th of the next month.',
   onboardingPanelAcHeader: 'Giving back made effortless',
   onboardingPanelAcText: 'Creators receive your token contributions automatically based on your engagement levels that we measure as ‘Attention’.',
@@ -41,5 +38,12 @@ export const localeStrings = {
   onboardingPanelSetupHeader: 'Lastly, let’s get you set up on the basic settings',
   onboardingPanelSetupText: 'You can change this later.',
   onboardingPanelCompleteHeader: 'Woohoo, you’re all set!',
-  onboardingPanelCompleteText: 'By using Brave Rewards you are helping make the web a better place for everyone. And that’s awesome!'
+  onboardingPanelCompleteText: 'By using Brave Rewards you are helping make the web a better place for everyone. And that’s awesome!',
+  onboardingPanelVerifyHeader: 'Verify your wallet',
+  onboardingPanelVerifySubtext: 'In order to withdraw the tokens you earn for viewing ads, you’ll need to verify your wallet.',
+  onboardingPanelVerifyLater: 'Do it later',
+  onboardingPanelVerifyNow: 'Verify my wallet',
+  onboardingPanelBitflyerNote: 'The bitFlyer wallet is a service managed by bitFlyer, Inc.',
+  onboardingPanelBitflyerText: 'By verifying your wallet and linking it to a bitFlyer account, you will be able to store and manage the tokens you have earned through Brave Rewards more easily',
+  onboardingPanelBitflyerLearnMore: '$1Learn more$2 about how to link your Brave browser with your bitFlyer account.'
 }

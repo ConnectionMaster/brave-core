@@ -5,8 +5,8 @@
 
 #include "bat/ads/new_tab_page_ad_info.h"
 
-#include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/json_helper.h"
+#include "bat/ads/internal/logging.h"
 
 namespace ads {
 
@@ -14,8 +14,7 @@ struct ConfirmationType;
 
 NewTabPageAdInfo::NewTabPageAdInfo() = default;
 
-NewTabPageAdInfo::NewTabPageAdInfo(
-    const NewTabPageAdInfo& info) = default;
+NewTabPageAdInfo::NewTabPageAdInfo(const NewTabPageAdInfo& info) = default;
 
 NewTabPageAdInfo::~NewTabPageAdInfo() = default;
 
@@ -24,8 +23,7 @@ bool NewTabPageAdInfo::IsValid() const {
     return false;
   }
 
-  if (company_name.empty() ||
-      alt.empty()) {
+  if (company_name.empty() || alt.empty()) {
     return false;
   }
 
@@ -38,8 +36,7 @@ std::string NewTabPageAdInfo::ToJson() const {
   return json;
 }
 
-Result NewTabPageAdInfo::FromJson(
-    const std::string& json) {
+Result NewTabPageAdInfo::FromJson(const std::string& json) {
   rapidjson::Document document;
   document.Parse(json.c_str());
 
@@ -68,6 +65,10 @@ Result NewTabPageAdInfo::FromJson(
     campaign_id = document["campaign_id"].GetString();
   }
 
+  if (document.HasMember("advertiser_id")) {
+    advertiser_id = document["advertiser_id"].GetString();
+  }
+
   if (document.HasMember("segment")) {
     segment = document["segment"].GetString();
   }
@@ -87,9 +88,7 @@ Result NewTabPageAdInfo::FromJson(
   return SUCCESS;
 }
 
-void SaveToJson(
-    JsonWriter* writer,
-    const NewTabPageAdInfo& info) {
+void SaveToJson(JsonWriter* writer, const NewTabPageAdInfo& info) {
   writer->StartObject();
 
   writer->String("type");
@@ -107,6 +106,9 @@ void SaveToJson(
 
   writer->String("campaign_id");
   writer->String(info.campaign_id.c_str());
+
+  writer->String("advertiser_id");
+  writer->String(info.advertiser_id.c_str());
 
   writer->String("segment");
   writer->String(info.segment.c_str());

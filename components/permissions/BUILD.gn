@@ -1,0 +1,19 @@
+source_set("unit_tests") {
+  testonly = true
+
+  sources = [ "permission_expirations_unittest.cc" ]
+
+  deps = [
+    "//base",
+    "//base/test:test_support",
+    "//components/content_settings/browser",
+    "//components/content_settings/browser:test_support",
+    "//components/content_settings/core/browser",
+    "//components/permissions",
+    "//components/pref_registry",
+    "//components/prefs",
+    "//components/sync_preferences:test_support",
+    "//testing/gtest",
+    "//url",
+  ]
+}

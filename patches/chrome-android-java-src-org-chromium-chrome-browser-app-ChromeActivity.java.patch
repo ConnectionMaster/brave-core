@@ -1,13 +1,13 @@
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/app/ChromeActivity.java b/chrome/android/java/src/org/chromium/chrome/browser/app/ChromeActivity.java
-index a97bb23faaac78dbc96a0882841f8abc4544da42..02afc7f8052b75c3c6a88104a6b6493d7d496065 100644
+index 80d596a0b35b7aaa2ec74bf6d75f9202a1257e7f..1dc2ca2148daf1f7989c1d12ac16466cb55d601e 100644
 --- a/chrome/android/java/src/org/chromium/chrome/browser/app/ChromeActivity.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/app/ChromeActivity.java
-@@ -330,7 +330,7 @@ public abstract class ChromeActivity<C extends ChromeActivityComponent>
-     NightModeReparentingController mNightModeReparentingController;
+@@ -365,7 +365,7 @@ public abstract class ChromeActivity<C extends ChromeActivityComponent>
+             new ArrayList<>();
  
      protected ChromeActivity() {
 -        mIntentHandler = new IntentHandler(this, createIntentHandlerDelegate());
 +        mIntentHandler = new org.chromium.chrome.browser.BraveIntentHandler(this, createIntentHandlerDelegate());
+         mManualFillingComponentSupplier.set(ManualFillingComponentFactory.createComponent());
      }
  
-     @Override

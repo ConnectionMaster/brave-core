@@ -1,16 +1,16 @@
 diff --git a/chrome/browser/ui/BUILD.gn b/chrome/browser/ui/BUILD.gn
-index 91bb3832b7efdc317875db18ec4b8a8965458ba6..9a2c00f9886b0a9bbce8fc8ca93394a4c63f77f0 100644
+index 71810d671161b2ec457575e020f7357cb5af828f..9cf88f17ccd04ef9d0f98e1f882d38c9c44538f8 100644
 --- a/chrome/browser/ui/BUILD.gn
 +++ b/chrome/browser/ui/BUILD.gn
-@@ -580,6 +580,7 @@ static_library("ui") {
+@@ -601,6 +601,7 @@ static_library("ui") {
      "//ui/webui/resources/cr_components/customize_themes:mojom",
      "//v8:v8_version",
    ]
 +  deps+= [ "//brave/browser/ui" ]
-   allow_circular_includes_from +=
-       [ "//chrome/browser/ui/webui/bluetooth_internals" ]
  
-@@ -3214,10 +3215,13 @@ static_library("ui") {
+   # TODO(crbug/925153): Remove this circular dependency.
+   allow_circular_includes_from = [
+@@ -3406,10 +3407,13 @@ static_library("ui") {
        ]
        deps += [ "//google_update" ]
      } else {

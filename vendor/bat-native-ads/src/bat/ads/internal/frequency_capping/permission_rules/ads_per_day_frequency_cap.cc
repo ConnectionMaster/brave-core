@@ -5,26 +5,22 @@
 
 #include "bat/ads/internal/frequency_capping/permission_rules/ads_per_day_frequency_cap.h"
 
-#include <deque>
-
 #include "base/time/time.h"
-#include "bat/ads/internal/ads_client_helper.h"
+#include "bat/ads/internal/ad_events/ad_events.h"
+#include "bat/ads/internal/features/ad_serving/ad_serving_features.h"
 #include "bat/ads/internal/frequency_capping/frequency_capping_util.h"
-#include "bat/ads/internal/logging.h"
-#include "bat/ads/pref_names.h"
 
 namespace ads {
 
-AdsPerDayFrequencyCap::AdsPerDayFrequencyCap(
-    const AdEventList& ad_events)
-    : ad_events_(ad_events) {
-}
+AdsPerDayFrequencyCap::AdsPerDayFrequencyCap() = default;
 
 AdsPerDayFrequencyCap::~AdsPerDayFrequencyCap() = default;
 
 bool AdsPerDayFrequencyCap::ShouldAllow() {
-  const AdEventList filtered_ad_events = FilterAdEvents(ad_events_);
-  if (!DoesRespectCap(filtered_ad_events)) {
+  const std::deque<uint64_t> history =
+      GetAdEvents(AdType::kAdNotification, ConfirmationType::kServed);
+
+  if (!DoesRespectCap(history)) {
     last_message_ = "You have exceeded the allowed ads per day";
     return false;
   }
@@ -37,30 +33,14 @@ std::string AdsPerDayFrequencyCap::get_last_message() const {
 }
 
 bool AdsPerDayFrequencyCap::DoesRespectCap(
-    const AdEventList& ad_events) {
-  const std::deque<uint64_t> history =
-      GetTimestampHistoryForAdEvents(ad_events);
+    const std::deque<uint64_t>& history) {
+  const uint64_t time_constraint =
+      base::Time::kSecondsPerHour * base::Time::kHoursPerDay;
 
-  const uint64_t time_constraint = base::Time::kSecondsPerHour *
-      base::Time::kHoursPerDay;
+  const uint64_t cap = features::GetMaximumAdNotificationsPerDay();
 
-  return DoesHistoryRespectCapForRollingTimeConstraint(
-      history, time_constraint, kAdNotificationsPerDayFrequencyCap);
-}
-
-AdEventList AdsPerDayFrequencyCap::FilterAdEvents(
-    const AdEventList& ad_events) const {
-  AdEventList filtered_ad_events = ad_events;
-
-  const auto iter = std::remove_if(filtered_ad_events.begin(),
-      filtered_ad_events.end(), [](const AdEventInfo& ad_event) {
-    return ad_event.type != AdType::kAdNotification ||
-        ad_event.confirmation_type != ConfirmationType::kViewed;
-  });
-
-  filtered_ad_events.erase(iter, filtered_ad_events.end());
-
-  return filtered_ad_events;
+  return DoesHistoryRespectCapForRollingTimeConstraint(history, time_constraint,
+                                                       cap);
 }
 
 }  // namespace ads

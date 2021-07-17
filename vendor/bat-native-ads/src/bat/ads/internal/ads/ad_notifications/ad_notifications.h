@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_ADS_AD_NOTIFICATIONS_AD_NOTIFICATIONS_H_
-#define BAT_ADS_INTERNAL_ADS_AD_NOTIFICATIONS_AD_NOTIFICATIONS_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_ADS_AD_NOTIFICATIONS_AD_NOTIFICATIONS_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_ADS_AD_NOTIFICATIONS_AD_NOTIFICATIONS_H_
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <deque>
 #include <string>
 
@@ -28,26 +27,19 @@ class AdNotifications {
 
   static bool HasInstance();
 
-  void Initialize(
-      InitializeCallback callback);
+  void Initialize(InitializeCallback callback);
 
-  bool Get(
-      const std::string& uuid,
-      AdNotificationInfo* ad_notification) const;
+  bool Get(const std::string& uuid, AdNotificationInfo* ad_notification) const;
 
-  void PushBack(
-      const AdNotificationInfo& info);
-  void PopFront(
-      const bool should_dismiss);
+  void PushBack(const AdNotificationInfo& info);
+  void PopFront(const bool should_dismiss);
 
-  bool Remove(
-      const std::string& uuid,
-      const bool should_dismiss);
-  void RemoveAll(
-      const bool should_dismiss);
+  bool Remove(const std::string& uuid);
+  void RemoveAll();
 
-  bool Exists(
-      const std::string& uuid) const;
+  void CloseAndRemoveAll();
+
+  bool Exists(const std::string& uuid) const;
 
   uint64_t Count() const;
 
@@ -66,56 +58,42 @@ class AdNotifications {
   std::deque<AdNotificationInfo> GetNotificationsFromList(
       base::ListValue* list) const;
 
-  bool GetNotificationFromDictionary(
-      base::DictionaryValue* dictionary,
-      AdNotificationInfo* ad_notification) const;
+  bool GetNotificationFromDictionary(base::DictionaryValue* dictionary,
+                                     AdNotificationInfo* ad_notification) const;
 
-  bool GetUuidFromDictionary(
-      base::DictionaryValue* dictionary,
-      std::string* value) const;
-  bool GetCreativeInstanceIdFromDictionary(
-      base::DictionaryValue* dictionary,
-      std::string* value) const;
-  bool GetCreativeSetIdFromDictionary(
-      base::DictionaryValue* dictionary,
-      std::string* value) const;
-  bool GetCampaignIdFromDictionary(
-      base::DictionaryValue* dictionary,
-      std::string* value) const;
-  bool GetSegmentFromDictionary(
-      base::DictionaryValue* dictionary,
-      std::string* value) const;
-  bool GetTitleFromDictionary(
-      base::DictionaryValue* dictionary,
-      std::string* value) const;
-  bool GetBodyFromDictionary(
-      base::DictionaryValue* dictionary,
-      std::string* value) const;
-  bool GetTargetUrlFromDictionary(
-      base::DictionaryValue* dictionary,
-      std::string* value) const;
-  bool GetGeoTargetFromDictionary(
-      base::DictionaryValue* dictionary,
-      std::string* value) const;
+  bool GetUuidFromDictionary(base::DictionaryValue* dictionary,
+                             std::string* value) const;
+  bool GetCreativeInstanceIdFromDictionary(base::DictionaryValue* dictionary,
+                                           std::string* value) const;
+  bool GetCreativeSetIdFromDictionary(base::DictionaryValue* dictionary,
+                                      std::string* value) const;
+  bool GetCampaignIdFromDictionary(base::DictionaryValue* dictionary,
+                                   std::string* value) const;
+  bool GetAdvertiserIdFromDictionary(base::DictionaryValue* dictionary,
+                                     std::string* value) const;
+  bool GetSegmentFromDictionary(base::DictionaryValue* dictionary,
+                                std::string* value) const;
+  bool GetTitleFromDictionary(base::DictionaryValue* dictionary,
+                              std::string* value) const;
+  bool GetBodyFromDictionary(base::DictionaryValue* dictionary,
+                             std::string* value) const;
+  bool GetTargetUrlFromDictionary(base::DictionaryValue* dictionary,
+                                  std::string* value) const;
+  bool GetGeoTargetFromDictionary(base::DictionaryValue* dictionary,
+                                  std::string* value) const;
 
-  bool GetStringFromDictionary(
-    const std::string& key,
-    base::DictionaryValue* dictionary,
-    std::string* string) const;
+  bool GetStringFromDictionary(const std::string& key,
+                               base::DictionaryValue* dictionary,
+                               std::string* string) const;
 
   void Save();
-  void OnSaved(
-      const Result result);
+  void OnSaved(const Result result);
 
   void Load();
-  void OnLoaded(
-      const Result result,
-      const std::string& json);
+  void OnLoaded(const Result result, const std::string& json);
 
-  bool FromJson(
-      const std::string& json);
-  bool GetNotificationsFromDictionary(
-      base::DictionaryValue* dictionary);
+  bool FromJson(const std::string& json);
+  bool GetNotificationsFromDictionary(base::DictionaryValue* dictionary);
 
   std::string ToJson();
   base::Value GetAsList();
@@ -123,4 +101,4 @@ class AdNotifications {
 
 }  // namespace ads
 
-#endif  // BAT_ADS_INTERNAL_ADS_AD_NOTIFICATIONS_AD_NOTIFICATIONS_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_ADS_AD_NOTIFICATIONS_AD_NOTIFICATIONS_H_

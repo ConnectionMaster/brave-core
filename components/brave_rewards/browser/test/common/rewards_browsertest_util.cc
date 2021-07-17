@@ -8,6 +8,7 @@
 #include "base/files/file_util.h"
 #include "base/path_service.h"
 #include "base/run_loop.h"
+#include "base/strings/stringprintf.h"
 #include "base/test/bind.h"
 #include "bat/ledger/mojom_structs.h"
 #include "brave/common/brave_paths.h"
@@ -44,16 +45,9 @@ GURL GetNewTabUrl() {
 void StartProcess(brave_rewards::RewardsServiceImpl* rewards_service) {
   DCHECK(rewards_service);
   base::RunLoop run_loop;
-  bool success = false;
   rewards_service->StartProcess(
-      base::BindLambdaForTesting([&](const ledger::type::Result result) {
-        success = result == ledger::type::Result::LEDGER_OK;
-        run_loop.Quit();
-      }));
-
+      base::BindLambdaForTesting([&]() { run_loop.Quit(); }));
   run_loop.Run();
-
-  ASSERT_TRUE(success);
 }
 
 GURL GetUrl(
@@ -81,6 +75,10 @@ std::string BalanceDoubleToString(double amount) {
 
 std::string GetUpholdExternalAddress() {
   return "abe5f454-fedd-4ea9-9203-470ae7315bb3";
+}
+
+std::string GetGeminiExternalAddress() {
+  return "00471311-fc4d-463b-9317-579e82b0a6b8";
 }
 
 void NavigateToPublisherPage(
@@ -122,8 +120,7 @@ void CreateWallet(brave_rewards::RewardsServiceImpl* rewards_service) {
 
 void SetOnboardingBypassed(Browser* browser, bool bypassed) {
   DCHECK(browser);
-  // Rewards onboarding will be skipped if the legacy "enabled" pref
-  // is set to true.
+  // Rewards onboarding will be skipped if the rewards enabled flag is set
   PrefService* prefs = browser->profile()->GetPrefs();
   prefs->SetBoolean(brave_rewards::prefs::kEnabled, bypassed);
 }

@@ -5,6 +5,7 @@
 
 #include "bat/ads/internal/ad_server/ad_server.h"
 
+#include <cstdint>
 #include <functional>
 #include <string>
 #include <utility>
@@ -17,6 +18,7 @@
 #include "bat/ads/internal/bundle/bundle.h"
 #include "bat/ads/internal/catalog/catalog.h"
 #include "bat/ads/internal/catalog/catalog_issuers_info.h"
+#include "bat/ads/internal/catalog/catalog_version.h"
 #include "bat/ads/internal/logging.h"
 #include "bat/ads/internal/server/ads_server_util.h"
 #include "bat/ads/internal/time_formatting_util.h"
@@ -36,14 +38,12 @@ AdServer::AdServer() = default;
 
 AdServer::~AdServer() = default;
 
-void AdServer::AddObserver(
-    AdServerObserver* observer) {
+void AdServer::AddObserver(AdServerObserver* observer) {
   DCHECK(observer);
   observers_.AddObserver(observer);
 }
 
-void AdServer::RemoveObserver(
-    AdServerObserver* observer) {
+void AdServer::RemoveObserver(AdServerObserver* observer) {
   DCHECK(observer);
   observers_.RemoveObserver(observer);
 }
@@ -62,7 +62,7 @@ void AdServer::Fetch() {
   DCHECK(!is_processing_);
 
   BLOG(1, "Get catalog");
-  BLOG(2, "GET /v6/catalog");
+  BLOG(2, "GET /v" << kCurrentCatalogVersion << "/catalog");
 
   is_processing_ = true;
 
@@ -75,8 +75,7 @@ void AdServer::Fetch() {
   AdsClientHelper::Get()->UrlRequest(std::move(url_request), callback);
 }
 
-void AdServer::OnFetch(
-    const UrlResponse& url_response) {
+void AdServer::OnFetch(const UrlResponse& url_response) {
   BLOG(7, UrlResponseToString(url_response));
   BLOG(7, UrlResponseHeadersToString(url_response));
 
@@ -111,8 +110,7 @@ void AdServer::OnFetch(
   Retry();
 }
 
-void AdServer::SaveCatalog(
-    const Catalog& catalog) {
+void AdServer::SaveCatalog(const Catalog& catalog) {
   const std::string last_catalog_id =
       AdsClientHelper::Get()->GetStringPref(prefs::kCatalogId);
 
@@ -126,8 +124,8 @@ void AdServer::SaveCatalog(
   AdsClientHelper::Get()->SetStringPref(prefs::kCatalogId, catalog_id);
 
   const int catalog_version = catalog.GetVersion();
-  AdsClientHelper::Get()->SetIntegerPref(
-      prefs::kCatalogVersion, catalog_version);
+  AdsClientHelper::Get()->SetIntegerPref(prefs::kCatalogVersion,
+                                         catalog_version);
 
   const int64_t catalog_ping = catalog.GetPing();
   AdsClientHelper::Get()->SetInt64Pref(prefs::kCatalogPing, catalog_ping);
@@ -135,7 +133,7 @@ void AdServer::SaveCatalog(
   const int64_t catalog_last_updated =
       static_cast<int64_t>(base::Time::Now().ToDoubleT());
   AdsClientHelper::Get()->SetInt64Pref(prefs::kCatalogLastUpdated,
-      catalog_last_updated);
+                                       catalog_last_updated);
 
   Bundle bundle;
   bundle.BuildFromCatalog(catalog);
@@ -144,7 +142,7 @@ void AdServer::SaveCatalog(
 void AdServer::Retry() {
   const base::Time time = retry_timer_.StartWithPrivacy(
       base::TimeDelta::FromSeconds(kRetryAfterSeconds),
-          base::BindOnce(&AdServer::OnRetry, base::Unretained(this)));
+      base::BindOnce(&AdServer::OnRetry, base::Unretained(this)));
 
   BLOG(1, "Retry fetching catalog " << FriendlyDateAndTime(time));
 }
@@ -158,25 +156,25 @@ void AdServer::OnRetry() {
 void AdServer::FetchAfterDelay() {
   retry_timer_.Stop();
 
-  const int64_t ping = g_is_debug ? kDebugCatalogPing :
-      AdsClientHelper::Get()->GetInt64Pref(prefs::kCatalogPing);
+  const int64_t ping =
+      g_is_debug ? kDebugCatalogPing
+                 : AdsClientHelper::Get()->GetInt64Pref(prefs::kCatalogPing);
 
   const base::TimeDelta delay = base::TimeDelta::FromSeconds(ping);
 
-  const base::Time time = timer_.StartWithPrivacy(delay,
-      base::BindOnce(&AdServer::Fetch, base::Unretained(this)));
+  const base::Time time = timer_.StartWithPrivacy(
+      delay, base::BindOnce(&AdServer::Fetch, base::Unretained(this)));
 
   BLOG(1, "Fetch catalog " << FriendlyDateAndTime(time));
 }
 
-void AdServer::NotifyCatalogUpdated(
-    const Catalog& catalog) {
+void AdServer::NotifyCatalogUpdated(const Catalog& catalog) const {
   for (AdServerObserver& observer : observers_) {
     observer.OnCatalogUpdated(catalog);
   }
 }
 
-void AdServer::NotifyCatalogFailed() {
+void AdServer::NotifyCatalogFailed() const {
   for (AdServerObserver& observer : observers_) {
     observer.OnCatalogFailed();
   }

@@ -16,29 +16,25 @@ AdNotification::AdNotification() = default;
 
 AdNotification::~AdNotification() = default;
 
-void AdNotification::AddObserver(
-    AdNotificationObserver* observer) {
+void AdNotification::AddObserver(AdNotificationObserver* observer) {
   DCHECK(observer);
   observers_.AddObserver(observer);
 }
 
-void AdNotification::RemoveObserver(
-    AdNotificationObserver* observer) {
+void AdNotification::RemoveObserver(AdNotificationObserver* observer) {
   DCHECK(observer);
   observers_.RemoveObserver(observer);
 }
 
-void AdNotification::FireEvent(
-    const std::string& uuid,
-    const AdNotificationEventType event_type) {
+void AdNotification::FireEvent(const std::string& uuid,
+                               const AdNotificationEventType event_type) {
   DCHECK(!uuid.empty());
 
   AdNotificationInfo ad;
   if (!AdNotifications::Get()->Get(uuid, &ad)) {
-    BLOG(1, "Failed to fire ad notification event for uuid " << uuid);
-
+    BLOG(1,
+         "Failed to fire ad notification event due to missing uuid " << uuid);
     NotifyAdNotificationEventFailed(uuid, event_type);
-
     return;
   }
 
@@ -52,8 +48,13 @@ void AdNotification::FireEvent(
 
 void AdNotification::NotifyAdNotificationEvent(
     const AdNotificationInfo& ad,
-    const AdNotificationEventType event_type) {
+    const AdNotificationEventType event_type) const {
   switch (event_type) {
+    case AdNotificationEventType::kServed: {
+      NotifyAdNotificationServed(ad);
+      break;
+    }
+
     case AdNotificationEventType::kViewed: {
       NotifyAdNotificationViewed(ad);
       break;
@@ -76,29 +77,36 @@ void AdNotification::NotifyAdNotificationEvent(
   }
 }
 
+void AdNotification::NotifyAdNotificationServed(
+    const AdNotificationInfo& ad) const {
+  for (AdNotificationObserver& observer : observers_) {
+    observer.OnAdNotificationServed(ad);
+  }
+}
+
 void AdNotification::NotifyAdNotificationViewed(
-    const AdNotificationInfo& ad) {
+    const AdNotificationInfo& ad) const {
   for (AdNotificationObserver& observer : observers_) {
     observer.OnAdNotificationViewed(ad);
   }
 }
 
 void AdNotification::NotifyAdNotificationClicked(
-    const AdNotificationInfo& ad) {
+    const AdNotificationInfo& ad) const {
   for (AdNotificationObserver& observer : observers_) {
     observer.OnAdNotificationClicked(ad);
   }
 }
 
 void AdNotification::NotifyAdNotificationDismissed(
-    const AdNotificationInfo& ad) {
+    const AdNotificationInfo& ad) const {
   for (AdNotificationObserver& observer : observers_) {
     observer.OnAdNotificationDismissed(ad);
   }
 }
 
 void AdNotification::NotifyAdNotificationTimedOut(
-    const AdNotificationInfo& ad) {
+    const AdNotificationInfo& ad) const {
   for (AdNotificationObserver& observer : observers_) {
     observer.OnAdNotificationTimedOut(ad);
   }
@@ -106,7 +114,7 @@ void AdNotification::NotifyAdNotificationTimedOut(
 
 void AdNotification::NotifyAdNotificationEventFailed(
     const std::string& uuid,
-    const AdNotificationEventType event_type) {
+    const AdNotificationEventType event_type) const {
   for (AdNotificationObserver& observer : observers_) {
     observer.OnAdNotificationEventFailed(uuid, event_type);
   }

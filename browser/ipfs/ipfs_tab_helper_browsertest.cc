@@ -1,185 +1,332 @@
-/* Copyright (c) 2020 The Brave Authors. All rights reserved.
+/* Copyright (c) 2019 The Brave Authors. All rights reserved.
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/path_service.h"
-#include "base/scoped_observer.h"
 #include "brave/browser/ipfs/ipfs_tab_helper.h"
-#include "brave/common/brave_paths.h"
-#include "brave/components/ipfs/features.h"
-#include "brave/components/ipfs/ipfs_constants.h"
-#include "brave/components/ipfs/ipfs_gateway.h"
+
+#include "brave/browser/ipfs/ipfs_host_resolver.h"
 #include "brave/components/ipfs/pref_names.h"
-#include "chrome/browser/infobars/infobar_service.h"
-#include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
-#include "components/infobars/core/confirm_infobar_delegate.h"
-#include "components/infobars/core/infobar.h"
-#include "components/infobars/core/infobar_manager.h"
 #include "components/prefs/pref_service.h"
+#include "components/user_prefs/user_prefs.h"
+#include "content/public/browser/browser_context.h"
+#include "content/public/browser/navigation_handle.h"
+#include "content/public/browser/storage_partition.h"
+#include "content/public/browser/web_contents.h"
 #include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "net/dns/mock_host_resolver.h"
+#include "net/test/embedded_test_server/controllable_http_response.h"
+#include "net/test/embedded_test_server/embedded_test_server.h"
 #include "net/test/embedded_test_server/http_request.h"
 #include "net/test/embedded_test_server/http_response.h"
 
-namespace {
+using content::NavigationHandle;
+using content::WebContents;
 
-std::unique_ptr<net::test_server::HttpResponse> HandleRequest(
-    const net::test_server::HttpRequest& request) {
-  std::unique_ptr<net::test_server::BasicHttpResponse> http_response(
-      new net::test_server::BasicHttpResponse());
-  http_response->set_code(net::HTTP_OK);
-  http_response->set_content_type("text/html");
-  http_response->set_content("test");
-  http_response->AddCustomHeader(
-      "x-ipfs-path", "/ipfs/QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR");
-  return std::move(http_response);
-}
-
-}  // namespace
-
-class IPFSTabHelperTest : public InProcessBrowserTest,
-                          public infobars::InfoBarManager::Observer {
+class IpfsTabHelperBrowserTest : public InProcessBrowserTest {
  public:
-  IPFSTabHelperTest() : infobar_observer_(this), infobar_added_(false) {
-    feature_list_.InitAndEnableFeature(ipfs::features::kIpfsFeature);
-  }
-
-  void WaitForInfobarAdded() {
-    if (infobar_added_) {
-      return;
-    }
-    infobar_added_run_loop_ = std::make_unique<base::RunLoop>();
-    infobar_added_run_loop_->Run();
-  }
-
-  void WaitForTabCount(int expected) {
-    while (browser()->tab_strip_model()->count() != expected)
-      base::RunLoop().RunUntilIdle();
-  }
-
+  IpfsTabHelperBrowserTest()
+      : https_server_(net::EmbeddedTestServer::TYPE_HTTPS) {}
   void SetUpOnMainThread() override {
     InProcessBrowserTest::SetUpOnMainThread();
     host_resolver()->AddRule("*", "127.0.0.1");
-    brave::RegisterPathProvider();
-    base::FilePath test_data_dir;
-    base::PathService::Get(brave::DIR_TEST_DATA, &test_data_dir);
-    embedded_test_server()->RegisterRequestHandler(
-        base::BindRepeating(&HandleRequest));
+
+    embedded_test_server()->ServeFilesFromSourceDirectory("content/test/data");
+    https_server_.ServeFilesFromSourceDirectory("content/test/data");
+    embedded_test_server()->RegisterRequestHandler(base::BindRepeating(
+        &IpfsTabHelperBrowserTest::ResponseHandler, base::Unretained(this)));
+
+    https_server_.RegisterRequestHandler(base::BindRepeating(
+        &IpfsTabHelperBrowserTest::ResponseHandler, base::Unretained(this)));
+    ASSERT_TRUE(https_server_.Start());
     ASSERT_TRUE(embedded_test_server()->Start());
-    ipfs::SetIPFSDefaultGatewayForTest(
-        embedded_test_server()->GetURL("cloudflare-ipfs.com", "/"));
-  }
-
-  ~IPFSTabHelperTest() override {}
-
-  void AddInfoBarObserver(InfoBarService* infobar_service) {
-    infobar_observer_.Add(infobar_service);
-  }
-
-  void RemoveInfoBarObserver(InfoBarService* infobar_service) {
-    infobar_observer_.Remove(infobar_service);
   }
 
   content::WebContents* active_contents() {
     return browser()->tab_strip_model()->GetActiveWebContents();
   }
 
-  void InfoBarAccept(int expected_buttons) {
-    InfoBarService* infobar_service =
-        InfoBarService::FromWebContents(active_contents());
-    for (size_t i = 0; i < infobar_service->infobar_count(); i++) {
-      infobars::InfoBarDelegate* delegate =
-          infobar_service->infobar_at(i)->delegate();
-      if (delegate->GetIdentifier() ==
-          infobars::InfoBarDelegate::IPFS_INFOBAR_DELEGATE) {
-        ConfirmInfoBarDelegate* confirm_delegate =
-            delegate->AsConfirmInfoBarDelegate();
-        ASSERT_EQ(confirm_delegate->GetButtons(), expected_buttons);
-        confirm_delegate->Accept();
-      }
-    }
+  GURL ReplaceScheme(const GURL& current, const std::string& new_scheme) {
+    GURL::Replacements replacements;
+    replacements.SetSchemeStr(new_scheme);
+    return current.ReplaceComponents(replacements);
   }
 
-  void InfoBarCancel(int expected_buttons) {
-    InfoBarService* infobar_service =
-        InfoBarService::FromWebContents(active_contents());
-    for (size_t i = 0; i < infobar_service->infobar_count(); i++) {
-      infobars::InfoBarDelegate* delegate =
-          infobar_service->infobar_at(i)->delegate();
-      if (delegate->GetIdentifier() ==
-          infobars::InfoBarDelegate::IPFS_INFOBAR_DELEGATE) {
-        ConfirmInfoBarDelegate* confirm_delegate =
-            delegate->AsConfirmInfoBarDelegate();
-        ASSERT_EQ(confirm_delegate->GetButtons(), expected_buttons);
-        confirm_delegate->Cancel();
-      }
-    }
+  std::unique_ptr<net::test_server::HttpResponse> ResponseHandler(
+      const net::test_server::HttpRequest& request) {
+    std::unique_ptr<net::test_server::BasicHttpResponse> http_response(
+        new net::test_server::BasicHttpResponse);
+
+    http_response->set_code(code_);
+    if (code_ == net::HTTP_OK)
+      http_response->AddCustomHeader("x-ipfs-path", x_ipfs_path_);
+    return std::move(http_response);
   }
 
-  bool NavigateToURLUntilLoadStop(const std::string& origin,
-                                  const std::string& path) {
-    ui_test_utils::NavigateToURL(browser(),
-                                 embedded_test_server()->GetURL(origin, path));
-    return WaitForLoadStop(active_contents());
-  }
+  void SetXIpfsPathHeader(const std::string& value) { x_ipfs_path_ = value; }
 
- private:
-  ScopedObserver<infobars::InfoBarManager, infobars::InfoBarManager::Observer>
-      infobar_observer_;
-  bool infobar_added_;
-  std::unique_ptr<base::RunLoop> infobar_added_run_loop_;
-  base::test::ScopedFeatureList feature_list_;
+  void SetHttpStatusCode(net::HttpStatusCode code) { code_ = code; }
 
-  // infobars::InfoBarManager::Observer:
-  void OnInfoBarAdded(infobars::InfoBar* infobar) override {
-    if (infobar->delegate()->GetIdentifier() ==
-        infobars::InfoBarDelegate::IPFS_INFOBAR_DELEGATE) {
-      infobar_added_ = true;
-      if (infobar_added_run_loop_) {
-        infobar_added_run_loop_->Quit();
-      }
-    }
-  }
+  net::HttpStatusCode code_ = net::HTTP_OK;
+  std::string x_ipfs_path_;
+  net::EmbeddedTestServer https_server_;
 };
 
-IN_PROC_BROWSER_TEST_F(IPFSTabHelperTest, InfobarAddWithAccept) {
-  InfoBarService* infobar_service =
-      InfoBarService::FromWebContents(active_contents());
-  AddInfoBarObserver(infobar_service);
-  EXPECT_TRUE(NavigateToURLUntilLoadStop(
-      "cloudflare-ipfs.com",
-      "/ipfs/QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR"));
+class FakeIPFSHostResolver : public ipfs::IPFSHostResolver {
+ public:
+  explicit FakeIPFSHostResolver(network::mojom::NetworkContext* context)
+      : ipfs::IPFSHostResolver(context) {}
+  ~FakeIPFSHostResolver() override {}
+  void Resolve(const net::HostPortPair& host,
+               const net::NetworkIsolationKey& isolation_key,
+               net::DnsQueryType dns_query_type,
+               HostTextResultsCallback callback) override {
+    resolve_called_++;
+    if (callback)
+      std::move(callback).Run(host.host(), dnslink_);
+  }
 
-  WaitForInfobarAdded();
-  InfoBarAccept(ConfirmInfoBarDelegate::BUTTON_OK |
-                ConfirmInfoBarDelegate::BUTTON_CANCEL);
-  // Pref for Wallet should still be ask by default
-  auto method = static_cast<ipfs::IPFSResolveMethodTypes>(
-      browser()->profile()->GetPrefs()->GetInteger(kIPFSResolveMethod));
-  ASSERT_EQ(method, ipfs::IPFSResolveMethodTypes::IPFS_LOCAL);
-  RemoveInfoBarObserver(infobar_service);
+  bool resolve_called() const { return resolve_called_ == 1; }
+
+  void SetDNSLinkToResopnd(const std::string& dnslink) { dnslink_ = dnslink; }
+
+ private:
+  int resolve_called_ = 0;
+  std::string dnslink_;
+};
+
+IN_PROC_BROWSER_TEST_F(IpfsTabHelperBrowserTest, ResolvedIPFSLinkLocal) {
+  ASSERT_TRUE(
+      ipfs::IPFSTabHelper::MaybeCreateForWebContents(active_contents()));
+  ipfs::IPFSTabHelper* helper =
+      ipfs::IPFSTabHelper::FromWebContents(active_contents());
+  if (!helper)
+    return;
+  auto* storage_partition =
+      active_contents()->GetBrowserContext()->GetDefaultStoragePartition();
+  std::unique_ptr<FakeIPFSHostResolver> resolver(
+      new FakeIPFSHostResolver(storage_partition->GetNetworkContext()));
+  FakeIPFSHostResolver* resolver_raw = resolver.get();
+  helper->SetResolverForTesting(std::move(resolver));
+  auto* prefs =
+      user_prefs::UserPrefs::Get(active_contents()->GetBrowserContext());
+  prefs->SetInteger(kIPFSResolveMethod,
+                    static_cast<int>(ipfs::IPFSResolveMethodTypes::IPFS_LOCAL));
+
+  SetXIpfsPathHeader("/ipfs/bafybeiemx/empty.html");
+  GURL test_url = https_server_.GetURL("/empty.html?query#ref");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  std::string result = "ipfs://bafybeiemx/empty.html?query#ref";
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), result);
+
+  test_url = https_server_.GetURL("/another.html?query#ref");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  result = "ipfs://bafybeiemx/another.html?query#ref";
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), result);
+
+  SetXIpfsPathHeader("/ipns/brave.eth/empty.html");
+  test_url = https_server_.GetURL("/?query#ref");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  result = "ipns://brave.eth/?query#ref";
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), result);
+
+  SetXIpfsPathHeader("/ipfs/bafy");
+  test_url = embedded_test_server()->GetURL(
+      "a.com", "/ipfs/bafy/wiki/empty.html?query#ref");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  result = "ipfs://bafy/wiki/empty.html?query#ref";
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), result);
+
+  SetXIpfsPathHeader("/ipns/bafyb");
+  test_url = embedded_test_server()->GetURL(
+      "a.com", "/ipns/bafyb/wiki/empty.html?query#ref");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  result = "ipns://bafyb/wiki/empty.html?query#ref";
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), result);
 }
 
-IN_PROC_BROWSER_TEST_F(IPFSTabHelperTest, InfobarAddWithSettings) {
-  InfoBarService* infobar_service =
-      InfoBarService::FromWebContents(active_contents());
-  AddInfoBarObserver(infobar_service);
-  EXPECT_TRUE(NavigateToURLUntilLoadStop(
-      "cloudflare-ipfs.com",
-      "/ipfs/QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR"));
+IN_PROC_BROWSER_TEST_F(IpfsTabHelperBrowserTest, ResolvedIPFSLinkGateway) {
+  ASSERT_TRUE(
+      ipfs::IPFSTabHelper::MaybeCreateForWebContents(active_contents()));
+  ipfs::IPFSTabHelper* helper =
+      ipfs::IPFSTabHelper::FromWebContents(active_contents());
+  if (!helper)
+    return;
+  auto* storage_partition =
+      active_contents()->GetBrowserContext()->GetDefaultStoragePartition();
+  std::unique_ptr<FakeIPFSHostResolver> resolver(
+      new FakeIPFSHostResolver(storage_partition->GetNetworkContext()));
+  FakeIPFSHostResolver* resolver_raw = resolver.get();
+  helper->SetResolverForTesting(std::move(resolver));
+  auto* prefs =
+      user_prefs::UserPrefs::Get(active_contents()->GetBrowserContext());
+  prefs->SetInteger(
+      kIPFSResolveMethod,
+      static_cast<int>(ipfs::IPFSResolveMethodTypes::IPFS_GATEWAY));
+  SetXIpfsPathHeader("/ipfs/bafybeiemx/empty.html");
+  const GURL test_url = https_server_.GetURL("/empty.html");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  GURL ipns = ReplaceScheme(test_url, ipfs::kIPNSScheme);
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(),
+            "ipfs://bafybeiemx/empty.html");
+}
 
-  WaitForInfobarAdded();
-  InfoBarCancel(ConfirmInfoBarDelegate::BUTTON_OK |
-                ConfirmInfoBarDelegate::BUTTON_CANCEL);
-  // Pref for Wallet should still be ask by default
-  auto method = static_cast<ipfs::IPFSResolveMethodTypes>(
-      browser()->profile()->GetPrefs()->GetInteger(kIPFSResolveMethod));
-  ASSERT_EQ(method, ipfs::IPFSResolveMethodTypes::IPFS_ASK);
-  WaitForTabCount(2);
-  RemoveInfoBarObserver(infobar_service);
+IN_PROC_BROWSER_TEST_F(IpfsTabHelperBrowserTest, NoResolveIPFSLinkCalledMode) {
+  ASSERT_TRUE(
+      ipfs::IPFSTabHelper::MaybeCreateForWebContents(active_contents()));
+  ipfs::IPFSTabHelper* helper =
+      ipfs::IPFSTabHelper::FromWebContents(active_contents());
+  if (!helper)
+    return;
+  auto* storage_partition =
+      active_contents()->GetBrowserContext()->GetDefaultStoragePartition();
+  std::unique_ptr<FakeIPFSHostResolver> resolver(
+      new FakeIPFSHostResolver(storage_partition->GetNetworkContext()));
+  FakeIPFSHostResolver* resolver_raw = resolver.get();
+  helper->SetResolverForTesting(std::move(resolver));
+  auto* prefs =
+      user_prefs::UserPrefs::Get(active_contents()->GetBrowserContext());
+  prefs->SetInteger(kIPFSResolveMethod,
+                    static_cast<int>(ipfs::IPFSResolveMethodTypes::IPFS_ASK));
+  SetXIpfsPathHeader("/ipfs/bafybeiemx/empty.html");
+  GURL test_url = https_server_.GetURL("/empty.html");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), std::string());
+
+  prefs->SetInteger(
+      kIPFSResolveMethod,
+      static_cast<int>(ipfs::IPFSResolveMethodTypes::IPFS_DISABLED));
+
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), std::string());
+}
+
+IN_PROC_BROWSER_TEST_F(IpfsTabHelperBrowserTest,
+                       NoResolveIPFSLinkCalledHeader) {
+  ASSERT_TRUE(
+      ipfs::IPFSTabHelper::MaybeCreateForWebContents(active_contents()));
+  ipfs::IPFSTabHelper* helper =
+      ipfs::IPFSTabHelper::FromWebContents(active_contents());
+  if (!helper)
+    return;
+  auto* storage_partition =
+      active_contents()->GetBrowserContext()->GetDefaultStoragePartition();
+  std::unique_ptr<FakeIPFSHostResolver> resolver(
+      new FakeIPFSHostResolver(storage_partition->GetNetworkContext()));
+  FakeIPFSHostResolver* resolver_raw = resolver.get();
+  helper->SetResolverForTesting(std::move(resolver));
+  auto* prefs =
+      user_prefs::UserPrefs::Get(active_contents()->GetBrowserContext());
+  prefs->SetInteger(kIPFSResolveMethod,
+                    static_cast<int>(ipfs::IPFSResolveMethodTypes::IPFS_LOCAL));
+
+  GURL test_url = embedded_test_server()->GetURL("/empty.html");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), std::string());
+}
+
+IN_PROC_BROWSER_TEST_F(IpfsTabHelperBrowserTest, ResolveIPFSLinkCalled5xx) {
+  ASSERT_TRUE(
+      ipfs::IPFSTabHelper::MaybeCreateForWebContents(active_contents()));
+  ipfs::IPFSTabHelper* helper =
+      ipfs::IPFSTabHelper::FromWebContents(active_contents());
+  if (!helper)
+    return;
+  auto* storage_partition =
+      active_contents()->GetBrowserContext()->GetDefaultStoragePartition();
+  std::unique_ptr<FakeIPFSHostResolver> resolver(
+      new FakeIPFSHostResolver(storage_partition->GetNetworkContext()));
+  FakeIPFSHostResolver* resolver_raw = resolver.get();
+  resolver_raw->SetDNSLinkToResopnd("/ipfs/QmXoypiz");
+  helper->SetResolverForTesting(std::move(resolver));
+  auto* prefs =
+      user_prefs::UserPrefs::Get(active_contents()->GetBrowserContext());
+  prefs->SetInteger(
+      kIPFSResolveMethod,
+      static_cast<int>(ipfs::IPFSResolveMethodTypes::IPFS_GATEWAY));
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), std::string());
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  SetHttpStatusCode(net::HTTP_INTERNAL_SERVER_ERROR);
+  const GURL test_url = https_server_.GetURL("/5xx.html?query#fragment");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_FALSE(WaitForLoadStop(active_contents()));
+  ASSERT_TRUE(resolver_raw->resolve_called());
+  GURL ipns = ReplaceScheme(test_url, ipfs::kIPNSScheme);
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), ipns);
+}
+
+IN_PROC_BROWSER_TEST_F(IpfsTabHelperBrowserTest, ResolveNotCalled5xx) {
+  ASSERT_TRUE(
+      ipfs::IPFSTabHelper::MaybeCreateForWebContents(active_contents()));
+  ipfs::IPFSTabHelper* helper =
+      ipfs::IPFSTabHelper::FromWebContents(active_contents());
+  if (!helper)
+    return;
+  auto* storage_partition =
+      active_contents()->GetBrowserContext()->GetDefaultStoragePartition();
+  std::unique_ptr<FakeIPFSHostResolver> resolver(
+      new FakeIPFSHostResolver(storage_partition->GetNetworkContext()));
+  FakeIPFSHostResolver* resolver_raw = resolver.get();
+  SetHttpStatusCode(net::HTTP_INTERNAL_SERVER_ERROR);
+  helper->SetResolverForTesting(std::move(resolver));
+  auto* prefs =
+      user_prefs::UserPrefs::Get(active_contents()->GetBrowserContext());
+  prefs->SetInteger(kIPFSResolveMethod,
+                    static_cast<int>(ipfs::IPFSResolveMethodTypes::IPFS_ASK));
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), std::string());
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  const GURL test_url = https_server_.GetURL("/5xx.html");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_FALSE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), std::string());
+}
+
+IN_PROC_BROWSER_TEST_F(IpfsTabHelperBrowserTest, ResolvedIPFSLinkBad) {
+  ASSERT_TRUE(
+      ipfs::IPFSTabHelper::MaybeCreateForWebContents(active_contents()));
+  ipfs::IPFSTabHelper* helper =
+      ipfs::IPFSTabHelper::FromWebContents(active_contents());
+  if (!helper)
+    return;
+  auto* storage_partition =
+      active_contents()->GetBrowserContext()->GetDefaultStoragePartition();
+  std::unique_ptr<FakeIPFSHostResolver> resolver(
+      new FakeIPFSHostResolver(storage_partition->GetNetworkContext()));
+  FakeIPFSHostResolver* resolver_raw = resolver.get();
+  helper->SetResolverForTesting(std::move(resolver));
+  auto* prefs =
+      user_prefs::UserPrefs::Get(active_contents()->GetBrowserContext());
+  prefs->SetInteger(kIPFSResolveMethod,
+                    static_cast<int>(ipfs::IPFSResolveMethodTypes::IPFS_LOCAL));
+
+  SetXIpfsPathHeader("/http/bafybeiemx/empty.html");
+  const GURL test_url = https_server_.GetURL("/empty.html");
+  ui_test_utils::NavigateToURL(browser(), test_url);
+  ASSERT_TRUE(WaitForLoadStop(active_contents()));
+  ASSERT_FALSE(resolver_raw->resolve_called());
+  std::string result = "";
+  EXPECT_EQ(helper->GetIPFSResolvedURL().spec(), result);
 }

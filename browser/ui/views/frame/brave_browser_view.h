@@ -10,7 +10,24 @@
 #include <string>
 
 #include "brave/browser/ui/tabs/brave_tab_strip_model.h"
+#include "brave/components/sidebar/buildflags/buildflags.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
+
+#if BUILDFLAG(ENABLE_SIDEBAR)
+class ContentsLayoutManager;
+class SidebarContainerView;
+#endif
+
+namespace speedreader {
+class SpeedreaderBubbleView;
+class SpeedreaderTabHelper;
+}  // namespace speedreader
+
+namespace content {
+class WebContents;
+}  // namespace content
+
+class WalletButton;
 
 class BraveBrowserView : public BrowserView {
  public:
@@ -26,8 +43,17 @@ class BraveBrowserView : public BrowserView {
       const std::string& target_language,
       translate::TranslateErrors::Type error_type,
       bool is_user_gesture) override;
-
+  speedreader::SpeedreaderBubbleView* ShowSpeedreaderBubble(
+      speedreader::SpeedreaderTabHelper* tab_helper,
+      bool is_enabled) override;
+  void CreateWalletBubble();
+  void CloseWalletBubble();
+  WalletButton* GetWalletButton();
   void StartTabCycling() override;
+
+#if BUILDFLAG(ENABLE_SIDEBAR)
+  views::View* sidebar_host_view() { return sidebar_host_view_; }
+#endif
 
  private:
   class TabCyclingEventHandler;
@@ -39,6 +65,20 @@ class BraveBrowserView : public BrowserView {
       const TabStripSelectionChange& selection) override;
 
   void StopTabCycling();
+
+#if BUILDFLAG(ENABLE_SIDEBAR)
+  sidebar::Sidebar* InitSidebar() override;
+  ContentsLayoutManager* GetContentsLayoutManager() const override;
+
+  // If sidebar is enabled, |BrowserView::contents_container_| points to
+  // |brave_contents_container_| that includes sidebar and contents container.
+  // |original_contents_container_| points to original contents container that
+  // includes contents & devtools webview. It's used by
+  // GetContentsLayoutManager().
+  views::View* original_contents_container_ = nullptr;
+  SidebarContainerView* sidebar_container_view_ = nullptr;
+  views::View* sidebar_host_view_ = nullptr;
+#endif
 
   std::unique_ptr<TabCyclingEventHandler> tab_cycling_event_handler_;
 

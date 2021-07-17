@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <string>
+
 #include "brave/browser/ui/views/translate/brave_translate_bubble_view.h"
 #include "base/test/scoped_feature_list.h"
 #include "chrome/test/views/chrome_views_test_base.h"
@@ -47,17 +49,27 @@ class MockTranslateBubbleModel : public TranslateBubbleModel {
     view_state_transition_.GoBackFromAdvanced();
   }
 
-  int GetNumberOfLanguages() const override { return 1000; }
+  int GetNumberOfSourceLanguages() const override { return 1000; }
 
-  base::string16 GetLanguageNameAt(int index) const override {
-    return base::ASCIIToUTF16("English");
+  int GetNumberOfTargetLanguages() const override { return 1000; }
+
+  std::u16string GetSourceLanguageNameAt(int index) const override {
+    return u"English";
   }
 
-  int GetOriginalLanguageIndex() const override {
+  std::u16string GetTargetLanguageNameAt(int index) const override {
+    return u"Spanish";
+  }
+
+  std::string GetSourceLanguageCode() const override {
+    return std::string("en-US");
+  }
+
+  int GetSourceLanguageIndex() const override {
     return original_language_index_;
   }
 
-  void UpdateOriginalLanguageIndex(int index) override {
+  void UpdateSourceLanguageIndex(int index) override {
     original_language_index_ = index;
   }
 
@@ -115,6 +127,8 @@ class MockTranslateBubbleModel : public TranslateBubbleModel {
   }
 
   bool CanBlocklistSite() override { return can_blocklist_site_; }
+
+  void ReportUIInteraction(translate::UIInteraction ui_interaction) override {}
 
   void SetCanBlocklistSite(bool value) { can_blocklist_site_ = value; }
 
@@ -198,8 +212,7 @@ class BraveTranslateBubbleViewTest : public ChromeViewsTestBase {
   }
 
   void PressButton(TranslateBubbleView::ButtonID id) {
-    views::LabelButton button(views::Button::PressedCallback(),
-                              base::ASCIIToUTF16("dummy"));
+    views::LabelButton button(views::Button::PressedCallback(), u"dummy");
     button.SetID(id);
 
     bubble_->ButtonPressed(id);

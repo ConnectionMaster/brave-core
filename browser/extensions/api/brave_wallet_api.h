@@ -35,6 +35,15 @@ class BraveWalletReadyFunction :
   ResponseAction Run() override;
 };
 
+class BraveWalletNotifyWalletUnlockFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.notifyWalletUnlock", UNKNOWN)
+
+ protected:
+  ~BraveWalletNotifyWalletUnlockFunction() override {}
+  ResponseAction Run() override;
+};
+
 class BraveWalletShouldCheckForDappsFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveWallet.shouldCheckForDapps", UNKNOWN)
@@ -123,6 +132,15 @@ class BraveWalletGetWeb3ProviderListFunction : public ExtensionFunction {
 
  protected:
   ~BraveWalletGetWeb3ProviderListFunction() override {}
+  ResponseAction Run() override;
+};
+
+class BraveWalletIsNativeWalletEnabledFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.isNativeWalletEnabled", UNKNOWN)
+
+ protected:
+  ~BraveWalletIsNativeWalletEnabledFunction() override {}
   ResponseAction Run() override;
 };
 

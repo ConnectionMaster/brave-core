@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import './change_ipfs_gateway_dialog.js';
-
 (function() {
 'use strict';
 
@@ -18,13 +16,23 @@ Polymer({
     WebUIListenerBehavior,
   ],
 
+  /**
+   * Keep it the same as Provider in
+   * brave/componentsdecentralized_dns/constants.h.
+   */
+  Provider: {
+    UNSTOPPABLE_DOMAINS: 0,
+    ENS: 1
+  },
+
   properties: {
     showRestartToast_: Boolean,
     torEnabled_: Boolean,
     widevineEnabled_: Boolean,
     disableTorOption_: Boolean,
-    ipfsEnabled_: Boolean,
-    showChangeIPFSGatewayDialog_: Boolean,
+    decentralizedDnsEnabled_: Boolean,
+    unstoppableDomainsResolveMethod_: Array,
+    ensResolveMethod_: Array,
   },
 
   /** @private {?settings.BraveDefaultExtensionsBrowserProxy} */
@@ -38,9 +46,7 @@ Polymer({
   /** @override */
   ready: function() {
     this.onWebTorrentEnabledChange_ = this.onWebTorrentEnabledChange_.bind(this)
-    this.onBraveWalletEnabledChange_ = this.onBraveWalletEnabledChange_.bind(this)
     this.onHangoutsEnabledChange_ = this.onHangoutsEnabledChange_.bind(this)
-    this.onIPFSCompanionEnabledChange_ = this.onIPFSCompanionEnabledChange_.bind(this)
     this.openExtensionsPage_ = this.openExtensionsPage_.bind(this)
     this.openKeyboardShortcutsPage_ = this.openKeyboardShortcutsPage_.bind(this)
     this.onWidevineEnabledChange_ = this.onWidevineEnabledChange_.bind(this)
@@ -69,31 +75,25 @@ Polymer({
     this.browserProxy_.isWidevineEnabled().then(enabled => {
       this.widevineEnabled_ = enabled
     })
-    this.browserProxy_.getWeb3ProviderList().then(list => {
-      this.braveWeb3Providers_ = JSON.parse(list)
-    });
-    this.browserProxy_.getIPFSResolveMethodList().then(list => {
-      this.ipfsResolveMethod_ = JSON.parse(list)
-    });
-    this.browserProxy_.getIPFSEnabled().then(enabled => {
-      this.ipfsEnabled_ = enabled
-    });
+    this.browserProxy_.isDecentralizedDnsEnabled().then(enabled => {
+      this.decentralizedDnsEnabled_ = enabled
+    })
+    this.browserProxy_.getDecentralizedDnsResolveMethodList(
+      this.Provider.UNSTOPPABLE_DOMAINS).then(list => {
+        this.unstoppableDomainsResolveMethod_ = list
+    })
+    this.browserProxy_.getDecentralizedDnsResolveMethodList(
+      this.Provider.ENS).then(list => {
+      this.ensResolveMethod_ = list
+    })
   },
 
   onWebTorrentEnabledChange_: function() {
     this.browserProxy_.setWebTorrentEnabled(this.$.webTorrentEnabled.checked);
   },
 
-  onBraveWalletEnabledChange_: function() {
-    this.browserProxy_.setBraveWalletEnabled(this.$.braveWalletEnabled.checked);
-  },
-
   onHangoutsEnabledChange_: function() {
     this.browserProxy_.setHangoutsEnabled(this.$.hangoutsEnabled.checked);
-  },
-
-  onIPFSCompanionEnabledChange_: function() {
-    this.browserProxy_.setIPFSCompanionEnabled(this.$.ipfsCompanionEnabled.checked);
   },
 
   restartBrowser_: function(e) {
@@ -127,15 +127,7 @@ Polymer({
 
   shouldShowRestartForGoogleLogin_: function(value) {
     return this.browserProxy_.wasSignInEnabledAtStartup() != value;
-  },
-
-  onChangeIPFSGatewayDialogTapped_: function() {
-    this.showChangeIPFSGatewayDialog_ = true;
-  },
-
-  onChangeIPFSGatewayDialogClosed_: function() {
-    this.showChangeIPFSGatewayDialog_ = false;
-  },
+  }
 
 });
 })();

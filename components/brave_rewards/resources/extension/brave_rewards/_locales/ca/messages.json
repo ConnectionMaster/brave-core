@@ -51,18 +51,6 @@
     "message": "Detalls",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "El vostre Saldo",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Punts BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "es pot usar en les Recompenses de Brave per a ajudar els vostres creadors de continguts. Els BAT points no es poden bescanviar per BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "connectat",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Donacions sol·licitades",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Punts de subvenció reclamats",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Guanys dels anuncis",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Si et plau, fes una còpia de seguretat del teu moneder.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Més informació",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "S'ha assolit el límit del dispositiu",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "La teva cartera no es pot verificar perquè has assolit el límit màxim de dispositius verificats.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "El teu compte de Premis de Brave està esperant un dipòsit.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "i cant",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Activeu els anuncis",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Donació gratis",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Punt de subvenció gratuït",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Heu guanyat una recompensa publicitària!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Moneder Verificat",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Anar al meu compte d'Uphold",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Anar al meu compte de $provider$",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Desconnectar de Gratificacions Brave",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "punts",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Fitxes de recompensa",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Recompenses de punts",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Hola,  $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Necessiteu tenir com a mínim 25 BAT per a crear un compte Uphold. Si us plau torneu-ho a provar més tard. Si ja teniu un compte Uphold verificat, continueu a iniciar sessió.  ",
-    "description": "Text for login button"
+    "message": "Necessiteu com a mínim $amount$ BAT per crear un compte Uphold. Si ja disposeu d'un compte Uphold verificat, continueu per iniciar sessió.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Connectat",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Nota: Les vostres transaccions estaran visibles per a Uphold un cop ho autoritzeu; per exemple, podran veure el destinatari i la quantitat de les vostres propines. ",
-    "description": "Displayed in login modal for uphold"
+    "message": "Nota: $provider$ podrà veure les teves transaccions un cop ho autoritzis; per exemple, podrà veure el destinatari i l'import de les teves propines.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Guanyey & Torneu Fitxes",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Guanyey fitxes mirant anuncis que respectin la privadesa i doneu suport als vostres llocs preferits i creadors de contingut automàticament. ",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Cada quan vols veure anuncis?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(anuncis per hora)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Quant suport mensual vols donar als teus creadors preferits?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(dels teus guanys d'anuncis)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Quan rebeu recompenses",
+    "message": "Quan rebràs recompenses?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Els tokens es poden utilitzar per a més coses a més de sostenir els creadors. Podeu comprar continguts digitals i altres productes quan s'incorporin venedors.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Finalment, posem a punt la configuració bàsica.",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Podeu canviar-ho més endavant.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Molt bé, ja esteu llestos!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Fent servir Brave Rewards esteu ajudant a fer de la xarxa un lloc millor per a tots. I això és fantàstic!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Verifica la teva cartera",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Per tal de retirar els tokens que hagis guanyat visualitzant anuncis, hauràs de verificar la teva cartera.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Fes-ho més tard",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Verifica la meva cartera",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "La cartera bitFlyer és un servei que gestiona bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "En verificar la teva cartera i vincular-la a un compte de bitFlyer, podràs emmagatzemar i gestionar els tokens que hagis guanyat amb Brave Rewards més fàcilment",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Aprèn més$link_end$ sobre com enllaçar el teu navegador Brave amb el teu compte de bitFlyer.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

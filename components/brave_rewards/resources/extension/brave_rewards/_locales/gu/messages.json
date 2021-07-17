@@ -51,18 +51,6 @@
     "message": "વિગતો",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Your Balance",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "BAT Points",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "can be used in Brave Rewards to contribute to your favorite content creators. BAT Points cannot be exchanged for BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "on",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "ટોકન અનુદાનનો દાવો કરવામાં આવ્યો",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Point Grants Claimed",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "જાહેરાતો દ્વારા કમાણી",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "કૃપયા કરીને તમારા બૅકઅપ વૉલેટનું બૅકઅપ લો.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "વધુ જાણો",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Device Limit Reached",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Your wallet cannot be verified because you've reached the maximum verified device limit.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "તમારું Brave પુરસ્કારો ખાતું એક ડિપોઝિટની રાહ જોઈ રહ્યું છે.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Turn on Ads",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "નિ:શુલ્ક ટોકન અનુદાન",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Free Point Grant",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "You've earned an Ads Reward!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Wallet Verified",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Go to my Uphold account",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Go to my $provider$ account",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Disconnect from Brave Rewards",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "points",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Token Grants",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Point Grants",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Hello, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "You need to have minimum 25 BAT to create an Uphold account. Please try again later. \n If you already have a verified Uphold account, continue to login.",
-    "description": "Text for login button"
+    "message": "You need to have minimum $amount$ BAT to create an Uphold account. If you already have a verified Uphold account, continue to login.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "કનેક્ટેડ",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Note: Your transactions will be visible to Uphold once you authorize; for instance, they will be able to see the recipient and amount of your tips.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Note: Your transactions will be visible to $provider$ once you authorize; for instance, they will be able to see the recipient and amount of your tips.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Earn Tokens & Give Back",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Earn tokens by viewing privacy-respecting ads and support your favorite sites and content creators automatically.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "How often do you want to see ads?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(ads per hour)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "How much monthly support do you want to give to your favorite creators?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(from your ads earnings)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "When do you receive rewards",
+    "message": "When do you receive rewards?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Tokens can be used beyond supporting creators. You can buy digital content and other goods as merchants come onboard.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Lastly, let’s get you set up on the basic settings",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "You can change this later.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Woohoo, you’re all set!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "By using Brave Rewards you are helping make the web a better place for everyone. And that’s awesome!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Verify your wallet",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "In order to withdraw the tokens you earn for viewing ads, you’ll need to verify your wallet.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Do it later",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Verify my wallet",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "The bitFlyer wallet is a service managed by bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "By verifying your wallet and linking it to a bitFlyer account, you will be able to store and manage the tokens you have earned through Brave Rewards more easily",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Learn more$link_end$ about how to link your Brave browser with your bitFlyer account.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

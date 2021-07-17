@@ -3,24 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_CONVERSIONS_CONVERSIONS_OBSERVER_H_
-#define BAT_ADS_INTERNAL_CONVERSIONS_CONVERSIONS_OBSERVER_H_
-
-#include <string>
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_CONVERSIONS_CONVERSIONS_OBSERVER_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_CONVERSIONS_CONVERSIONS_OBSERVER_H_
 
 #include "base/observer_list.h"
+#include "bat/ads/internal/conversions/conversion_queue_item_info.h"
 
 namespace ads {
 
 class ConversionsObserver : public base::CheckedObserver {
  public:
-  // Invoked when an ad is transferred
+  // Invoked when an ad is converted
   virtual void OnConversion(
-     const std::string& creative_instance_id) {}
+      const ConversionQueueItemInfo& conversion_queue_item) {}
 
-  // Invoked when an ad fails to transfer
+  // Invoked when an ad fails to convert
   virtual void OnConversionFailed(
-     const std::string& creative_instance_id) {}
+      const ConversionQueueItemInfo& conversion_queue_item) {}
 
  protected:
   ~ConversionsObserver() override = default;
@@ -28,4 +27,4 @@ class ConversionsObserver : public base::CheckedObserver {
 
 }  // namespace ads
 
-#endif  // BAT_ADS_INTERNAL_CONVERSIONS_CONVERSIONS_OBSERVER_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_CONVERSIONS_CONVERSIONS_OBSERVER_H_

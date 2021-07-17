@@ -10,8 +10,6 @@
 #include "base/task/post_task.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "brave/components/sync/driver/brave_sync_profile_sync_service.h"
-#include "chrome/browser/sync/device_info_sync_service_factory.h"
-#include "chrome/browser/sync/profile_sync_service_factory.h"
 #include "components/sync_device_info/device_info_sync_service.h"
 #include "components/sync_device_info/device_info_tracker.h"
 #include "components/sync_device_info/local_device_info_provider.h"
@@ -30,7 +28,7 @@ BraveProfileSyncServiceDelegate::BraveProfileSyncServiceDelegate(
   device_info_tracker_ = device_info_sync_service_->GetDeviceInfoTracker();
   DCHECK(device_info_tracker_);
 
-  device_info_observer_.Add(device_info_tracker_);
+  device_info_observer_.Observe(device_info_tracker_);
 }
 
 BraveProfileSyncServiceDelegate::~BraveProfileSyncServiceDelegate() {}
@@ -68,14 +66,12 @@ void BraveProfileSyncServiceDelegate::OnSelfDeviceInfoDeleted() {
 }
 
 void BraveProfileSyncServiceDelegate::SuspendDeviceObserverForOwnReset() {
-  if (device_info_observer_.IsObserving(device_info_tracker_)) {
-    device_info_observer_.Remove(device_info_tracker_);
-  }
+  device_info_observer_.Reset();
 }
 
 void BraveProfileSyncServiceDelegate::ResumeDeviceObserver() {
-  if (!device_info_observer_.IsObserving(device_info_tracker_)) {
-    device_info_observer_.Add(device_info_tracker_);
+  if (!device_info_observer_.IsObserving()) {
+    device_info_observer_.Observe(device_info_tracker_);
   }
 }
 

@@ -7,7 +7,7 @@
 
 #include "bat/ads/internal/client/client.h"
 #include "bat/ads/internal/logging.h"
-#include "bat/usermodel/user_model.h"
+#include "bat/ads/internal/ml/pipeline/text_processing/text_processing.h"
 
 namespace ads {
 namespace ad_targeting {
@@ -21,37 +21,37 @@ std::string GetTopSegmentFromPageProbabilities(
     return "";
   }
 
-  const auto iter = std::max_element(probabilities.begin(), probabilities.end(),
-      [](const SegmentProbabilityPair& a,
-          const SegmentProbabilityPair& b) -> bool {
-    return a.second < b.second;
-  });
+  const auto iter =
+      std::max_element(probabilities.begin(), probabilities.end(),
+                       [](const SegmentProbabilityPair& lhs,
+                          const SegmentProbabilityPair& rhs) -> bool {
+                         return lhs.second < rhs.second;
+                       });
 
   return iter->first;
 }
 
 }  // namespace
 
-TextClassification::TextClassification(
-    resource::TextClassification* resource)
+TextClassification::TextClassification(resource::TextClassification* resource)
     : resource_(resource) {
   DCHECK(resource_);
 }
 
 TextClassification::~TextClassification() = default;
 
-void TextClassification::Process(
-    const std::string& text) {
+void TextClassification::Process(const std::string& text) {
   if (!resource_->IsInitialized()) {
-    BLOG(1, "Failed to process text classification as user model "
-        "not initialized");
+    BLOG(1,
+         "Failed to process text classification as resource "
+         "not initialized");
     return;
   }
 
-  usermodel::UserModel* user_model = resource_->get();
+  ml::pipeline::TextProcessing* text_proc_pipeline = resource_->get();
 
   const TextClassificationProbabilitiesMap probabilities =
-      user_model->ClassifyPage(text);
+      text_proc_pipeline->ClassifyPage(text);
 
   if (probabilities.empty()) {
     BLOG(1, "Text not classified as not enough content");

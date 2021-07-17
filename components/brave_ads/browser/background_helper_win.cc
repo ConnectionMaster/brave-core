@@ -14,8 +14,9 @@
 namespace brave_ads {
 
 BackgroundHelperWin::BackgroundHelperWin() {
-  singleton_hwnd_observer_.reset(new gfx::SingletonHwndObserver(
-      base::Bind(&BackgroundHelperWin::OnWndProc, base::Unretained(this))));
+  singleton_hwnd_observer_.reset(
+      new gfx::SingletonHwndObserver(base::BindRepeating(
+          &BackgroundHelperWin::OnWndProc, base::Unretained(this))));
 }
 
 BackgroundHelperWin::~BackgroundHelperWin() {}
@@ -24,17 +25,16 @@ bool BackgroundHelperWin::IsForeground() const {
   auto* browser = BrowserList::GetInstance()->GetLastActive();
   if (browser && browser->window() && browser->window()->GetNativeWindow()) {
     return ::GetForegroundWindow() ==
-        views::HWNDForNativeWindow(browser->window()->GetNativeWindow());
+           views::HWNDForNativeWindow(browser->window()->GetNativeWindow());
   }
 
   return false;
 }
 
-void BackgroundHelperWin::OnWndProc(
-    HWND hwnd,
-    UINT message,
-    WPARAM wparam,
-    LPARAM lparam) {
+void BackgroundHelperWin::OnWndProc(HWND hwnd,
+                                    UINT message,
+                                    WPARAM wparam,
+                                    LPARAM lparam) {
   if (message != WM_ACTIVATEAPP) {
     return;
   }

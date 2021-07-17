@@ -4,34 +4,35 @@
 
 package org.chromium.chrome.browser;
 
-import org.chromium.chrome.R;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
-import android.text.Spanned;
-import android.view.MotionEvent;
+
 import org.chromium.base.IntentUtils;
+import org.chromium.chrome.R;
 import org.chromium.chrome.browser.BraveRewardsBalance;
 import org.chromium.chrome.browser.BraveRewardsHelper;
 import org.chromium.chrome.browser.BraveRewardsNativeWorker;
 import org.chromium.chrome.browser.BraveRewardsObserver;
 import org.chromium.chrome.browser.BraveRewardsPublisher.PublisherStatus;
 import org.chromium.chrome.browser.app.BraveActivity;
-import android.graphics.Bitmap;
-import android.widget.ImageView;
 import org.chromium.chrome.browser.tab.Tab;
 
 import java.math.RoundingMode;
@@ -48,7 +49,6 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
     public static final String TIP_AMOUNT_EXTRA="tipAmount";
     public static final String TIP_MONTHLY_EXTRA="tipMonthly";
 
-
     private int currentTabId_ = -1;
     private BraveRewardsNativeWorker mBraveRewardsNativeWorker;
     private final int PUBLISHER_ICON_SIDE_LEN= 70; //dp
@@ -58,7 +58,7 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
     private BraveRewardsHelper mIconFetcher;
     private boolean mTippingInProgress; //flag preventing multiple tipping processes
 
-    private boolean isAnonWallet;
+    private LinearLayout sendDonationLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +67,7 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.brave_rewards_site_banner);
 
-        isAnonWallet = BraveRewardsHelper.isAnonWallet();
+        sendDonationLayout = findViewById(R.id.send_donation_button);
 
         //change weight of the footer in landscape mode
         int orientation = this.getResources().getConfiguration().orientation;
@@ -82,18 +82,18 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
 
         //bind tip amount custom radio buttons
         radio_tip_amount[0] = findViewById(R.id.one_bat_option);
-        radio_tip_amount[0].setTextOff(String.format(getResources().getString(R.string.one_tip_option),isAnonWallet ? getResources().getString(R.string.brave_ui_bap_text) : getResources().getString(R.string.brave_ui_bat_text)));
-        radio_tip_amount[0].setTextOn(String.format(getResources().getString(R.string.one_tip_option),isAnonWallet ? getResources().getString(R.string.brave_ui_bap_text) : getResources().getString(R.string.brave_ui_bat_text)));
+        radio_tip_amount[0].setTextOff(BraveRewardsHelper.ONE_BAT_TEXT);
+        radio_tip_amount[0].setTextOn(BraveRewardsHelper.ONE_BAT_TEXT);
         radio_tip_amount[0].setChecked(false);
 
         radio_tip_amount[1] = findViewById(R.id.five_bat_option);
-        radio_tip_amount[1].setTextOff(String.format(getResources().getString(R.string.five_tip_option),isAnonWallet ? getResources().getString(R.string.brave_ui_bap_text) : getResources().getString(R.string.brave_ui_bat_text)));
-        radio_tip_amount[1].setTextOn(String.format(getResources().getString(R.string.five_tip_option),isAnonWallet ? getResources().getString(R.string.brave_ui_bap_text) : getResources().getString(R.string.brave_ui_bat_text)));
+        radio_tip_amount[1].setTextOff(BraveRewardsHelper.FIVE_BAT_TEXT);
+        radio_tip_amount[1].setTextOn(BraveRewardsHelper.FIVE_BAT_TEXT);
         radio_tip_amount[1].setChecked(true);
 
         radio_tip_amount[2] = findViewById(R.id.ten_bat_option);
-        radio_tip_amount[2].setTextOff(String.format(getResources().getString(R.string.ten_tip_option),isAnonWallet ? getResources().getString(R.string.brave_ui_bap_text) : getResources().getString(R.string.brave_ui_bat_text)));
-        radio_tip_amount[2].setTextOn(String.format(getResources().getString(R.string.ten_tip_option),isAnonWallet ? getResources().getString(R.string.brave_ui_bap_text) : getResources().getString(R.string.brave_ui_bat_text)));
+        radio_tip_amount[2].setTextOff(BraveRewardsHelper.TEN_BAT_TEXT);
+        radio_tip_amount[2].setTextOn(BraveRewardsHelper.TEN_BAT_TEXT);
         radio_tip_amount[2].setChecked(false);
 
         //radio buttons behaviour
@@ -144,7 +144,7 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
         DecimalFormat df = new DecimalFormat("#.###");
         df.setRoundingMode(RoundingMode.FLOOR);
         df.setMinimumFractionDigits(3);
-        String walletAmount = df.format(balance) + " "+(isAnonWallet ? getResources().getString(R.string.brave_ui_bat_points_text) : getResources().getString(R.string.brave_ui_bat_text));
+        String walletAmount = df.format(balance) + " " + BraveRewardsHelper.BAT_TEXT;
 
         ((TextView)findViewById(R.id.wallet_amount_text)).setText(walletAmount);
 
@@ -204,10 +204,9 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
                 }
                 //not enough funds
                 else {
-                    View send_tip = findViewById(R.id.send_donation_button);
-                    send_tip.setVisibility(View.INVISIBLE);
+                    sendDonationLayout.setVisibility(View.INVISIBLE);
                     View animatedView = findViewById(R.id.not_enough_funds_button);
-                    int fromY = findViewById(R.id.send_donation_button).getHeight();
+                    int fromY = sendDonationLayout.getHeight();
 
                     TranslateAnimation animate = new TranslateAnimation(0,0,fromY,0);
                     animate.setDuration(FADE_OUT_DURATION);
@@ -217,8 +216,7 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
             }
         };
 
-        findViewById(R.id.send_donation_button).setOnClickListener (send_tip_clicker);
-
+        sendDonationLayout.setOnClickListener(send_tip_clicker);
 
         //set 'add funds' button onClick
          View.OnClickListener add_funds_clicker = new View.OnClickListener() {
@@ -234,19 +232,19 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
                  View add_funds_btn = findViewById(R.id.not_enough_funds_button);
                  add_funds_btn.setVisibility(View.INVISIBLE);
 
-                 View animatedView = findViewById(R.id.send_donation_button);
-                 int fromY = findViewById(R.id.send_donation_button).getHeight();
+                 int fromY = sendDonationLayout.getHeight();
                  TranslateAnimation animate = new TranslateAnimation(0,0,fromY,0);
                  animate.setDuration(FADE_OUT_DURATION);
-                 animatedView.startAnimation(animate);
-                 animatedView.setVisibility(View.VISIBLE);
+                 sendDonationLayout.startAnimation(animate);
+                 sendDonationLayout.setVisibility(View.VISIBLE);
              }
          };
 
         View not_enough_funds_btn = findViewById(R.id.not_enough_funds_button);
         not_enough_funds_btn.setOnClickListener (add_funds_clicker);
 
-        String part1 = String.format(getResources().getString(R.string.brave_ui_not_enough_tokens), isAnonWallet ? getResources().getString(R.string.point) : getResources().getString(R.string.token));
+        String part1 = String.format(getResources().getString(R.string.brave_ui_not_enough_tokens),
+                getResources().getString(R.string.token));
         String part2 = getResources().getString(R.string.brave_ui_please);
         String part3 = getResources().getString(R.string.brave_ui_add_funds);
 
@@ -276,8 +274,8 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
                 mBraveRewardsNativeWorker.GetPublisherStatus(currentTabId_);
         setPublisherNoteText(pubStatus);
 
-        if (pubStatus == BraveRewardsPublisher.CONNECTED ||
-                pubStatus == BraveRewardsPublisher.VERIFIED) {
+        if (pubStatus == BraveRewardsPublisher.CONNECTED
+                || pubStatus == BraveRewardsPublisher.UPHOLD_VERIFIED) {
             findViewById(R.id.publisher_favicon_verified).setVisibility(View.VISIBLE);
         }
 
@@ -316,6 +314,7 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
         });
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void setPublisherNoteText(@PublisherStatus int pubStatus) {
         String note_part1 = "";
         if (pubStatus == BraveRewardsPublisher.CONNECTED) {
@@ -472,10 +471,7 @@ public class BraveRewardsSiteBannerActivity extends Activity implements
                 DecimalFormat df = new DecimalFormat("#.###");
                 df.setRoundingMode(RoundingMode.FLOOR);
                 df.setMinimumFractionDigits(3);
-                String walletAmount = df.format(balance) + " "
-                        + (isAnonWallet ? getResources().getString(
-                                   R.string.brave_ui_bat_points_text)
-                                        : getResources().getString(R.string.brave_ui_bat_text));
+                String walletAmount = df.format(balance) + " " + BraveRewardsHelper.BAT_TEXT;
                 ((TextView) findViewById(R.id.wallet_amount_text)).setText(walletAmount);
             }
         }

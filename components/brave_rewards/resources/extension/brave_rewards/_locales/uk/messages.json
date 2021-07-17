@@ -51,18 +51,6 @@
     "message": "Подробиці",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Ваш баланс",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Бали BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "можуть бути використані у Brave Rewards для підтримки ваших улюблених творців контенту. BAT Points не можуть бути обміняні на BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "увімкнути",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Гранти з токенів запитано",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Запитано грантів у балах",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Заробітки від реклами",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Будь ласка, зробіть резервну копію гаманця Brave.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Докладніше",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Досягнуто ліміт кількості пристроїв",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Ваш гаманець не може бути перевірений, оскільки ви досягли максимального ліміту підтверджених пристроїв.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Ваш обліковий запис Винагород Brave Rewards очікує на депозит.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Увімкнути Рекламу",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Безкоштовний грант з токенів",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Грант безкоштовних балів",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Ви заробили Ads Reward!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Гаманець підтверджено",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Перейти до мого облікового запису Uphold",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Перейти до мого облікового запису $provider$",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Від'єднатись від Винагород Brave",
@@ -573,17 +567,9 @@
     "message": "Токен",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "бали",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Гранти з токенів",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Гранти у балах",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Вітаємо, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Для створення облікового запису Uphold, вам потрібно мати щонайменше 25 BAT. Будь ласка, спробуйте пізніше. Якщо ви вже маєте верифікований обліковий запис Uphold -  перейдіть до Входу.",
-    "description": "Text for login button"
+    "message": "Для створення облікового запису Uphold вам потрібно мати щонайменше $amount$ BAT. Якщо ви вже маєте верифікований обліковий запис Uphold, виконайте вхід у систему.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Підключено",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Зауважте: Ваші транзакції будуть видимі для Uphold, щойно ви надасте дозвіл; наприклад, вони зможуть бачити отримувача та суму ваших чайових.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Примітка: Ваші транзакції будуть видимими для $provider$ щойно ви авторизуєтесь; наприклад, вони зможуть побачити одержувача та кількість ваших чайових.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Заробляйте токени та допомагайте іншим",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Заробляйте токени, переглядаючи рекламні оголошення, що не порушують вашу конфіденційність, та автоматично підтримуйте улюблені сайти та творців контенту.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Як часто ви хочете бачити оголошення?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(оголошень за годину)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Яку суму щомісячної підтримки ви хочете віддавати своїм улюбленим творцям?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(із вашого заробітку з оголошень)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Коли ви отримуєте винагороди",
+    "message": "Коли ви отримуєте винагороди?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Токени можна витрачати не лише на підтримку творців. З появою продавців за них можна буде придбати цифровий контент та інші товари.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Врешті, давайте завершимо ваші основні налаштування",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Ви можете змінити це пізніше.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Ура, все налаштовано!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Користуючись нагородами Brave, ви допомагаєте зробити мережу кращим місцем для кожного. І це чудово!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Верифікуйте свій гаманець",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Щоб зняти токени, зароблені за перегляд реклами, вам потрібно верифікувати гаманець.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Зробити це пізніше",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Верифікувати мій гаманець",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Гаманець bitFlyer — це сервіс, роботою якого керує компанія bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Виконавши верифікацію гаманця та прив’язавши його до облікового запису bitFlyer, ви зможете зберігати зароблені за допомогою Винагород Brave токени і керувати ними в більш простий спосіб.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Дізнайтеся детальніше$link_end$, як зв’язати браузер Brave з вашим обліковим записом bitFlyer.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

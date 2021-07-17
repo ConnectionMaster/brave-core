@@ -10,9 +10,11 @@
 #include "base/files/file_util.h"
 #include "base/logging.h"
 #include "base/task/post_task.h"
+#include "base/task/thread_pool.h"
 #include "base/task_runner.h"
 #include "base/task_runner_util.h"
-#include "third_party/re2/src/re2/re2.h"
+#include "brave/components/ipfs/ipfs_utils.h"
+#include "components/component_updater/component_updater_service.h"
 
 namespace ipfs {
 
@@ -25,8 +27,8 @@ BraveIpfsClientUpdater::BraveIpfsClientUpdater(
     BraveComponent::Delegate* delegate,
     const base::FilePath& user_data_dir)
     : BraveComponent(delegate),
-      task_runner_(base::CreateSequencedTaskRunner(
-          {base::ThreadPool(), base::MayBlock()})),
+      task_runner_(
+          base::ThreadPool::CreateSequencedTaskRunner({base::MayBlock()})),
       registered_(false),
       user_data_dir_(user_data_dir),
       weak_ptr_factory_(this) {}
@@ -40,6 +42,8 @@ void BraveIpfsClientUpdater::Register() {
   BraveComponent::Register(kIpfsClientComponentName,
                            g_ipfs_client_component_id_,
                            g_ipfs_client_component_base64_public_key_);
+  if (!updater_observer_.IsObservingSource(this))
+    updater_observer_.Observe(this);
   registered_ = true;
 }
 
@@ -53,8 +57,7 @@ base::FilePath InitExecutablePath(const base::FilePath& install_dir) {
   for (base::FilePath current = traversal.Next(); !current.empty();
        current = traversal.Next()) {
     base::FileEnumerator::FileInfo file_info = traversal.GetInfo();
-    if (!RE2::FullMatch(file_info.GetName().MaybeAsASCII(),
-                        "go-ipfs_v\\d+\\.\\d+\\.\\d+\\_\\w+-amd64"))
+    if (!ipfs::IsValidNodeFilename(file_info.GetName().MaybeAsASCII()))
       continue;
     executable_path = current;
     break;
@@ -94,6 +97,16 @@ void BraveIpfsClientUpdater::SetExecutablePath(const base::FilePath& path) {
 
 base::FilePath BraveIpfsClientUpdater::GetExecutablePath() const {
   return executable_path_;
+}
+
+void BraveIpfsClientUpdater::OnEvent(Events event, const std::string& id) {
+  if (id != kIpfsClientComponentId)
+    return;
+  if (event == Events::COMPONENT_UPDATE_ERROR) {
+    registered_ = false;
+  }
+  for (Observer& observer : observers_)
+    observer.OnInstallationEvent(event);
 }
 
 void BraveIpfsClientUpdater::OnComponentReady(const std::string& component_id,

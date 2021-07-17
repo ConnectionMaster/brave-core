@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVELEDGER_PROMOTION_H_
-#define BRAVELEDGER_PROMOTION_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_PROMOTION_PROMOTION_H_
+#define BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_PROMOTION_PROMOTION_H_
 
 #include <map>
 #include <memory>
@@ -46,9 +46,12 @@ class Promotion {
 
   void Refresh(const bool retry_after_error);
 
-  void TransferTokens(ledger::ResultCallback callback);
+  void TransferTokens(ledger::PostSuggestionsClaimCallback callback);
 
   void GetTransferableAmount(ledger::GetTransferableAmountCallback callback);
+
+  void GetDrainStatus(const std::string& drain_id,
+                      ledger::GetDrainCallback callback);
 
  private:
   void OnFetch(
@@ -156,4 +159,4 @@ class Promotion {
 }  // namespace promotion
 }  // namespace ledger
 
-#endif  // BRAVELEDGER_PROMOTION_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_PROMOTION_PROMOTION_H_

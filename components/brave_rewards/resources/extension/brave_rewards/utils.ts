@@ -43,17 +43,15 @@ export const handleContributionAmount = (amount: string) => {
   return result
 }
 
-export const getPromotion = (promotion: RewardsExtension.Promotion, onlyAnonWallet: boolean) => {
+export const getPromotion = (promotion: RewardsExtension.Promotion) => {
   if (!promotion) {
     return promotion
   }
 
-  const tokenString = onlyAnonWallet ? getMessage('point') : getMessage('token')
+  const tokenString = getMessage('token')
   promotion.finishTitle = getMessage('grantFinishTitleUGP')
   promotion.finishText = getMessage('grantFinishTextUGP', [tokenString])
-  promotion.finishTokenTitle = onlyAnonWallet
-    ? getMessage('grantFinishPointTitleUGP')
-    : getMessage('grantFinishTokenTitleUGP')
+  promotion.finishTokenTitle = getMessage('grantFinishTokenTitleUGP')
 
   if (promotion.type === 1) { // Rewards.PromotionTypes.ADS
     promotion.expiresAt = 0
@@ -70,7 +68,7 @@ export const isPublisherVerified = (status?: RewardsExtension.PublisherStatus) =
     return false
   }
 
-  return status === 2
+  return status > 1
 }
 
 export const isPublisherConnected = (status?: RewardsExtension.PublisherStatus) => {
@@ -82,11 +80,9 @@ export const isPublisherConnected = (status?: RewardsExtension.PublisherStatus) 
 }
 
 export const isPublisherConnectedOrVerified = (status?: RewardsExtension.PublisherStatus) => {
-  if (status === undefined) {
-    return false
-  }
-
-  return status === 2 || status === 1
+  // Any non-zero publisher status indicates that they are either connected or
+  // verified
+  return Boolean(status)
 }
 
 export const isPublisherNotVerified = (status?: RewardsExtension.PublisherStatus) => {
@@ -99,7 +95,7 @@ export const isPublisherNotVerified = (status?: RewardsExtension.PublisherStatus
 
 export const getWalletStatus = (externalWallet?: RewardsExtension.ExternalWallet): WalletState | undefined => {
   if (!externalWallet) {
-    return undefined
+    return 'unverified'
   }
 
   switch (externalWallet.status) {
@@ -131,19 +127,13 @@ export const getGreetings = (externalWallet?: RewardsExtension.ExternalWallet) =
   return getMessage('greetingsVerified', [externalWallet.userName])
 }
 
-export const handleUpholdLink = (balance: RewardsExtension.Balance, externalWallet?: RewardsExtension.ExternalWallet) => {
-  if (!externalWallet) {
-    return
-  }
-
-  let link = externalWallet.verifyUrl
+export const handleExternalWalletLink = (balance: RewardsExtension.Balance, externalWallet?: RewardsExtension.ExternalWallet) => {
+  let link = ''
 
   if (!externalWallet || (externalWallet && externalWallet.status === 0)) {
     link = 'brave://rewards/#verify'
-  }
-
-  if (balance.total < 25) {
-    link = externalWallet.loginUrl
+  } else {
+    link = externalWallet.verifyUrl
   }
 
   chrome.tabs.create({
@@ -152,7 +142,7 @@ export const handleUpholdLink = (balance: RewardsExtension.Balance, externalWall
 }
 
 export const getExternalWallet = (actions: any, externalWallet?: RewardsExtension.ExternalWallet) => {
-  chrome.braveRewards.getExternalWallet('uphold', (result: number, wallet: RewardsExtension.ExternalWallet) => {
+  chrome.braveRewards.getExternalWallet((result: number, wallet: RewardsExtension.ExternalWallet) => {
     // EXPIRED TOKEN
     if (result === 24) {
       getExternalWallet(actions, externalWallet)
@@ -161,4 +151,12 @@ export const getExternalWallet = (actions: any, externalWallet?: RewardsExtensio
 
     actions.onExternalWallet(wallet)
   })
+}
+
+export const getWalletProviderName = (wallet?: RewardsExtension.ExternalWallet) => {
+  switch (wallet ? wallet.type : '') {
+    case 'uphold' : return 'Uphold'
+    case 'bitflyer': return 'bitFlyer'
+    default: return ''
+  }
 }

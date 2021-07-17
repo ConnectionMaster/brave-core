@@ -82,12 +82,12 @@ import org.chromium.chrome.browser.qrreader.CameraSource;
 import org.chromium.chrome.browser.qrreader.CameraSourcePreview;
 import org.chromium.chrome.browser.settings.BravePreferenceFragment;
 import org.chromium.chrome.browser.settings.SettingsActivity;
-import org.chromium.chrome.browser.settings.SettingsLauncher;
 import org.chromium.chrome.browser.sync.BraveSyncDevices;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
 import org.chromium.chrome.browser.sync.settings.BraveManageSyncSettings;
 import org.chromium.chrome.browser.sync.settings.SyncSettingsUtils;
 import org.chromium.chrome.browser.sync.settings.SyncSettingsUtils.SyncError;
+import org.chromium.components.browser_ui.settings.SettingsLauncher;
 import org.chromium.content_public.browser.UiThreadTaskTraits;
 import org.chromium.ui.KeyboardVisibilityDelegate;
 import org.chromium.ui.base.DeviceFormFactor;
@@ -178,7 +178,7 @@ public class BraveSyncScreensPreference extends BravePreferenceFragment
     public void deviceInfoChanged() {
         onDevicesAvailable();
     }
-    boolean deviceInfoObserverSet = false;
+    boolean deviceInfoObserverSet;
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -345,7 +345,7 @@ public class BraveSyncScreensPreference extends BravePreferenceFragment
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        getActivity().setTitle(R.string.sign_in_sync);
+        getActivity().setTitle(R.string.sync_category_title);
 
         mScrollViewSyncInitial = (ScrollView) getView().findViewById(R.id.view_sync_initial);
         mScrollViewSyncChainCode = (ScrollView) getView().findViewById(R.id.view_sync_chain_code);
@@ -1009,7 +1009,7 @@ public class BraveSyncScreensPreference extends BravePreferenceFragment
         alertDialog.show();
     }
 
-    private boolean mLeaveSyncChainInProgress = false;
+    private boolean mLeaveSyncChainInProgress;
 
     private void startLeaveSyncChainOperations() {
         mLeaveSyncChainInProgress = true;

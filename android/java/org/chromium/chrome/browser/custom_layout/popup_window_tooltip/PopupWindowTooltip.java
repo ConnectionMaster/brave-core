@@ -8,6 +8,7 @@ package org.chromium.chrome.browser.custom_layout.popup_window_tooltip;
 
 import static org.chromium.ui.base.ViewUtils.dpToPx;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PointF;
@@ -21,6 +22,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -63,7 +65,7 @@ public class PopupWindowTooltip implements PopupWindow.OnDismissListener {
     private final float mPadding;
     private final float mArrowWidth;
     private final float mArrowHeight;
-    private boolean dismissed = false;
+    private boolean dismissed;
     private int width;
     private int height;
 
@@ -104,6 +106,7 @@ public class PopupWindowTooltip implements PopupWindow.OnDismissListener {
         mPopupWindow.setOutsideTouchable(true);
         mPopupWindow.setTouchable(true);
         mPopupWindow.setTouchInterceptor(new View.OnTouchListener() {
+            @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 final int x = (int) event.getX();
@@ -136,13 +139,24 @@ public class PopupWindowTooltip implements PopupWindow.OnDismissListener {
         mRootView.post(new Runnable() {
             @Override
             public void run() {
-                if (mRootView.isShown())
+                if (mRootView.isShown()) {
                     mPopupWindow.showAtLocation(mRootView, Gravity.NO_GRAVITY, mRootView.getWidth(),
                             mRootView.getHeight());
-                else
+                    dimBackgroundPopupWindow();
+                } else
                     Log.e(TAG, "Tooltip cannot be shown, root view is invalid or has been closed.");
             }
         });
+    }
+
+    private void dimBackgroundPopupWindow() {
+        View container = mPopupWindow.getContentView().getRootView();
+        Context context = mPopupWindow.getContentView().getContext();
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager.LayoutParams p = (WindowManager.LayoutParams) container.getLayoutParams();
+        p.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        p.dimAmount = 0.4f;
+        wm.updateViewLayout(container, p);
     }
 
     private void verifyDismissed() {
@@ -299,7 +313,8 @@ public class PopupWindowTooltip implements PopupWindow.OnDismissListener {
                     RectF achorRect = PopupWindowTooltipUtils.calculeRectOnScreen(mAnchorView);
                     RectF contentViewRect =
                             PopupWindowTooltipUtils.calculeRectOnScreen(mContentLayout);
-                    float x, y;
+                    float x;
+                    float y;
                     if (mArrowDirection == ArrowColorDrawable.TOP
                             || mArrowDirection == ArrowColorDrawable.BOTTOM) {
                         x = mContentLayout.getPaddingLeft() + dpToPx(mContext, 2);
@@ -367,7 +382,7 @@ public class PopupWindowTooltip implements PopupWindow.OnDismissListener {
         private final Context context;
         private boolean dismissOnInsideTouch = true;
         private boolean dismissOnOutsideTouch = true;
-        private boolean modal = false;
+        private boolean modal;
         private View contentView;
         private View anchorView;
         private int arrowDirection = ArrowColorDrawable.AUTO;

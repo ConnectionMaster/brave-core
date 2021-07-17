@@ -16,14 +16,10 @@
 #include "brave/components/tor/tor_control_event.h"
 
 #include "base/callback.h"
-#include "base/files/file_path.h"
 #include "base/memory/scoped_refptr.h"
-#include "base/observer_list.h"
-#include "base/process/process.h"
-#include "base/time/time.h"
+#include "base/memory/weak_ptr.h"
 
 namespace base {
-class FilePathWatcher;
 class SequencedTaskRunner;
 }  // namespace base
 
@@ -35,6 +31,17 @@ class TCPClientSocket;
 
 namespace tor {
 
+// This class is resposible for talking to Tor executable to get status, send
+// command or subsribe to events through the control channel.
+// Tor Control Channel spec:
+// https://gitweb.torproject.org/torspec.git/plain/control-spec.txt
+//
+// Most of its internal implementation should be ran on IO thread so owner of
+// TorControl should pass in named io task runner and also use
+// base::OnTaskRunnerDeleter or calling base::SequencedTaskRunner::DeleteSoon to
+// invalidate the weak ptr on the correct sequence.
+// When calling API with callback, caller should use base::BindPostTask to make
+// sure callback will be ran on the dedicated thread.
 class TorControl {
  public:
   using PerLineCallback =
@@ -47,8 +54,7 @@ class TorControl {
    public:
     virtual ~Delegate() = default;
     virtual void OnTorControlReady() = 0;
-    virtual void OnTorClosed() = 0;
-    virtual void OnTorCleanupNeeded(base::ProcessId id) = 0;
+    virtual void OnTorControlClosed(bool was_running) = 0;
 
     virtual void OnTorEvent(
         TorControlEvent,
@@ -65,22 +71,12 @@ class TorControl {
                              const std::string& line) {}
   };
 
-  explicit TorControl(TorControl::Delegate* delegate);
+  TorControl(base::WeakPtr<TorControl::Delegate> delegate,
+             scoped_refptr<base::SequencedTaskRunner> task_runner);
   virtual ~TorControl();
 
-  static std::unique_ptr<TorControl> Create(Delegate* delegate);
-
-  // This has to called before Start(), it will check if orphaned tor process
-  // exists and reap it.
-  void PreStartCheck(const base::FilePath& watchDirPath,
-                     base::OnceClosure check_complete);
-  void Start();
+  void Start(std::vector<uint8_t> cookie, int port);
   void Stop();
-
-  void Cmd1(const std::string& cmd, CmdCallback callback);
-  void Cmd(const std::string& cmd,
-           PerLineCallback perline,
-           CmdCallback callback);
 
   void Subscribe(TorControlEvent event,
                  base::OnceCallback<void(bool error)> callback);
@@ -94,12 +90,15 @@ class TorControl {
       base::OnceCallback<void(bool error,
                               const std::vector<std::string>& listeners)>
           callback);
+  void GetCircuitEstablished(
+      base::OnceCallback<void(bool error, bool established)> callback);
 
  protected:
   friend class TorControlTest;
   FRIEND_TEST_ALL_PREFIXES(TorControlTest, ParseQuoted);
   FRIEND_TEST_ALL_PREFIXES(TorControlTest, ParseKV);
   FRIEND_TEST_ALL_PREFIXES(TorControlTest, ReadLine);
+  FRIEND_TEST_ALL_PREFIXES(TorControlTest, GetCircuitEstablishedDone);
 
   static bool ParseKV(const std::string& string,
                       std::string* key,
@@ -113,19 +112,94 @@ class TorControl {
                           size_t* end);
 
  private:
-  bool running_;
-  SEQUENCE_CHECKER(sequence_checker_);
+  void OpenControl(int port, std::vector<uint8_t> cookie);
+  void StopOnTaskRunner();
+  void Connected(std::vector<uint8_t> cookie, int rv);
+  void Authenticated(bool error,
+                     const std::string& status,
+                     const std::string& reply);
 
-  scoped_refptr<base::SequencedTaskRunner> watch_task_runner_;
-  SEQUENCE_CHECKER(watch_sequence_checker_);
+  void DoCmd(std::string cmd, PerLineCallback perline, CmdCallback callback);
+
+  void GetVersionLine(std::string* version,
+                      const std::string& status,
+                      const std::string& line);
+  void GetVersionDone(
+      std::unique_ptr<std::string> version,
+      base::OnceCallback<void(bool error, const std::string& version)> callback,
+      bool error,
+      const std::string& status,
+      const std::string& reply);
+  void GetSOCKSListenersLine(std::vector<std::string>* listeners,
+                             const std::string& status,
+                             const std::string& reply);
+  void GetSOCKSListenersDone(
+      std::unique_ptr<std::vector<std::string>> listeners,
+      base::OnceCallback<
+          void(bool error, const std::vector<std::string>& listeners)> callback,
+      bool error,
+      const std::string& status,
+      const std::string& reply);
+  void GetCircuitEstablishedLine(std::string* established,
+                                 const std::string& status,
+                                 const std::string& reply);
+  void GetCircuitEstablishedDone(
+      std::unique_ptr<std::string> established,
+      base::OnceCallback<void(bool error, bool established)> callback,
+      bool error,
+      const std::string& status,
+      const std::string& reply);
+
+  void DoSubscribe(TorControlEvent event,
+                   base::OnceCallback<void(bool error)> callback);
+  void Subscribed(TorControlEvent event,
+                  base::OnceCallback<void(bool error)> callback,
+                  bool error,
+                  const std::string& status,
+                  const std::string& reply);
+  void DoUnsubscribe(TorControlEvent event,
+                     base::OnceCallback<void(bool error)> callback);
+  void Unsubscribed(TorControlEvent event,
+                    base::OnceCallback<void(bool error)> callback,
+                    bool error,
+                    const std::string& status,
+                    const std::string& reply);
+  std::string SetEventsCmd();
+
+  // Notify delegate on UI thread
+  void NotifyTorControlReady();
+  void NotifyTorControlClosed();
+
+  void NotifyTorEvent(TorControlEvent,
+                      const std::string& initial,
+                      const std::map<std::string, std::string>& extra);
+  void NotifyTorRawCmd(const std::string& cmd);
+  void NotifyTorRawAsync(const std::string& status, const std::string& line);
+  void NotifyTorRawMid(const std::string& status, const std::string& line);
+  void NotifyTorRawEnd(const std::string& status, const std::string& line);
+
+  void StartWrite();
+  void DoWrites();
+  void WriteDoneAsync(int rv);
+  void WriteDone(int rv);
+
+  void StartRead();
+  void DoReads();
+  void ReadDoneAsync(int rv);
+  void ReadDone(int rv);
+  bool ReadLine(const std::string& line);
+
+  void Error();
+
+  TorControl(const TorControl&) = delete;
+  TorControl& operator=(const TorControl&) = delete;
+
+  bool running_;
+  scoped_refptr<base::SequencedTaskRunner> owner_task_runner_;
+  SEQUENCE_CHECKER(owner_sequence_checker_);
+
   scoped_refptr<base::SequencedTaskRunner> io_task_runner_;
   SEQUENCE_CHECKER(io_sequence_checker_);
-
-  // Connection state machine.
-  base::FilePath watch_dir_path_;
-  std::unique_ptr<base::FilePathWatcher> watcher_;
-  bool polling_;
-  bool repoll_;
 
   std::unique_ptr<net::TCPClientSocket> socket_;
 
@@ -153,90 +227,9 @@ class TorControl {
   };
   std::unique_ptr<Async> async_;
 
-  TorControl::Delegate* delegate_;
+  base::WeakPtr<TorControl::Delegate> delegate_;
 
-  void StartWatching();
-  void StopWatching();
-  void CheckingOldTorProcess(base::OnceClosure callback);
-  void WatchDirChanged(const base::FilePath& path, bool error);
-  void Poll();
-  void PollDone();
-  bool EatControlCookie(std::vector<uint8_t>&, base::Time&);
-  bool EatControlPort(int&, base::Time&);
-  bool EatOldPid(base::ProcessId* id);
-
-  void OpenControl(int port, std::vector<uint8_t> cookie);
-  void Connected(std::vector<uint8_t> cookie, int rv);
-  void Authenticated(bool error,
-                     const std::string& status,
-                     const std::string& reply);
-
-  void DoCmd(std::string cmd, PerLineCallback perline, CmdCallback callback);
-
-  void GetVersionLine(std::string* version,
-                      const std::string& status,
-                      const std::string& line);
-  void GetVersionDone(
-      std::unique_ptr<std::string> version,
-      base::OnceCallback<void(bool error, const std::string& version)> callback,
-      bool error,
-      const std::string& status,
-      const std::string& reply);
-  void GetSOCKSListenersLine(std::vector<std::string>* listeners,
-                             const std::string& status,
-                             const std::string& reply);
-  void GetSOCKSListenersDone(
-      std::unique_ptr<std::vector<std::string>> listeners,
-      base::OnceCallback<
-          void(bool error, const std::vector<std::string>& listeners)> callback,
-      bool error,
-      const std::string& status,
-      const std::string& reply);
-
-  void DoSubscribe(TorControlEvent event,
-                   base::OnceCallback<void(bool error)> callback);
-  void Subscribed(TorControlEvent event,
-                  base::OnceCallback<void(bool error)> callback,
-                  bool error,
-                  const std::string& status,
-                  const std::string& reply);
-  void DoUnsubscribe(TorControlEvent event,
-                     base::OnceCallback<void(bool error)> callback);
-  void Unsubscribed(TorControlEvent event,
-                    base::OnceCallback<void(bool error)> callback,
-                    bool error,
-                    const std::string& status,
-                    const std::string& reply);
-  std::string SetEventsCmd();
-
-  // Notify delegate on UI thread
-  void NotifyTorControlReady();
-  void NotifyTorClosed();
-  void NotifyTorCleanupNeeded(base::ProcessId id);
-
-  void NotifyTorEvent(TorControlEvent,
-                      const std::string& initial,
-                      const std::map<std::string, std::string>& extra);
-  void NotifyTorRawCmd(const std::string& cmd);
-  void NotifyTorRawAsync(const std::string& status, const std::string& line);
-  void NotifyTorRawMid(const std::string& status, const std::string& line);
-  void NotifyTorRawEnd(const std::string& status, const std::string& line);
-
-  void StartWrite();
-  void DoWrites();
-  void WriteDoneAsync(int rv);
-  void WriteDone(int rv);
-
-  void StartRead();
-  void DoReads();
-  void ReadDoneAsync(int rv);
-  void ReadDone(int rv);
-  bool ReadLine(const std::string& line);
-
-  void Error();
-
-  TorControl(const TorControl&) = delete;
-  TorControl& operator=(const TorControl&) = delete;
+  base::WeakPtrFactory<TorControl> weak_ptr_factory_{this};
 };
 
 }  // namespace tor

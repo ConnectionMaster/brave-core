@@ -34,14 +34,13 @@ import org.chromium.chrome.browser.layouts.LayoutStateProvider;
 import org.chromium.chrome.browser.layouts.LayoutType;
 import org.chromium.chrome.browser.omnibox.OmniboxFocusReason;
 import org.chromium.chrome.browser.profiles.Profile;
-import org.chromium.chrome.browser.share.ShareDelegate;
-import org.chromium.chrome.browser.share.ShareDelegateImpl.ShareOrigin;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.IncognitoStateProvider;
 import org.chromium.chrome.browser.tasks.ReturnToChromeExperimentsUtil;
+import org.chromium.chrome.browser.tasks.tab_management.TabUiFeatureUtilities;
+import org.chromium.chrome.browser.theme.ThemeColorProvider;
 import org.chromium.chrome.browser.toolbar.HomeButton;
 import org.chromium.chrome.browser.toolbar.TabCountProvider;
-import org.chromium.chrome.browser.toolbar.ThemeColorProvider;
 import org.chromium.chrome.browser.toolbar.bottom.BookmarksButton;
 import org.chromium.chrome.browser.toolbar.bottom.BottomToolbarNewTabButton;
 import org.chromium.chrome.browser.toolbar.bottom.SearchAccelerator;
@@ -75,8 +74,6 @@ class BottomToolbarCoordinator implements View.OnLongClickListener {
     /** The activity tab provider. */
     private ActivityTabProvider mTabProvider;
 
-    private final ObservableSupplier<ShareDelegate> mShareDelegateSupplier;
-    private final Callback<ShareDelegate> mShareDelegateSupplierCallback;
     private ObservableSupplierImpl<OnClickListener> mShareButtonListenerSupplier =
             new ObservableSupplierImpl<>();
     private CallbackController mCallbackController = new CallbackController();
@@ -91,28 +88,13 @@ class BottomToolbarCoordinator implements View.OnLongClickListener {
 
     private final Context mContext = ContextUtils.getApplicationContext();
 
-    /**
-     * Build the coordinator that manages the bottom toolbar.
-     * @param stub The bottom toolbar {@link ViewStub} to inflate.
-     * @param tabProvider The {@link ActivityTabProvider} used for making the IPH.
-     * @param themeColorProvider The {@link ThemeColorProvider} for the bottom toolbar.
-     * @param shareDelegateSupplier The supplier for the {@link ShareDelegate} the bottom controls
-     *         should use to share content.
-     * @param openHomepageAction The action that opens the homepage.
-     * @param setUrlBarFocusAction The function that sets Url bar focus. The first argument is
-     * @param overviewModeBehaviorSupplier Supplier for the overview mode manager.
-     * @param menuButtonHelperSupplier
-     */
     BottomToolbarCoordinator(ScrollingBottomViewResourceFrameLayout scrollingBottomView,
-            ViewStub stub, ActivityTabProvider tabProvider,
+            View root, ActivityTabProvider tabProvider,
             OnLongClickListener tabsSwitcherLongClickListner, ThemeColorProvider themeColorProvider,
-            ObservableSupplier<ShareDelegate> shareDelegateSupplier, Runnable openHomepageAction,
-            Callback<Integer> setUrlBarFocusAction,
+            Runnable openHomepageAction, Callback<Integer> setUrlBarFocusAction,
             OneshotSupplier<LayoutStateProvider> layoutStateProviderSupplier,
             ObservableSupplier<AppMenuButtonHelper> menuButtonHelperSupplier,
             BottomControlsMediator bottomControlsMediator) {
-        View root = stub.inflate();
-
         layoutStateProviderSupplier.onAvailable(
                 mCallbackController.makeCancelable(this::setLayoutStateProvider));
 
@@ -132,10 +114,6 @@ class BottomToolbarCoordinator implements View.OnLongClickListener {
 
         mThemeColorProvider = themeColorProvider;
         mTabProvider = tabProvider;
-
-        mShareDelegateSupplier = shareDelegateSupplier;
-        mShareDelegateSupplierCallback = this::onShareDelegateAvailable;
-        mShareDelegateSupplier.addObserver(mShareDelegateSupplierCallback);
 
         mMenuButtonHelperSupplier = menuButtonHelperSupplier;
         mBottomControlsMediator = bottomControlsMediator;
@@ -180,19 +158,17 @@ class BottomToolbarCoordinator implements View.OnLongClickListener {
                 topToolbarRoot, incognitoStateProvider, mThemeColorProvider, newTabClickListener,
                 closeTabsClickListener, mMenuButtonHelperSupplier, tabCountProvider);
 
+        ChromeActivity activity = BraveActivity.getBraveActivity();
         // Do not change bottom bar if StartSurface Single Pane is enabled and HomePage is not
         // customized.
-        if (!ReturnToChromeExperimentsUtil.shouldShowStartSurfaceAsTheHomePage()
+        if (!ReturnToChromeExperimentsUtil.shouldShowStartSurfaceAsTheHomePage(
+                    activity != null ? activity : mContext)
                 && BottomToolbarVariationManager.shouldBottomToolbarBeVisibleInOverviewMode()) {
             mLayoutStateObserver = new LayoutStateProvider.LayoutStateObserver() {
                 @Override
                 public void onStartedShowing(@LayoutType int layoutType, boolean showToolbar) {
                     if (layoutType != LayoutType.TAB_SWITCHER) return;
 
-                    if (mBottomControlsMediator instanceof BraveBottomControlsMediator) {
-                        ((BraveBottomControlsMediator) mBottomControlsMediator)
-                                .setCompositedViewVisibile(false);
-                    }
                     BrowsingModeBottomToolbarCoordinator browsingModeCoordinator =
                             (BrowsingModeBottomToolbarCoordinator) mBrowsingModeCoordinator;
                     browsingModeCoordinator.getSearchAccelerator().setVisibility(View.GONE);
@@ -241,16 +217,6 @@ class BottomToolbarCoordinator implements View.OnLongClickListener {
                         browsingModeCoordinator.getNewTabButtonParent().setVisibility(View.GONE);
                     }
                 }
-
-                @Override
-                public void onFinishedHiding(@LayoutType int layoutType) {
-                    if (layoutType != LayoutType.TAB_SWITCHER) return;
-
-                    if (mBottomControlsMediator instanceof BraveBottomControlsMediator) {
-                        ((BraveBottomControlsMediator) mBottomControlsMediator)
-                                .setCompositedViewVisibile(true);
-                    }
-                }
             };
         }
 
@@ -289,7 +255,6 @@ class BottomToolbarCoordinator implements View.OnLongClickListener {
             mNewTabButton.setOnLongClickListener(this);
         }
 
-        ChromeActivity activity = BraveActivity.getBraveActivity();
         if (mScrollingBottomView != null && activity != null) {
             mScrollingBottomView.setSwipeDetector(
                     activity.getCompositorViewHolder().getLayoutManager().getToolbarSwipeHandler());
@@ -301,7 +266,10 @@ class BottomToolbarCoordinator implements View.OnLongClickListener {
      */
     void setBottomToolbarVisible(boolean isVisible) {
         if (mTabSwitcherModeCoordinator != null) {
-            mTabSwitcherModeCoordinator.showToolbarOnTop(!isVisible);
+            ChromeActivity activity = BraveActivity.getBraveActivity();
+            mTabSwitcherModeCoordinator.showToolbarOnTop(!isVisible,
+                    TabUiFeatureUtilities.isGridTabSwitcherEnabled(
+                            activity != null ? activity : mContext));
         }
         mBrowsingModeCoordinator.onVisibilityChanged(isVisible);
     }
@@ -320,20 +288,6 @@ class BottomToolbarCoordinator implements View.OnLongClickListener {
             mLayoutStateProvider = null;
         }
         mThemeColorProvider.destroy();
-        mShareDelegateSupplier.removeObserver(mShareDelegateSupplierCallback);
-    }
-
-    private void onShareDelegateAvailable(ShareDelegate shareDelegate) {
-        final OnClickListener shareButtonListener = v -> {
-            if (BottomToolbarVariationManager.isShareButtonOnBottom()) {
-                RecordUserAction.record("MobileBottomToolbarShareButton");
-            }
-
-            Tab tab = mTabProvider.get();
-            shareDelegate.share(tab, /*shareDirectly=*/false, ShareOrigin.TOP_TOOLBAR);
-        };
-
-        mShareButtonListenerSupplier.set(shareButtonListener);
     }
 
     private void setLayoutStateProvider(LayoutStateProvider layoutStateProvider) {

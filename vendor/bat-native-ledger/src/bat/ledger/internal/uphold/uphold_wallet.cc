@@ -7,6 +7,7 @@
 
 #include "base/json/json_reader.h"
 #include "bat/ledger/global_constants.h"
+#include "bat/ledger/internal/common/random_util.h"
 #include "bat/ledger/internal/ledger_impl.h"
 #include "bat/ledger/internal/logging/event_log_keys.h"
 #include "bat/ledger/internal/uphold/uphold_util.h"
@@ -26,14 +27,15 @@ UpholdWallet::UpholdWallet(LedgerImpl* ledger) :
 UpholdWallet::~UpholdWallet() = default;
 
 void UpholdWallet::Generate(ledger::ResultCallback callback) {
-  auto wallet = GetWallet(ledger_);
+  auto wallet = ledger_->uphold()->GetWallet();
   if (!wallet) {
-    wallet = type::UpholdWallet::New();
+    wallet = type::ExternalWallet::New();
+    wallet->type = constant::kWalletUphold;
     wallet->status = type::WalletStatus::NOT_CONNECTED;
   }
 
   if (wallet->one_time_string.empty()) {
-    wallet->one_time_string = GenerateRandomString(ledger::is_testing);
+    wallet->one_time_string = util::GenerateRandomHexString();
   }
 
   if (wallet->token.empty() &&
@@ -64,7 +66,7 @@ void UpholdWallet::OnGenerate(
     const type::Result result,
     const User& user,
     ledger::ResultCallback callback) {
-  auto wallet_ptr = GetWallet(ledger_);
+  auto wallet_ptr = ledger_->uphold()->GetWallet();
   if (result == type::Result::EXPIRED_TOKEN) {
     ledger_->uphold()->DisconnectWallet();
     callback(result);
@@ -116,7 +118,7 @@ void UpholdWallet::OnCreateCard(
     const type::Result result,
     const std::string& address,
     ledger::ResultCallback callback) {
-  auto wallet_ptr = GetWallet(ledger_);
+  auto wallet_ptr = ledger_->uphold()->GetWallet();
   if (result != type::Result::LEDGER_OK || !wallet_ptr) {
     BLOG(0, "Card not created");
     callback(result);

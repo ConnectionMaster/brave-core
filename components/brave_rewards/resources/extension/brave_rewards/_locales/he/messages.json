@@ -51,18 +51,6 @@
     "message": "פרטים",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "היתרה שלך",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "נקודות BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "ניתן להשתמש בו ב-Brave Rewards כדי לתרום ליוצרי התוכן החביבים עליך. לא ניתן להמיר נקודות BAT ב-BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "פעיל",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "מענקי אסימון נתבעו",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "מענקי נקודות נתבעו",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "צבירה מפרסומות",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "אנא גבו את ארנק ה-Brave שלכם.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "למידע נוסף",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "הגעת למגבלת המכשיר",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "לא ניתן לאמת את הארנק שלך משום שהגעת לגבול האימות המרבי למכשיר.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "חשבון Brave Rewards שלך מחכה להפקה.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "הפעל פרסומות",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "מענק אסימון חינם ",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "מענק נקודות חינם",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "הרווחת תגמול פרסומות!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "הארנק מאומת",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "עבור לחשבון Uphold שלי",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "עבור לחשבון ה-$provider$ שלי",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "התנתקות מתגמולי Brave",
@@ -573,17 +567,9 @@
     "message": "טוקן",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "נקודות",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "מענק אסימונים",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "מענקי נקודות",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "שלום, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "דרושים לכם מינימום של 25 BAT כדי ליצור חשבון Uphold. נא לנסות שוב מאוחר יותר.\n  אם כבר יש לכם חשבון Uphold מאומת, המשיכו להתחברות.",
-    "description": "Text for login button"
+    "message": "ליצירת חשבון Uphold דרוש סכום מזערי של $amount$ BAT. אם כבר יש לך חשבון Uphold מאומת, יש להמשיך לכניסה.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "מחובר",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "תשומת לבכם: העסקאות שלכם יהיו גלויות בפני Uphold ברגע שתאשרו; למשל, הם יוכלו לראות את הנמען ואת סכום הטיפים שלכם.",
-    "description": "Displayed in login modal for uphold"
+    "message": "הערה: העסקאות שלך יהיו גלויות ל-$provider$ ברגע שתאשר; למשל, הם יוכלו לראות את מקבלי הטיפים שלך ואת סכומיהם.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "הרוויחו טוקנים ותנו בחזרה",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "הרוויחו טוקנים על ידי צפייה בפרסומות השומרות על הפרטיות ותמכו באתרים וביוצרי התוכן המועדפים עליכם באופן אוטומטי.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "באיזו תדירות תרצו לראות פרסומות?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(פרסומות לשעה)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "כמה תמיכה חודשית תרצו לתת ליוצרים החביבים עליכם?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(מרווחי הפרסומות שלך)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "מתי אתם מקבלים תגמולים",
+    "message": "מתי אתם מקבלים פרסים?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "ניתן להשתמש בטוקנים מעבר לתמיכה ביוצרים. באפשרותכם לקנות תוכן דיגיטלי וסחורות אחרות כאשר הסוחרים מצטרפים.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "לסיום, בוא/י נתקין אותך עם ההגדרות הבסיסיות",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "תוכלו לשנות זאת בהמשך.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "ווהו, אתם מוכנים!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "בשימושכם ב-Brave Rewards אתם עוזרים להפוך את האינטרנט למקום טוב יותר עבור כולם. וזה מדהים!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "אמתו את הארנק שלכם",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "על מנת למשוך את האסימונים שהרווחתם מצפיית פרסומות, תצטרכו לאמת את הארנק שלכם.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "עשה זאת מאוחר יותר",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "אמתו את הארנק שלי",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "ארנק bitFlyer הוא שירות המנוהל על ידי bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "על ידי אימות הארנק שלכם וקישורו לחשבון bitFlyer, תוכלו לאחסן ולנהל את האסימונים שהרווחתם באמצעות  Brave Rewards ביתר קלות.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$למידע נוסף$link_end$ אודות אופן הקישור של דפדפן Brave עם חשבון ה-bitFlyer שלכם.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

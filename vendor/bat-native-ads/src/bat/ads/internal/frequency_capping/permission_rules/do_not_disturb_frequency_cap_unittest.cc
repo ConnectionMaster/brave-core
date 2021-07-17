@@ -20,11 +20,12 @@ class BatAdsDoNotDisturbFrequencyCapTest : public UnitTestBase {
 };
 
 TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
-    AllowAdWhileBrowserIsInactiveBetween6amAnd9pmForAndroid) {
+       AllowAdWhileBrowserIsInactiveBetween6amAnd9pmForAndroid) {
   // Arrange
   MockPlatformHelper(platform_helper_mock_, PlatformType::kAndroid);
 
-  TabManager::Get()->OnBackgrounded();
+  BrowserManager::Get()->OnInactive();
+  BrowserManager::Get()->OnBackgrounded();
 
   AdvanceClockToMidnightUTC();
 
@@ -32,7 +33,7 @@ TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
   {
     // Verify 5:59 AM
     AdvanceClock(base::TimeDelta::FromHours(5) +
-        base::TimeDelta::FromMinutes(59));
+                 base::TimeDelta::FromMinutes(59));
 
     // Assert
     DoNotDisturbFrequencyCap frequency_cap;
@@ -53,7 +54,7 @@ TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
   {
     // Verify 8:59 PM
     AdvanceClock(base::TimeDelta::FromHours(14) +
-        base::TimeDelta::FromMinutes(59));
+                 base::TimeDelta::FromMinutes(59));
 
     // Assert
     DoNotDisturbFrequencyCap frequency_cap;
@@ -73,20 +74,21 @@ TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
 }
 
 TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
-    AllowAdWhileBrowserIsActiveForAndroid) {
+       AllowAdWhileBrowserIsActiveForAndroid) {
   // Arrange
   MockPlatformHelper(platform_helper_mock_, PlatformType::kAndroid);
 
-  TabManager::Get()->OnForegrounded();
+  BrowserManager::Get()->OnActive();
+  BrowserManager::Get()->OnForegrounded();
 
   AdvanceClock(base::Time::Now().LocalMidnight() +
-      base::TimeDelta::FromHours(24) - base::Time::Now());
+               base::TimeDelta::FromHours(24) - base::Time::Now());
 
   // Act
   {
     // Verify 5:59 AM
     AdvanceClock(base::TimeDelta::FromHours(5) +
-        base::TimeDelta::FromMinutes(59));
+                 base::TimeDelta::FromMinutes(59));
 
     // Assert
     DoNotDisturbFrequencyCap frequency_cap;
@@ -107,7 +109,7 @@ TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
   {
     // Verify 8:59 PM
     AdvanceClock(base::TimeDelta::FromHours(14) +
-        base::TimeDelta::FromMinutes(59));
+                 base::TimeDelta::FromMinutes(59));
 
     // Assert
     DoNotDisturbFrequencyCap frequency_cap;
@@ -126,15 +128,15 @@ TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
   }
 }
 
-TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
-    AlwaysAllowAdForIOS) {
+TEST_F(BatAdsDoNotDisturbFrequencyCapTest, AlwaysAllowAdForIOS) {
   // Arrange
   MockPlatformHelper(platform_helper_mock_, PlatformType::kIOS);
 
-  TabManager::Get()->OnForegrounded();
+  BrowserManager::Get()->OnActive();
+  BrowserManager::Get()->OnForegrounded();
 
   AdvanceClock(base::Time::Now().LocalMidnight() +
-      base::TimeDelta::FromHours(24) - base::Time::Now());
+               base::TimeDelta::FromHours(24) - base::Time::Now());
 
   // Act
   {
@@ -157,15 +159,15 @@ TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
   }
 }
 
-TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
-    AlwaysAllowAdForMacOS) {
+TEST_F(BatAdsDoNotDisturbFrequencyCapTest, AlwaysAllowAdForMacOS) {
   // Arrange
   MockPlatformHelper(platform_helper_mock_, PlatformType::kWindows);
 
-  TabManager::Get()->OnForegrounded();
+  BrowserManager::Get()->OnActive();
+  BrowserManager::Get()->OnForegrounded();
 
   AdvanceClock(base::Time::Now().LocalMidnight() +
-      base::TimeDelta::FromHours(24) - base::Time::Now());
+               base::TimeDelta::FromHours(24) - base::Time::Now());
 
   // Act
   {
@@ -188,15 +190,15 @@ TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
   }
 }
 
-TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
-    AlwaysAllowAdForWindows) {
+TEST_F(BatAdsDoNotDisturbFrequencyCapTest, AlwaysAllowAdForWindows) {
   // Arrange
   MockPlatformHelper(platform_helper_mock_, PlatformType::kWindows);
 
-  TabManager::Get()->OnForegrounded();
+  BrowserManager::Get()->OnActive();
+  BrowserManager::Get()->OnForegrounded();
 
   AdvanceClock(base::Time::Now().LocalMidnight() +
-      base::TimeDelta::FromHours(24) - base::Time::Now());
+               base::TimeDelta::FromHours(24) - base::Time::Now());
 
   // Act
   {
@@ -219,15 +221,15 @@ TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
   }
 }
 
-TEST_F(BatAdsDoNotDisturbFrequencyCapTest,
-    AlwaysAllowAdForLinux) {
+TEST_F(BatAdsDoNotDisturbFrequencyCapTest, AlwaysAllowAdForLinux) {
   // Arrange
   MockPlatformHelper(platform_helper_mock_, PlatformType::kLinux);
 
-  TabManager::Get()->OnForegrounded();
+  BrowserManager::Get()->OnActive();
+  BrowserManager::Get()->OnForegrounded();
 
   AdvanceClock(base::Time::Now().LocalMidnight() +
-      base::TimeDelta::FromHours(24) - base::Time::Now());
+               base::TimeDelta::FromHours(24) - base::Time::Now());
 
   // Act
   {

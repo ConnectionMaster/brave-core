@@ -51,18 +51,6 @@
     "message": "Mga Detalye",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Ang Iyong Balanse",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Mga Puntos sa BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "magagamit sa Brave Rewards para mag-ambag sa iyong mga paboritong content creator. Hindi maipapalit ang BAT Points para sa BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "naka-on",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Mga Na-claim na Grant para sa Token",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Na-claim na ang Mga Grant para sa Puntos",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Mga kita mula sa Mga Ad",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Paki-back up ang iyong wallet sa Brave.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Matuto Pa",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Naabot na ang Limitasyon sa Device",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Hindi ma-verify ang iyong wallet dahil naabot mo na ang maximum na limitasyon sa na-verify na device.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Naghihintay ng deposito ang iyong Brave Rewards account.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "I-on ang Mga Ad",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Libreng Grant para sa Token",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Libreng Grant para sa Puntos",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Nakakuha ka ng Ads Reward!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Na-verify ang Wallet",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Pumunta sa aking Uphold account",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Pumunta sa aking $provider$ account",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Idiskonekta mula sa Mga Reward ng Brave",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "mga puntos",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Mga Token Grant",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Mga Grant para sa Puntos",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Kumusta, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Kailangang may minimum ka na 25 BAT para makagawa ng Uphold account. Pakisubukang muli sa ibang pagkakataon. \n Kung mayroon ka nang na-verify na Uphold account, magpatuloy sa pag-log in.",
-    "description": "Text for login button"
+    "message": "Kailangang may minimum ka na $amount$ BAT para makagawa ng Uphold account. Kung mayroon ka nang na-verify na Uphold account, magpatuloy sa pag-log in.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Nakakonekta",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Tandaan: Makikita ang iyong mga transaksyon sa Uphold kapag nagbigay ka ng pahintulot; halimbawa, makikita nila ang recipient at halaga ng mga tip mo.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Tandaan: Makikita ang iyong mga transaksyon sa $provider$ kapag nagbigay ka ng pahintulot; halimbawa, makikita nila ang tatanggap at halaga ng mga tip mo.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Makakuha ng Mga Token at Gumanti ng Tulong",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Makakuha ng mga token sa pamamagitan ng pagtingin sa mga ad na gumagalang sa privacy at awtomatikong suportahan ang iyong mga paboritong site at creator ng content.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Gaano ka kadalas nakakakita ng mga ad?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(mga ad bawat oras)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Gaano kalaking buwanang suporta ang gusto mong ibigay sa iyong mga paboritong creator?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(mula sa iyong mga kinikita sa mga ad)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Kailan ka makakatanggap ng mga reward",
+    "message": "Kailan ka makakatanggap ng mga reward?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Magagamit ang mga token hindi lang sa pagsuporta sa mga creator. Puwede kang bumili ng digital na content at iba pang produkto sa pagdating ng mga merchant.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Panghuli, tutulungan ka naming i-set up ang mga pangunahing setting",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Puwede mo itong baguhin sa ibang pagkakataon.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Ayos, handa ka na!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Sa pamamagitan ng paggamit sa Brave Rewards, nakakatulong kang gawing mas magandang lugar ang web para sa lahat. At mabuti iyon!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "I-verify ang iyong wallet",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Para ma-withdraw ang mga token na nakuha mo para sa panonood ng mga ad, kakailanganin mong i-verify ang iyong wallet.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Gawin ito sa ibang pagkakataon",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "I-verify ang aking wallet",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Ang bitFlyer wallet ay isang serbisyong pinapamahalaan ng bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Sa pamamagitan ng pag-verify sa iyong wallet at pag-link nito sa isang bitFlyer account, madali mong maso-store at mapapamahalaan ang mga token na nakuha mo sa pamamagitan ng Brave Rewards",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Matuto pa$link_end$ tungkol sa kung paano i-link ang iyong Brave browser sa bitFlyer account mo.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

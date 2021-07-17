@@ -7,7 +7,9 @@
 #define BRAVE_COMPONENTS_GREASELION_BROWSER_GREASELION_SERVICE_IMPL_H_
 
 #include <map>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "base/files/file_path.h"
@@ -18,6 +20,7 @@
 #include "base/version.h"
 #include "brave/components/greaselion/browser/greaselion_service.h"
 #include "extensions/common/extension_id.h"
+#include "third_party/abseil-cpp/absl/types/optional.h"
 #include "url/gurl.h"
 
 namespace base {
@@ -61,10 +64,14 @@ class GreaselionServiceImpl : public GreaselionService {
                            const extensions::Extension* extension,
                            extensions::UnloadedExtensionReason reason) override;
 
+  using GreaselionConvertedExtension =
+      std::pair<scoped_refptr<extensions::Extension>, base::ScopedTempDir>;
+
  private:
   void SetBrowserVersionForTesting(const base::Version& version) override;
   void CreateAndInstallExtensions();
-  void PostConvert(scoped_refptr<extensions::Extension> extension);
+  void PostConvert(
+      absl::optional<GreaselionConvertedExtension> converted_extension);
   void Install(scoped_refptr<extensions::Extension> extension);
   void MaybeNotifyObservers();
 

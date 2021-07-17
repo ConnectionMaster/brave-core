@@ -2,39 +2,42 @@
 <!DOCTYPE translationbundle>
 <translationbundle lang="nl">
 <translation id="7307834434086582547">Schakel Brave Shields in/uit</translation>
-<translation id="6303294677342628402">Schilden</translation>
-<translation id="6132506775968708399">Blokkeer cookies van derden</translation>
-<translation id="7835726359440951858">Advertenties en Tracking Blokkeren</translation>
 <translation id="3570081523466826008">Waardeer verbindingen op naar HTTPS</translation>
+<translation id="2278950434998763147">Hiermee worden sommige websites met gebruik van een beveiligde HTTPS-verbinding geopend in plaats van standaard HTTP.</translation>
 <translation id="94154759592465111">Blokkeer scripts</translation>
-<translation id="7458422973722236530">Vingerafdrukbescherming</translation>
+<translation id="3518266709656143462">Hiermee wordt Javascript geblokkeerd (websites werken hierdoor mogelijk niet)</translation>
 <translation id="5709627087332022422">Blokkeer cross-site trackers</translation>
-<translation id="6754976710186182237">Vingerafdrukmethoden</translation>
-<translation id="2313532038420432247">HTTPS Upgrades</translation>
-<translation id="7461425058443653485">Scripts geblokkeerd</translation>
 <translation id="6052725679982758334">Sociale media blokkeren</translation>
 <translation id="7498695072878479744">Sta Google-inlogknoppen toe op sites van externe partijen</translation>
 <translation id="863171915776379000">Sta Facebook-aanmeldingen en embedded berichten toe</translation>
 <translation id="5165042248369837294">Embedded tweets van Twitter toestaan</translation>
 <translation id="958971637207126733">Sta ingesloten berichten van LinkedIn toe</translation>
-<translation id="3834924998750356151">Blokkeringen Weergave</translation>
-<translation id="1713450908129883784">Individuele Bedieningselementen</translation>
 <translation id="6302422639282249274">Beheer Brave Rewards</translation>
-<translation id="1506061864768559482">Zoekmachine</translation>
+<translation id="8877432762827303535">Online afrekenen</translation>
+<translation id="6583902294974160967">Ondersteuning</translation>
+<translation id="1799030480311994998">Functies</translation>
+<translation id="5345505584130165588">Beveiliging &amp; privacy van Brave</translation>
+<translation id="4692623383562244444">Zoekmachines</translation>
 <translation id="1468415711258933398">Standaard Tab</translation>
 <translation id="3377025655491224618">Incognitotabblad</translation>
 <translation id="9148058034647219655">Sluiten</translation>
-<translation id="520895744850022668">Overal HTTPS</translation>
-<translation id="8710614491157212477">Opent indien mogelijk ondersteunde sites met HTTPS in plaats van HTTP</translation>
-<translation id="8387201461264842096">Advertentieblok</translation>
-<translation id="1934885595886623674">Voorkomt dat advertenties worden geladen</translation>
+<translation id="4022987104439075738">IPFS-gateway</translation>
+<translation id="2688519859165248360">Staat navigatie naar IPFS-hulpmiddelen toe met een IPFS-gateway</translation>
+<translation id="7534079972563542000">Unstoppable Domains</translation>
+<translation id="6513892817556267573">Ethereum Name Service</translation>
+<translation id="3894650624018948468">Methode omzetten</translation>
+<translation id="2356070529366658676">Vragen</translation>
+<translation id="4176463684765177261">Uitgeschakeld</translation>
+<translation id="2218918398178303658">DNS met HTTPS</translation>
+<translation id="1448289340149908413">Ethereum</translation>
 <translation id="5787084571334399599">Voorkomt dat de browser vingerafdrukken neemt</translation>
 <translation id="7459000603787995422">Tabbladen sluiten bij afsluiten</translation>
+<translation id="4448697385961650078">Blokkeer trackers &amp; advertenties</translation>
+<translation id="2448893613530489637">Hiermee wordt voorkomen dat trackers &amp; advertenties op webpagina's worden getoond</translation>
 <translation id="1680858055899097121">Blijf niet tussen tabbladen doorbladeren.</translation>
-<translation id="6469509880167172749">Stuur automatisch volledig privé productanalyses naar Brave</translation>
-<translation id="7090566321964540749">Met deze anonieme info kan Brave alleen het algehele gebruik van bepaalde functies schatten.</translation>
-<translation id="453601949003770390">Trackers &amp; advertenties geblokkeerd</translation>
-<translation id="347604927162577559">Data\nBespaard</translation>
+<translation id="7142548388914389999">Productanalyse met privacybescherming (P3A) toestaan</translation>
+<translation id="5469408008145872264">Deze volledige geanonimiseerde info helpt Brave om het algehele gebruik van bepaalde functies te schatten en voor jou te verbeteren.</translation>
+<translation id="7977176350719484850">Geschatte hoeveelheid\ndata bespaard</translation>
 <translation id="9008534313521214777">Gem. Bespaarde\nTijd</translation>
 <translation id="6572660632052512096">Desktop-modus</translation>
 <translation id="1340503115760585811">Schakel Desktop Weergave in voor nieuwe tabbladen</translation>
@@ -43,12 +46,13 @@
 <translation id="4479934682648362332">Voorkeur voor desktopversie van sites</translation>
 <translation id="1842747674580016420">Video afspelen in Brave</translation>
 <translation id="5368992950177874750">Indien ingeschakeld, worden video's afgespeeld in Brave in plaats van de bijbehorende app</translation>
-<translation id="2645380101799517405">Besturing</translation>
+<translation id="181905442828471321">Standaardinstellingen van Brave Shields</translation>
+<translation id="2675679258824361492">Andere privacy-instellingen</translation>
+<translation id="8026334261755873520">Browsegegevens wissen</translation>
 <translation id="5965081608816406060">Achtergrondvideo afspelen</translation>
 <translation id="6332924730165919598">Als je alle tabbladen sluit, wordt Brave gesloten</translation>
 <translation id="1580125697191336644">Experimenteel. Hiermee kun je audio van video op de achtergrond afspelen wanneer het tabblad niet actief is of het apparaatscherm is uitgeschakeld. Probeer over te schakelen naar de bureaubladmodus als deze functie niet werkt.</translation>
 <translation id="59174027418879706">Ingeschakeld</translation>
-<translation id="4176463684765177261">Uitgeschakeld</translation>
 <translation id="4150201353443180367">Weergave</translation>
 <translation id="2433507940547922241">Vormgeving</translation>
 <translation id="2804710924397009224">Verberg het Brave-beloningen-pictogram</translation>
@@ -58,17 +62,13 @@
 <translation id="8701563696941209024">HERSTART NU</translation>
 <translation id="834487290629916192">LATER</translation>
 <translation id="8281886186245836920">Overslaan</translation>
-<translation id="316832010181763471">Onboarding van zoekmachines</translation>
 <translation id="986879628471635371">Problemen met onboarding oplossingen</translation>
 <translation id="5808759341041733958">Kies standaard zoekmachine</translation>
 <translation id="1331593888918588693">U kunt uw voorkeur altijd later wijzigen in de instellingen van de app.</translation>
-<translation id="7053983685419859001">Blokkeren</translation>
 <translation id="5806601733251372221">Brave Shields</translation>
-<translation id="2880356288762235261">privacy-inbreukmakende advertenties en trackers zodat je kunt browsen zonder op internet te worden gevolgd.</translation>
 <translation id="8537217141725709400">Verdien <ph name="TOKEN"/>s</translation>
 <translation id="3333887201479867589">Brave Rewards</translation>
 <translation id="5870330605209713397">door advertenties te bekijken die privacy in acht nemen en uw favoriete sites en makers bij standaard ondersteunen.</translation>
-<translation id="821707262661492716">voor het bekijken van advertenties die privacy respecteren.</translation>
 <translation id="5302488867897327287">Door te tikken op 'Starten met het gebruik van Brave Rewards', gaat u akkoord met</translation>
 <translation id="4281844954008187215">Servicevoorwaarden</translation>
 <translation id="6871397658902960384">Begin met bladeren</translation>
@@ -76,12 +76,10 @@
 <translation id="1448877943847791441">Brave toont je eerste advertentie in</translation>
 <translation id="4410793187232041318">Nu verdien je token van Brave Ads.</translation>
 <translation id="6511854390690723657">Dit is je eerste Brave advertentie. Tik om meer te leren.</translation>
-<translation id="4930714375720679147">Inschakelen</translation>
-<translation id="2453860139492968684">Voltooien</translation>
 <translation id="2070991379950719711">Starten met het gebruik van Brave Rewards</translation>
 <translation id="48520986898237073">Doorgaan naar wallet</translation>
 <translation id="3570367516044491911">Stel in als standaard browser</translation>
-<translation id="7493053924837150477">Selecteer Brave Browser in de lijst en tik op 'Altijd'</translation>
+<translation id="19715420010996093">Selecteer de Brave Browser en druk op 'Altijd'</translation>
 <translation id="3546439402724649282">Brave is al ingesteld als je standaardbrowser.</translation>
 <translation id="8389661903259423907">Je hebt al een standaardbrowser ingesteld. Je kunt de standaardbrowser wijzigen in de instellingen van je app.</translation>
 <translation id="7091885296442320770">Brave is razendsnel</translation>
@@ -117,28 +115,15 @@
 <translation id="8220228041552340594">OKTOBER</translation>
 <translation id="8280223431922155812">NOVEMBER</translation>
 <translation id="4254029385847607686">DECEMBER</translation>
-<translation id="1916285746997567466">Maak je klaar om het volgende internet te ervaren.</translation>
-<translation id="3540580927110899945">Je kunt nu <ph name="TOKEN"/>s verdienen voor het bekijken van
-privacy-respecterende advertenties.</translation>
-<translation id="1327938628925645979">DOE MEE MET BELONINGEN</translation>
-<translation id="5567439033041178034">LEER MEER</translation>
 <translation id="3780605330121608425">Je wallet</translation>
-<translation id="8845154268466251503">BAT</translation>
 <translation id="7837083325641186736"><ph name="VALUE"/></translation>
 <translation id="3826081199286264109">USD</translation>
-<translation id="2104073734684466851">Donaties</translation>
 <translation id="1165667598801520610">Voeg geld toe</translation>
 <translation id="8428213095426709021">instellingen</translation>
-<translation id="2012723204723845092">Welkom terug!</translation>
-<translation id="7669994301500276741">Word beloond voor het browsen.</translation>
-<translation id="8203529727745387785">Verdien door privacy respecterende
-advertenties en ondersteun
-contentmakers waar je van houdt.</translation>
-<translation id="5148719990624240755">SCHAKEL BRAVE REWARDS IN</translation>
 <translation id="8772672608371898774">Uitgever geverifieerd door Brave</translation>
 <translation id="1397683270551078781">Nog niet geverifieerd</translation>
-<translation id="5727208111992260840">Deze maker heeft zich nog niet aangemeld om bijdragen van Brave-gebruikers te ontvangen.
-        Fooi die je verzendt, blijven in je portefeuille totdat ze worden geverifieerd.</translation>
+<translation id="880893465294676334">Deze geverifieerde maker van Brave heeft zijn account nog niet geconfigureerd en kan daarom geen bijdragen van Brave-gebruikers ontvangen.
+        Alle door jou verzonden fooien blijven in je wallet, totdat deze gebruiker dit proces heeft voltooid.</translation>
 <translation id="8918760045046434238">Stuur een fooitje...</translation>
 <translation id="1978261665418056203">Nog geen activiteiten
 deze maand...</translation>
@@ -152,9 +137,8 @@ deze maand...</translation>
 <translation id="13853865024308201">Claimen</translation>
 <translation id="7335371657242627509">Deelname aan Auto-Contribute</translation>
 <translation id="5463954686005964104">Tip deze site maandelijks</translation>
-<translation id="7530570094705720669">Wallet aanmaken</translation>
 <translation id="937392350501765664"><ph name="MONTH"/> <ph name="YEAR"/></translation>
-<translation id="4751553692764711651">Je hebt <ph name="BAT_VALUE"/>  <ph name="BAT_TEXT"/> bijgedragen.</translation>
+<translation id="4781696154289395607">Jij hebt <ph name="BAT_VALUE"/> BAT bijgedragen.</translation>
 <translation id="7997676409547731821">Je geplande maandelijkse betaling voor Automatische Deelname en maandelijkse fooi konden niet worden voltooid vanwege onvoldoende saldo. We proberen het over 30 dagen opnieuw.</translation>
 <translation id="5306913077198665897">Er is een probleem opgetreden bij het verwerken van je fooi. Probeer het opnieuw.</translation>
 <translation id="2429828319207652823">Er is een probleem opgetreden bij het verwerken van je bijdrage.</translation>
@@ -168,19 +152,14 @@ deze maand...</translation>
 <translation id="1713542052890184975">Maak een back-up van je Brave-wallet.</translation>
 <translation id="2323069945529668668">Oh jee!</translation>
 <translation id="7510166204621526816">De server van het Brave Beloningssysteem reageert niet. We zullen dit zo snel mogelijk oplossen.</translation>
-<translation id="7117228822971127758">Probeer het later opnieuw</translation>
-<translation id="3068742524072211213">verloopt op <ph name="DATE"/></translation>
-<translation id="4292832015778676417">verdiend</translation>
 <translation id="683765328936486920">op Youtube</translation>
 <translation id="8969049974285901797">op Twitch</translation>
-<translation id="4376933248999950592">Je hebt <ph name="BAT_VALUE"/>  <ph name="BAT_TEXT"/> aangewezen voor ontwikkelaars die zich nog niet hebben aangemeld om bijdragen te ontvangen. Je browser blijft proberen bij te dragen totdat ze verifiëren, of tot er 90 dagen zijn verstreken.</translation>
+<translation id="3692362746128814480">Je hebt <ph name="BAT_VALUE"/> BAT aangewezen voor makers die dat zich nog niet hebben aangemeld om bijdragen te ontvangen. Je browser blijft proberen bij te dragen totdat ze verifiëren of tot 90 dagen zijn verstreken.</translation>
 <translation id="3101693828171454453">niet genoeg <ph name="TOKEN"/>s</translation>
 <translation id="6940273954212603510">alsjeblieft</translation>
 <translation id="1036277985068412734">voeg geld toe</translation>
 <translation id="3492491948683276944">stel maandelijkse fooi in</translation>
-<translation id="4162066325465825185">Het spijt ons dat Brave Rewards niet beschikbaar is op je apparaat</translation>
 <translation id="8038539967102225446">Brave Ads zijn hier!</translation>
-<translation id="8985635554450124959">Synchronisatie kon niet worden opgezet</translation>
 <translation id="222883304157347087">(dit apparaat)</translation>
 <translation id="4157741509680155021">APPARATEN IN SYNCHRONISATIEKETEN</translation>
 <translation id="279635009973773843">APPARATEN LADEN...</translation>
@@ -233,10 +212,11 @@ deze maand...</translation>
 <translation id="6810078320346589989">Maak een bladwijzer aan</translation>
 <translation id="3396347744975515056">Brave Sync is ge-update and vereist configuratie</translation>
 <translation id="7473245612074035141">Begin met de Configuratie</translation>
-<translation id="1872784258300710671">Brave maakt gebruik van volledig privé productanalyses om het totale gebruik van bepaalde functies te schatten</translation>
-<translation id="8712637175834984815">Begrepen</translation>
-<translation id="4394049700291259645">Uitschakelen</translation>
-<translation id="8446884382197647889">Meer informatie</translation>
+<translation id="8985635554450124959">Synchronisatie kon niet worden opgezet</translation>
+<translation id="2514300153301737214">We hebben gedetecteerd dat u Brave Sync ingeschakeld heeft, maar uw systeemsynchronisatie is uitgeschakeld en staat Brave niet toe te synchroniseren. Klik om de instellingen te openen</translation>
+<translation id="7173114856073700355">Instellingen openen</translation>
+<translation id="6965382102122355670">OK</translation>
+<translation id="4450893287417543264">Laat niet weer zien</translation>
 <translation id="597993392929850353">Brave Licentie</translation>
 <translation id="6336451774241870485">Nieuw privétabblad</translation>
 <translation id="6199596294742117349">Dit is een privaat tabblad</translation>
@@ -249,16 +229,7 @@ deze maand...</translation>
 <translation id="7541582550122501404">In afwachting van bijdrage</translation>
 <translation id="8520059774736886747">Ontwikkelaar <ph name="PUBLISHER_NAME"/> onlangs geverifieerd</translation>
 <translation id="7924320838799747606">Je overzicht</translation>
-<translation id="6160106411363856968">BAP</translation>
-<translation id="1081826981536899387">BAT-punten</translation>
-<translation id="9212459913845238740">Puntentoekenningen geclaimd</translation>
-<translation id="2132683977638223450">Gratis puntentoekenning</translation>
-<translation id="4522570452068850558">Details</translation>
 <translation id="1486343603936278248">token</translation>
-<translation id="8713995420537272453">punt</translation>
-<translation id="2802462801862186499">1,000 <ph name="TIP"/></translation>
-<translation id="3215472762156924589">5,000 <ph name="TIP"/></translation>
-<translation id="487252517537426371">10,000 <ph name="TIP"/></translation>
 <translation id="7781069478569868053">Nieuwe tabbladpagina</translation>
 <translation id="8522669544471808198">Achtergrondafbeeldingen weergeven</translation>
 <translation id="3870475560794762985">Gesponsorde afbeeldingen tonen</translation>
@@ -301,6 +272,8 @@ deze maand...</translation>
 <translation id="9132378787893584761">Deel Brave met je vrienden!</translation>
 <translation id="717952606991220586">Oeps, er is iets misgegaan. Probeer het later opnieuw.</translation>
 <translation id="2524310205387880526">Beoordeel Brave</translation>
+<translation id="987264212798334818">Algemeen</translation>
+<translation id="1116694919640316211">Over</translation>
 <translation id="6680650203439190394">Tarief</translation>
 <translation id="2635089463885398597">Hoe zou je je ervaring met Brave beoordelen?</translation>
 <translation id="141901961143729572">Deel jouw mening</translation>
@@ -315,18 +288,21 @@ deze maand...</translation>
 <translation id="1465733111003593696">Je verdient tokens voor het bekijken van deze afbeelding.</translation>
 <translation id="7877201489035217175">Meer informatie over gesponsorde afbeeldingen</translation>
 <translation id="828092975561478703">Voor elke gesponsorde afbeelding die je bekijkt, ontvang je 70% van de opbrengst in de vorm van tokens. Met Brave Ads heb je altijd de controle over welke advertenties je ziet.</translation>
+<translation id="3624048886326677117">Trackers &amp; advertenties blokkeren (aggressief)</translation>
+<translation id="7151914815476509258">Trackers &amp; advertenties blokkeren (standaard)</translation>
+<translation id="7384778069178817075">Laat alle trackers &amp; advertenties toe</translation>
 <translation id="4941539331405513605">Cross-site cookies blokkeren</translation>
 <translation id="3763681089644577874">Cookies blokkeren</translation>
 <translation id="614747795780742163">Voorkomt dat websites informatie over je eerdere bezoeken opslaan</translation>
 <translation id="6883611015375728278">Blokkeer alle cookies</translation>
 <translation id="5657156137487675418">Sta alle cookies toe</translation>
-<translation id="5963670684159057574">Vingerafdrukken tussen sites blokkeren</translation>
 <translation id="3895527457258986253">Blokkeer fingerprinting</translation>
+<translation id="7854108565842971747">Dit zijn de standaard Shields-instellingen voor nieuwe websites. Wijzigingen aan deze instellingen hebben geen invloed op je bestaande instellingen per website.</translation>
 <translation id="184568144098869637">Voorkomt dat browsers je apparaat herkennen</translation>
-<translation id="7396366757003005317">Vingerafdruk geblokkeerd(strikt, kan ervoor zorgen dat sites niet werken)</translation>
-<translation id="700453611199558021">Vingerafdruk geblokkeerd(standaard)</translation>
+<translation id="7445306466605902444">Vingerafdrukken geblokkeerd (strikt, kan websites doen stukgaan)</translation>
+<translation id="5582686930349810484">Vingerafdrukken geblokkeerd (standaard)</translation>
 <translation id="769702552748212954">Sta alle vingerafdrukken toe</translation>
-<translation id="5142293891785304489">Trackers, advertenties en meer geblokkeerd</translation>
+<translation id="876424292214881779">Advertenties en andere griezelige dingen zijn geblokkeerd</translation>
 <translation id="6930134873084561197">Sites bevatten vaak cookies en scripts die zowel jou als je apparaat proberen te identificeren. Ze willen erachter komen wie je bent en je volgen over het hele web; ze volgen op elke site wat je doet.\n\nBrave blokkeert deze dingen, zodat je kunt surfen zonder dat je gevolgd wordt.</translation>
 <translation id="8553998445606452168">Over Brave Shields</translation>
 <translation id="8912304686498704084">BOVEN</translation>
@@ -339,14 +315,35 @@ deze maand...</translation>
 <translation id="5299848999918506028">Bedankt!</translation>
 <translation id="76550953340008122">Bedankt dat u de ontwikkelaars van Brave heeft laten weten dat er iets mis is met deze site. We zullen ons best doen om het te repareren!</translation>
 <translation id="650318023204990401">Geavanceerde instellingen</translation>
-<translation id="7182293319417450928">Een minimumsaldo van 25 BAT is vereist om te controleren.</translation>
 <translation id="1275664486910646411">Toon top sites voor automatisch aanvullen</translation>
 <translation id="5516010970279932133">Toon voorgesteld sites voor automatisch aanvullen</translation>
 <translation id="5370478469168390143">Sla gegevens online op</translation>
 <translation id="1118508688433541158">Browse sneller en blokkeer advertenties met Brave</translation>
-<translation id="915835519491851291">U hebt zojuist enkele trackers &amp; advertenties geblokkeerd.</translation>
+<translation id="6589609065569680305">Geblokkeerde trackers &amp; advertenties op deze pagina.</translation>
+<translation id="1283922192221545319">Brave Shields heeft zojuist uw privacy beschermd.</translation>
 <translation id="3286927551967858325">Neem een kijkje</translation>
-<translation id="2929661208078053609">Mooi!</translation>
+<translation id="6227291358910554399">Advertenties worden geblokkeerd bij het kijken van video's op deze website.</translation>
+<translation id="7802980684512102010">Video's zonder reclame gebruiken minder data.</translation>
+<translation id="2046475855484346614">10+ trackers &amp; advertenties geblokkeerd op deze pagina.</translation>
+<translation id="5806208250835099572">Brave Shields beschermt uw online privacy op elke website.</translation>
+<translation id="5617673581653540121">Uw verbinding is nu versleuteld.</translation>
+<translation id="4055107796760496928">Waar beschikbaar verbetert Brave automatisch uw verbinding naar beveiligd.</translation>
+<translation id="8869714780588464835">Het nieuws delen</translation>
+<translation id="5372054974373489308">1000 trackers &amp; advertenties zijn geblokkeerd.</translation>
+<translation id="2338952568654182692">5000 trackers &amp; advertenties zijn geblokkeerd.</translation>
+<translation id="5289711064670408815">10.000 trackers &amp; advertenties zijn geblokkeerd.</translation>
+<translation id="7150609425870119925">25.000 trackers &amp; advertenties zijn geblokkeerd.</translation>
+<translation id="7856423737692274943">75.000 trackers &amp; advertenties zijn geblokkeerd.</translation>
+<translation id="7252948690584461484">100.000 trackers &amp; advertenties zijn geblokkeerd.</translation>
+<translation id="7579633043057546002">250.000 trackers &amp; advertenties zijn geblokkeerd.</translation>
+<translation id="8710984962087186365">500.000 trackers &amp; advertenties zijn geblokkeerd.</translation>
+<translation id="4383614608366907253">1.000.000 trackers &amp; advertenties zijn geblokkeerd.</translation>
+<translation id="6819535527112707811">Dit maakt jou best bijzonder.</translation>
+<translation id="5819231438994979709">Je maakt deel uit van een exclusief gezelschap.</translation>
+<translation id="5174835622895450943">Je hebt het niveau van de pro's bereikt.</translation>
+<translation id="4625546020186631261">Je hebt het niveau Master bereikt.</translation>
+<translation id="4288835546846020774">Je hebt het niveau Grand Master bereikt.</translation>
+<translation id="6863752373888328811">Je hebt het niveau Legendary bereikt.</translation>
 <translation id="4776948189086901857">Brave werkt overal</translation>
 <translation id="1606322780901645965">Download Brave op brave.com op uw laptop of tablet voor sneller internet met meer privacy.</translation>
 <translation id="8374242949413616101">Privacybescherming</translation>
@@ -363,6 +360,7 @@ deze maand...</translation>
 <translation id="4302754476737420523">3 maanden</translation>
 <translation id="8248593573177859437">Privacyrapport</translation>
 <translation id="1274039301958114163">Melding privacyrapport</translation>
+<translation id="453601949003770390">Trackers &amp; advertenties geblokkeerd</translation>
 <translation id="1581614543353331529">Nog geen gegevens beschikbaar</translation>
 <translation id="2401984885421380890">Trackers en Advertenties\nGeblokkeerd</translation>
 <translation id="2662183408296991265">Bespaarde data\n(<ph name="DATA_SAVED"/>)</translation>
@@ -384,9 +382,11 @@ deze maand...</translation>
 <translation id="1880168210969863408">Mooi! U hebt 10 minuten laadtijd bespaard met Brave browser.&#128168;&#128168;</translation>
 <translation id="7408493389591475748">Begin met browsen om uw privacyrapport te zien</translation>
 <translation id="9080777565335515917">Stel Brave in als uw standaardbrowser om privé en veilig te kunnen surfen.</translation>
-<translation id="7801488941710395275">Staat Brave toe om uw privacystatistieken weer te geven</translation>
+<translation id="1390943217516275883">Staat Brave toe om uw privacystatistieken weer te geven</translation>
 <translation id="1763352720905582220">Verzend een wekelijks privacyrapport</translation>
 <translation id="1811691435325545066">Wis alle gegevens van privacyrapporten</translation>
+<translation id="5966003059662780423">Gegevens wissen bij het verlaten</translation>
+<translation id="3980704343258720102">Hiermee worden alle browsergegevens gewist</translation>
 <translation id="8089997572759938512">Zet uw privacyrapporten op nul</translation>
 <translation id="2718046830255553131">Gegevens van privacyrapporten zijn gewist.</translation>
 <translation id="7559243474426790340">Status vernieuwen</translation>
@@ -394,6 +394,7 @@ deze maand...</translation>
 <translation id="1383876407941801731">Zoeken</translation>
 <translation id="1972589975368876259">Stapel bewerken</translation>
 <translation id="2490330380242414851">Widget verwijderen</translation>
+<translation id="8446884382197647889">Meer informatie</translation>
 <translation id="7384441892795736634">Gegevens vernieuwen</translation>
 <translation id="4804818685124855865">Verbinding verbreken</translation>
 <translation id="4789438578712143420">≈ $<ph name="USD_BALANCE"/></translation>
@@ -453,13 +454,15 @@ Beschikbaar</translation>
 <translation id="5876169128756792273">Tokens kunnen ook gebruikt worden buiten de ondersteuning van de makers. U kunt digitale content en andere producten kopen als handelaren aan boord komen.</translation>
 <translation id="1402530520078693620">Laten we tot slot de basisinstellingen instellen</translation>
 <translation id="3494356595346329740">U kunt dit later wijzigen.</translation>
-<translation id="6462814326662189004">Hoe vaak wilt u advertenties zien?\n(advertenties per uur)</translation>
-<translation id="2134244432345596331">Hoeveel steun wilt u uw favoriete makers geven?\n(van uw advertentie-inkomsten)</translation>
+<translation id="3115702351969988294">Hoe vaak wilt u advertenties zien?</translation>
+<translation id="3474670199029510295">(Advertenties per uur)</translation>
+<translation id="66599604460581068">Hoeveel steun wil je bieden aan je favoriete makers?</translation>
+<translation id="3164498053837913829">(van uw advertentie-inkomsten)</translation>
 <translation id="827315274423079662">Woehoe, u bent er helemaal klaar voor!</translation>
 <translation id="3895246934788932488">Door Brave Rewards te gebruiken, beschermt u uw privacy en helpt u internet te verbeteren voor iedereen. Is dat niet geweldig!</translation>
 <translation id="5705882733397021510">Terugkeren</translation>
 <translation id="5140321319944305531">Laten we een beknopt overzicht bekijken</translation>
-<translation id="3808131693704413134">Nadat u uw eerste advertentie-uitbetaling heeft ontvangen, kunt u terugkomen en deze maker een fooi geven!</translation>
+<translation id="2434574859640694129">Nadat u uw eerste advertentiebetaling ontvangen heeft kunt u teruggaan en deze auteur een fooi geven!</translation>
 <translation id="207242986925259074">Snelle opfriscursus</translation>
 <translation id="8342862030112839977">De uitbetaling van uw eerste</translation>
 <translation id="3769645103175790584">Verdien tokens en beloon makers voor hun geweldige inhoud terwijl je bladert. <ph name="QUICK_TOUR"/>.</translation>
@@ -470,7 +473,6 @@ Beschikbaar</translation>
 <translation id="7889432931837317731">Indien mogelijk automatisch openen</translation>
 <translation id="8967385052772844086">Volledig privacyrapport weergeven</translation>
 <translation id="6864343534748973390">Populairste</translation>
-<translation id="1622983732360473885">Ondersteunt Brave</translation>
 <translation id="4608192160278975831">Particulier en geen tracking</translation>
 <translation id="7208522820527289601">Particulier en zonder tracking, vanuit de EU</translation>
 <translation id="1161008391729450974">Google resultaten zonder trackers</translation>
@@ -485,4 +487,32 @@ Beschikbaar</translation>
 <translation id="6478996494082389936">privé productanalyse.</translation>
 <translation id="5187052478998910855">Heeft u een opfrisser nodig over Rewards?</translation>
 <translation id="8622329973403382303">Neem een snelle tour om erachter te komen hoe het werkt om de geschiedenis in te gaan als een Rewards rockster!</translation>
+<translation id="8401711613788729448">Open alle links met Brave om uw privacy te beschermen</translation>
+<translation id="3184805785843994538">Brave Shields blokkeert trackers &amp; advertenties, bespaart data, en bespaart tijd op elke website die u bezoekt.</translation>
+<translation id="8722651357687610395">Stel Brave in als standaard</translation>
+<translation id="3479552764303398839">Niet nu</translation>
+<translation id="4956847150856741762">1</translation>
+<translation id="5196716972587102051">2</translation>
+<translation id="7839580021124293374">3</translation>
+<translation id="2918322085844739869">4</translation>
+<translation id="7267186368513450821">5</translation>
+<translation id="6972003925509023890">1 BAT</translation>
+<translation id="8867821173176188875">5 BAT</translation>
+<translation id="8762169086048682708">10 BAT</translation>
+<translation id="7921571842056754133">15 BAT</translation>
+<translation id="3605291544485823713">25 BAT</translation>
+<translation id="817946134291678509">50 BAT</translation>
+<translation id="4548973860489847866">0.00 BAT</translation>
+<translation id="4193129043743994339">0,00 USD</translation>
+<translation id="8792121506918889955">WebRTC IP-verwerkingsbeleid</translation>
+<translation id="8798099450830957504">Standaard</translation>
+<translation id="1822560017823072927">Standaard openbare- en privé-interface</translation>
+<translation id="5825943197137337319">Alleen standaard openbare interface</translation>
+<translation id="1689062823386843231">Deactiveer non-proxied UDP</translation>
+<translation id="3171931580569169744">Tabbladgroepen inschakelen</translation>
+<translation id="5587305863196367357">Door uw wallet te verifiëren, kunt u uw geld efficiënter beheren en eenvoudiger geld toevoegen en opnemen</translation>
+<translation id="5760671211380791582">U hebt niet genoeg BAT.</translation>
+<translation id="6960458596933484861">U moet minimaal 15 BAT hebben om een Uphold-wallet aan te maken. Probeer het later opnieuw.</translation>
+<translation id="4389085954549744469">Indien u al een geverifieerd Uphold-account hebt, kunt u zich <ph name="CONTINUE_TO_LOGIN"/>.</translation>
+<translation id="6146966915297143881">aanmelden</translation>
 </translationbundle>

@@ -201,7 +201,8 @@ IN_PROC_BROWSER_TEST_F(RewardsPromotionBrowserTest,
   ASSERT_EQ(balance, 30.0);
 }
 
-IN_PROC_BROWSER_TEST_F(RewardsPromotionBrowserTest, ClaimViaPanel) {
+// https://github.com/brave/brave-browser/issues/12605
+IN_PROC_BROWSER_TEST_F(RewardsPromotionBrowserTest, DISABLED_ClaimViaPanel) {
   double balance = ClaimPromotion(true);
   ASSERT_EQ(balance, 30.0);
 }
@@ -242,6 +243,24 @@ IN_PROC_BROWSER_TEST_F(
       "[data-test-id='promotion-claim-box']",
       false);
   CheckPromotionStatus("Over");
+}
+
+IN_PROC_BROWSER_TEST_F(RewardsPromotionBrowserTest, PromotionNotQuiteOver) {
+  rewards_browsertest_util::StartProcess(rewards_service_);
+  rewards_service_->FetchPromotions();
+  promotion_->WaitForPromotionInitialization();
+
+  removed_ = true;
+  rewards_service_->FetchPromotions();
+  promotion_->WaitForPromotionInitialization();
+
+  CheckPromotionStatus("Over");
+
+  removed_ = false;
+  rewards_service_->FetchPromotions();
+  promotion_->WaitForPromotionInitialization();
+
+  CheckPromotionStatus("Active");
 }
 
 }  // namespace rewards_browsertest

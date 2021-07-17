@@ -1,12 +1,12 @@
 diff --git a/chrome/browser/ui/startup/startup_browser_creator_impl.cc b/chrome/browser/ui/startup/startup_browser_creator_impl.cc
-index b3ee8bf0344880efcfeee9e6b65216dd253ff1e6..2430a1f7aa75473508463f557a73bde5275532db 100644
+index 8af47d108ece8b14008ffb1e9fffbbf70c0db010..4df6e48007c956a01f15a09a2dbe9b3e231acf8e 100644
 --- a/chrome/browser/ui/startup/startup_browser_creator_impl.cc
 +++ b/chrome/browser/ui/startup/startup_browser_creator_impl.cc
-@@ -447,6 +447,7 @@ void StartupBrowserCreatorImpl::DetermineURLsAndLaunch(
+@@ -375,6 +375,7 @@ void StartupBrowserCreatorImpl::DetermineURLsAndLaunch(
+ #if !BUILDFLAG(IS_CHROMEOS_ASH)
    welcome_enabled =
        welcome::IsEnabled(profile_) && welcome::HasModulesToShow(profile_);
- #endif  // !defined(OS_CHROMEOS)
 +  BRAVE_STARTUPBROWSERCREATORIMPL_DETERMINEURLSANDLAUNCH
+ #endif  // !BUILDFLAG(IS_CHROMEOS_ASH)
  
-   bool serve_extensions_page =
-       extensions::ShouldShowExtensionsCheckupOnStartup(profile_);
+ #if BUILDFLAG(IS_CHROMEOS_LACROS)

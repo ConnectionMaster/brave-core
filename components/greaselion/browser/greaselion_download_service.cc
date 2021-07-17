@@ -19,6 +19,7 @@
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/task/post_task.h"
+#include "base/task/thread_pool.h"
 #include "base/task_runner_util.h"
 #include "base/threading/sequenced_task_runner_handle.h"
 #include "base/version.h"
@@ -68,6 +69,12 @@ const char kAds[] = "ads-enabled";
 const char kSupportsMinimumBraveVersion[] =
     "supports-minimum-brave-version";
 
+GreaselionRule::GreaselionRule(const std::string& name) : name_(name) {}
+
+GreaselionRule::GreaselionRule(const GreaselionRule& name) = default;
+
+GreaselionRule& GreaselionRule::operator=(const GreaselionRule& name) = default;
+
 GreaselionPreconditionValue GreaselionRule::ParsePrecondition(
     const base::Value& value) {
   GreaselionPreconditionValue condition = kAny;
@@ -76,9 +83,6 @@ GreaselionPreconditionValue GreaselionRule::ParsePrecondition(
   }
   return condition;
 }
-
-GreaselionRule::GreaselionRule(const std::string& name)
-    : name_(name), weak_factory_(this) {}
 
 void GreaselionRule::Parse(base::DictionaryValue* preconditions_value,
                            base::ListValue* urls_value,
@@ -206,17 +210,19 @@ GreaselionDownloadService::GreaselionDownloadService(
          base::TaskShutdownBehavior::CONTINUE_ON_SHUTDOWN, base::MayBlock()});
     dev_mode_path_watcher_ = std::make_unique<base::FilePathWatcher>();
 
-    using Callback = base::RepeatingCallback<void(bool)>;
+    using DevModeLocalFileChangedCallback = base::RepeatingCallback<void(bool)>;
     base::FilePathWatcher::Callback file_path_watcher_callback =
         base::BindRepeating(
             [](scoped_refptr<base::SequencedTaskRunner> main_sequence,
-               const Callback& callback, const base::FilePath&, bool error) {
+               const DevModeLocalFileChangedCallback& callback,
+               const base::FilePath&, bool error) {
               main_sequence->PostTask(FROM_HERE,
                                       base::BindOnce(callback, error));
             },
             base::SequencedTaskRunnerHandle::Get(),
-            base::Bind(&GreaselionDownloadService::OnDevModeLocalFileChanged,
-                       weak_factory_.GetWeakPtr()));
+            base::BindRepeating(
+                &GreaselionDownloadService::OnDevModeLocalFileChanged,
+                weak_factory_.GetWeakPtr()));
 
     // Start the watcher on a background sequence, reporting all events back to
     // this sequence. base::Unretained is safe because the watcher instance
@@ -229,13 +235,14 @@ GreaselionDownloadService::GreaselionDownloadService(
                        resource_dir_, base::FilePathWatcher::Type::kRecursive,
                        file_path_watcher_callback),
         base::BindOnce(
-            [](Callback callback, bool start_result) {
+            [](DevModeLocalFileChangedCallback callback, bool start_result) {
               if (!start_result) {
                 callback.Run(/*error=*/true);
               }
             },
-            base::Bind(&GreaselionDownloadService::OnDevModeLocalFileChanged,
-                       weak_factory_.GetWeakPtr())));
+            base::BindRepeating(
+                &GreaselionDownloadService::OnDevModeLocalFileChanged,
+                weak_factory_.GetWeakPtr())));
   }
 #endif
   DETACH_FROM_SEQUENCE(sequence_checker_);
@@ -275,7 +282,7 @@ void GreaselionDownloadService::OnDATFileDataReady(std::string contents) {
     LOG(ERROR) << "Could not obtain Greaselion configuration";
     return;
   }
-  base::Optional<base::Value> root = base::JSONReader::Read(contents);
+  absl::optional<base::Value> root = base::JSONReader::Read(contents);
   if (!root) {
     LOG(ERROR) << "Failed to parse Greaselion configuration";
     return;

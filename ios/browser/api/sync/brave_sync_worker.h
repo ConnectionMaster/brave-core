@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "base/scoped_observer.h"
+#include "base/scoped_observation.h"
 #include "components/sync/driver/sync_service.h"
 #include "components/sync/driver/sync_service_observer.h"
 #include "components/sync_device_info/device_info_sync_service.h"
@@ -22,6 +22,7 @@ class ChromeBrowserState;
 namespace syncer {
 class BraveProfileSyncService;
 class DeviceInfo;
+class BraveDeviceInfo;
 class ProfileSyncService;
 }  // namespace syncer
 
@@ -36,7 +37,8 @@ class BraveSyncDeviceTracker : public syncer::DeviceInfoTracker::Observer {
 
   std::function<void()> on_device_info_changed_callback_;
 
-  ScopedObserver<syncer::DeviceInfoTracker, syncer::DeviceInfoTracker::Observer>
+  base::ScopedObservation<syncer::DeviceInfoTracker,
+                          syncer::DeviceInfoTracker::Observer>
       device_info_tracker_observer_{this};
 };
 
@@ -51,7 +53,7 @@ class BraveSyncServiceTracker : public syncer::SyncServiceObserver {
 
   std::function<void()> on_state_changed_callback_;
 
-  ScopedObserver<syncer::SyncService, syncer::SyncServiceObserver>
+  base::ScopedObservation<syncer::SyncService, syncer::SyncServiceObserver>
       sync_service_observer_{this};
 };
 
@@ -66,11 +68,12 @@ class BraveSyncWorker : public syncer::SyncServiceObserver {
   bool SetSyncCode(const std::string& sync_code);
   std::string GetSyncCodeFromHexSeed(const std::string& hex_seed);
   const syncer::DeviceInfo* GetLocalDeviceInfo();
-  std::vector<std::unique_ptr<syncer::DeviceInfo>> GetDeviceList();
+  std::vector<std::unique_ptr<syncer::BraveDeviceInfo>> GetDeviceList();
   bool IsSyncEnabled();
   bool IsSyncFeatureActive();
   bool IsFirstSetupComplete();
-  bool ResetSync();
+  void ResetSync();
+  void DeleteDevice(const std::string& device_guid);
 
  private:
   // syncer::SyncServiceObserver implementation.
@@ -79,10 +82,15 @@ class BraveSyncWorker : public syncer::SyncServiceObserver {
   void OnStateChanged(syncer::SyncService* service) override;
   void OnSyncShutdown(syncer::SyncService* service) override;
 
-  void OnLocalDeviceInfoDeleted();
+  void OnResetDone();
+
+  void SetEncryptionPassphrase(syncer::SyncService* service);
+  void SetDecryptionPassphrase(syncer::SyncService* service);
+
+  std::string passphrase_;
 
   ChromeBrowserState* browser_state_;  // NOT OWNED
-  ScopedObserver<syncer::SyncService, syncer::SyncServiceObserver>
+  base::ScopedObservation<syncer::SyncService, syncer::SyncServiceObserver>
       sync_service_observer_{this};
   base::WeakPtrFactory<BraveSyncWorker> weak_ptr_factory_{this};
 

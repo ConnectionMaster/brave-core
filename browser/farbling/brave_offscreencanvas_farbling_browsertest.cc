@@ -7,7 +7,6 @@
 #include "base/strings/stringprintf.h"
 #include "base/task/post_task.h"
 #include "base/test/thread_test_helper.h"
-#include "brave/browser/brave_browser_process_impl.h"
 #include "brave/browser/brave_content_browser_client.h"
 #include "brave/browser/extensions/brave_base_local_data_files_browsertest.h"
 #include "brave/common/brave_paths.h"
@@ -30,9 +29,9 @@ using brave_shields::ControlType;
 
 const char kEmbeddedTestServerDirectory[] = "canvas";
 const char kTitleScript[] = "domAutomationController.send(document.title);";
-const char kExpectedImageDataHashFarblingBalanced[] = "83";
+const char kExpectedImageDataHashFarblingBalanced[] = "204";
 const char kExpectedImageDataHashFarblingOff[] = "0";
-const char kExpectedImageDataHashFarblingMaximum[] = "83";
+const char kExpectedImageDataHashFarblingMaximum[] = "204";
 
 class BraveOffscreenCanvasFarblingBrowserTest : public InProcessBrowserTest {
  public:

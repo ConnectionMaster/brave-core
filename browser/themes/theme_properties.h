@@ -6,8 +6,10 @@
 #ifndef BRAVE_BROWSER_THEMES_THEME_PROPERTIES_H_
 #define BRAVE_BROWSER_THEMES_THEME_PROPERTIES_H_
 
-#include "base/optional.h"
 #include "brave/browser/themes/brave_dark_mode_utils.h"
+#include "brave/components/sidebar/buildflags/buildflags.h"
+#include "brave/components/speedreader/buildflags.h"
+#include "third_party/abseil-cpp/absl/types/optional.h"
 #include "third_party/skia/include/core/SkColor.h"
 
 namespace BraveThemeProperties {
@@ -23,15 +25,40 @@ enum TestProperty {
 enum ThemeProperties {
   BRAVE_THEME_PROPERTIES_START = 10000,
   COLOR_BOOKMARK_BAR_INSTRUCTIONS_TEXT = BRAVE_THEME_PROPERTIES_START,
-  BRAVE_THEME_PROPERTIES_LAST = COLOR_BOOKMARK_BAR_INSTRUCTIONS_TEXT,
+#if BUILDFLAG(ENABLE_SIDEBAR)
+  COLOR_SIDEBAR_ADD_BUTTON_DISABLED,
+  COLOR_SIDEBAR_BACKGROUND,
+  COLOR_SIDEBAR_BUTTON_BASE,
+  COLOR_SIDEBAR_BORDER,
+  COLOR_SIDEBAR_PANEL_BORDER,
+  COLOR_SIDEBAR_ITEM_BACKGROUND,
+  COLOR_SIDEBAR_ITEM_DRAG_INDICATOR_COLOR,
+  COLOR_SIDEBAR_ADD_BUBBLE_BACKGROUND,
+  COLOR_SIDEBAR_ADD_BUBBLE_HEADER_TEXT,
+  COLOR_SIDEBAR_ADD_BUBBLE_ITEM_TEXT_NORMAL,
+  COLOR_SIDEBAR_ADD_BUBBLE_ITEM_TEXT_HOVERED,
+  COLOR_SIDEBAR_ADD_BUBBLE_ITEM_TEXT_BACKGROUND_HOVERED,
+  COLOR_SIDEBAR_ARROW_BACKGROUND_HOVERED,
+  COLOR_SIDEBAR_ARROW_NORMAL,
+  COLOR_SIDEBAR_ARROW_DISABLED,
+  COLOR_SIDEBAR_SEPARATOR,
+#endif
+#if BUILDFLAG(ENABLE_SPEEDREADER)
+  COLOR_SPEEDREADER_ICON,
+  COLOR_SPEEDREADER_TOGGLE_TRACK,
+  COLOR_SPEEDREADER_TOGGLE_THUMB,
+#endif
+  BRAVE_THEME_PROPERTIES_LAST = COLOR_SIDEBAR_SEPARATOR,
 };
 
 bool IsBraveThemeProperties(int id);
 
 }  // namespace BraveThemeProperties
 
-base::Optional<SkColor> MaybeGetDefaultColorForBraveUi(
-    int id, bool incognito,
-    bool is_tor, dark_mode::BraveDarkModeType dark_mode);
+absl::optional<SkColor> MaybeGetDefaultColorForBraveUi(
+    int id,
+    bool incognito,
+    bool is_tor,
+    dark_mode::BraveDarkModeType dark_mode);
 
 #endif  // BRAVE_BROWSER_THEMES_THEME_PROPERTIES_H_

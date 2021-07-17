@@ -13,9 +13,11 @@
 #include "bat/ads/internal/database/database_version.h"
 #include "bat/ads/internal/database/tables/ad_events_database_table.h"
 #include "bat/ads/internal/database/tables/campaigns_database_table.h"
+#include "bat/ads/internal/database/tables/conversion_queue_database_table.h"
 #include "bat/ads/internal/database/tables/conversions_database_table.h"
 #include "bat/ads/internal/database/tables/creative_ad_notifications_database_table.h"
 #include "bat/ads/internal/database/tables/creative_ads_database_table.h"
+#include "bat/ads/internal/database/tables/creative_inline_content_ads_database_table.h"
 #include "bat/ads/internal/database/tables/creative_new_tab_page_ads_database_table.h"
 #include "bat/ads/internal/database/tables/creative_promoted_content_ads_database_table.h"
 #include "bat/ads/internal/database/tables/dayparts_database_table.h"
@@ -30,9 +32,7 @@ Migration::Migration() = default;
 
 Migration::~Migration() = default;
 
-void Migration::FromVersion(
-    const int from_version,
-    ResultCallback callback) {
+void Migration::FromVersion(const int from_version, ResultCallback callback) {
   const int to_version = version();
   if (to_version == from_version) {
     callback(Result::SUCCESS);
@@ -44,8 +44,8 @@ void Migration::FromVersion(
     ToVersion(transaction.get(), i);
   }
 
-  BLOG(1, "Migrated database from version " << from_version
-      << " to version " << to_version);
+  BLOG(1, "Migrated database from version " << from_version << " to version "
+                                            << to_version);
 
   DBCommandPtr command = DBCommand::New();
   command->type = DBCommand::Type::MIGRATE;
@@ -54,17 +54,19 @@ void Migration::FromVersion(
   transaction->compatible_version = compatible_version();
   transaction->commands.push_back(std::move(command));
 
-  AdsClientHelper::Get()->RunDBTransaction(std::move(transaction),
+  AdsClientHelper::Get()->RunDBTransaction(
+      std::move(transaction),
       std::bind(&OnResultCallback, std::placeholders::_1, callback));
 }
 
-void Migration::ToVersion(
-    DBTransaction* transaction,
-    const int to_version) {
+void Migration::ToVersion(DBTransaction* transaction, const int to_version) {
   DCHECK(transaction);
 
   table::Conversions conversions_database_table;
   conversions_database_table.Migrate(transaction, to_version);
+
+  table::ConversionQueue conversion_queue_database_table;
+  conversion_queue_database_table.Migrate(transaction, to_version);
 
   table::AdEvents ad_events_database_table;
   ad_events_database_table.Migrate(transaction, to_version);
@@ -77,6 +79,9 @@ void Migration::ToVersion(
 
   table::CreativeAdNotifications creative_ad_notifications_database_table;
   creative_ad_notifications_database_table.Migrate(transaction, to_version);
+
+  table::CreativeInlineContentAds creative_inline_content_ads_database_table;
+  creative_inline_content_ads_database_table.Migrate(transaction, to_version);
 
   table::CreativeNewTabPageAds creative_new_tab_page_ads_database_table;
   creative_new_tab_page_ads_database_table.Migrate(transaction, to_version);

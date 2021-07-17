@@ -1,9 +1,13 @@
+import("//brave/browser/ethereum_remote_client/buildflags/buildflags.gni")
 import(
     "//brave/components/brave_perf_predictor/browser/buildflags/buildflags.gni")
 import("//brave/components/brave_rewards/browser/buildflags/buildflags.gni")
-import("//brave/components/brave_wallet/buildflags/buildflags.gni")
+import("//brave/components/brave_wallet/common/buildflags/buildflags.gni")
 import("//brave/components/crypto_dot_com/browser/buildflags/buildflags.gni")
+import("//brave/components/decentralized_dns/buildflags/buildflags.gni")
+import("//brave/components/ftx/browser/buildflags/buildflags.gni")
 import("//brave/components/ipfs/buildflags/buildflags.gni")
+import("//brave/components/sidebar/buildflags/buildflags.gni")
 import("//brave/components/speedreader/buildflags.gni")
 import("//brave/components/tor/buildflags/buildflags.gni")
 import("//build/config/locales.gni")
@@ -41,6 +45,8 @@ grit("static_resources") {
     "enable_speedreader=$enable_speedreader",
     "ipfs_enabled=$ipfs_enabled",
     "crypto_dot_com_enabled=$crypto_dot_com_enabled",
+    "decentralized_dns_enabled=$decentralized_dns_enabled",
+    "enable_ftx=$enable_ftx",
   ]
 
   grit_flags = [
@@ -56,20 +62,28 @@ repack("resources") {
   deps = [
     ":static_resources",
     "//brave/components/brave_adblock_ui:generated_resources",
-    "//brave/components/brave_new_tab_ui:generated_resources",
-    "//brave/components/brave_welcome_ui:generated_resources",
     "//brave/components/cosmetic_filters/resources/data:generated_resources",
-    "//brave/components/webcompat_reporter/ui:generated_resources",
   ]
 
   sources = [
     "$root_gen_dir/brave/components/brave_adblock/resources/brave_adblock_generated.pak",
-    "$root_gen_dir/brave/components/brave_new_tab/resources/brave_new_tab_generated.pak",
-    "$root_gen_dir/brave/components/brave_welcome/resources/brave_welcome_generated.pak",
     "$root_gen_dir/brave/components/cosmetic_filters/resources/cosmetic_filters_generated.pak",
-    "$root_gen_dir/brave/components/webcompat_reporter/resources/webcompat_reporter_generated.pak",
     "$root_gen_dir/components/brave_components_static.pak",
   ]
+
+  if (!is_android) {
+    deps += [
+      "//brave/components/brave_new_tab_ui:generated_resources",
+      "//brave/components/brave_welcome_ui:generated_resources",
+      "//brave/components/webcompat_reporter/ui:generated_resources",
+    ]
+
+    sources += [
+      "$root_gen_dir/brave/components/brave_new_tab/resources/brave_new_tab_generated.pak",
+      "$root_gen_dir/brave/components/brave_welcome/resources/brave_welcome_generated.pak",
+      "$root_gen_dir/brave/components/webcompat_reporter/resources/webcompat_reporter_generated.pak",
+    ]
+  }
 
   if (ipfs_enabled) {
     deps += [ "//brave/components/ipfs_ui:generated_resources" ]
@@ -78,9 +92,21 @@ repack("resources") {
     ]
   }
 
-  if (brave_wallet_enabled) {
-    deps += [ "//brave/components/brave_wallet_ui:generated_resources" ]
-    sources += [ "$root_gen_dir/brave/components/brave_wallet/resources/brave_wallet_generated.pak" ]
+  if (brave_wallet_enabled && !is_ios) {
+    if (!is_android) {
+      deps += [ "//brave/components/brave_wallet_ui:resources" ]
+      sources += [ "$root_gen_dir/brave/components/brave_wallet/resources/brave_wallet.pak" ]
+    }
+
+    deps += [ "//brave/components/brave_wallet/resources:ethereum_provider_generated_resources" ]
+    sources += [ "$root_gen_dir/brave/components/brave_wallet/resources/brave_wallet_script_generated.pak" ]
+  }
+
+  if (ethereum_remote_client_enabled) {
+    if (!is_android && !is_ios) {
+      sources += [ "$root_gen_dir/brave/components/ethereum_remote_client_page/resources/ethereum_remote_client_page_generated.pak" ]
+      deps += [ "//brave/browser/ui/webui/ethereum_remote_client:ethereum_remote_client_page_generated" ]
+    }
   }
 
   output = "$root_gen_dir/components/brave_components_resources.pak"
@@ -94,11 +120,16 @@ grit("strings") {
   defines = [
     "enable_speedreader=$enable_speedreader",
     "ipfs_enabled=$ipfs_enabled",
+    "brave_wallet_enabled=$brave_wallet_enabled",
+    "ethereum_remote_client_enabled=$ethereum_remote_client_enabled",
+    "decentralized_dns_enabled=$decentralized_dns_enabled",
     "crypto_dot_com_enabled=$crypto_dot_com_enabled",
     "enable_tor=$enable_tor",
+    "enable_sidebar=$enable_sidebar",
+    "enable_ftx=$enable_ftx",
   ]
 
-  foreach(locale, locales_with_fake_bidi) {
+  foreach(locale, locales_with_pseudolocales) {
     outputs += [ "brave_components_strings_$locale.pak" ]
   }
 

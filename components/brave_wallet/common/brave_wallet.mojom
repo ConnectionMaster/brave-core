@@ -1,0 +1,132 @@
+// Copyright (c) 2021 The Brave Authors. All rights reserved.
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this file,
+// you can obtain one at http://mozilla.org/MPL/2.0/.
+
+module brave_wallet.mojom;
+
+import "mojo/public/mojom/base/time.mojom";
+import "mojo/public/mojom/base/values.mojom";
+
+interface EventsListener {
+  ChainChangedEvent(string chain_id);
+};
+
+interface BraveWalletProvider {
+  Init(pending_remote<EventsListener> events_listener);
+  Request(string json_payload) => (int32 http_code,
+                                   string response);
+  Enable();
+  GetChainId() => (string chain_id);
+};
+
+// Used by the WebUI page to bootstrap bidirectional communication.
+interface PanelHandlerFactory {
+  // The WebUI calls this method when the page is first initialized.
+  CreatePanelHandler(pending_remote<Page> page,
+                     pending_receiver<PanelHandler> panel_handler,
+                     pending_receiver<WalletHandler> wallet_handler);
+};
+
+interface PageHandlerFactory {
+  // The WebUI calls this method when the page is first initialized.
+  CreatePageHandler(pending_remote<Page> page,
+                    pending_receiver<PageHandler> page_handler,
+                    pending_receiver<WalletHandler> wallet_handler);
+};
+
+// Browser-side handler for requests from WebUI page.
+interface PanelHandler {
+  // Notify the backend that the UI is ready to be shown.
+  ShowUI();
+
+  // Notify the backend that the dialog should be closed.
+  CloseUI();
+};
+
+// Browser-side handler for requests from WebUI page.
+interface PageHandler {
+  // Create a wallet via the Keyring controller
+  CreateWallet(string password) => (string mnemonic);
+  RestoreWallet(string mnemonic, string password) => (bool isValidMnemonic);
+  GetRecoveryWords() => (string mnemonic);
+  AddAccountToWallet() => (bool success);
+};
+
+struct AppItem {
+  string description;
+  string icon;
+  string name;
+  string url;
+};
+
+enum AssetPriceTimeframe {
+  Live,
+  OneDay,
+  OneWeek,
+  OneMonth,
+  ThreeMonths,
+  OneYear,
+  All
+};
+
+struct AssetTimePrice {
+  mojo_base.mojom.Time date;
+  string price;
+};
+
+struct SwapParams {
+  string taker_address;
+  string sell_amount;
+  string buy_amount;
+  string buy_token;
+  string sell_token;
+  double buy_token_percentage_fee;
+  double slippage_percentage;
+  string fee_recipient;
+  string gas_price;
+};
+
+struct SwapResponse {
+  string price;
+  string guaranteed_price; // Unused for price quote response
+  string to;   // Unused for price quote response
+  string data; // Unused for price quote response
+  string value;
+  string gas;
+  string estimated_gas;
+  string gas_price;
+  string protocol_fee;
+  string minimum_protocol_fee;
+  string buy_token_address;
+  string sell_token_address;
+  string buy_amount;
+  string sell_amount;
+  string allowance_target;
+  string sell_token_to_eth_rate;
+  string buy_token_to_eth_rate;
+  // Note we could also expose "sources" later
+};
+
+// Browser-side handler for common panel / page things
+interface WalletHandler {
+  GetWalletInfo() => (bool isWalletCreated, bool isWalletLocked,
+                      array<AppItem> favoriteApps,
+                      bool isWalletBackedUp, array<string> accounts,
+                      array<string> walletAccountNames);
+  LockWallet();
+  UnlockWallet(string password) => (bool isWalletUnlocked);
+  GetAssetPrice(string asset) => (string price);
+  GetAssetPriceHistory(string asset, AssetPriceTimeframe timeframe) => (array<AssetTimePrice> values);
+  GetPriceQuote(SwapParams params) => (SwapResponse response);
+  GetTransactionPayload(SwapParams params) => (SwapResponse response);
+  AddFavoriteApp(AppItem appItem);
+  RemoveFavoriteApp(AppItem appItem);
+  SetInitialAccountNames(array<string> accountNames);
+  AddNewAccountName(string accountName);
+  NotifyWalletBackupComplete();
+};
+
+// WebUI-side handler for requests from the browser.
+interface Page {
+};

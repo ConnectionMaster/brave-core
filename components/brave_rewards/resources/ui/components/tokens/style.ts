@@ -5,10 +5,6 @@
 import styled, { css } from 'styled-components'
 import { Props, Size, Type } from './index'
 
-interface StyleProps {
-  isAnon?: boolean
-}
-
 const sizes: Record<Size, { token: string, tokenNum: string, text: string }> = {
   mini: {
     text: '14px',
@@ -45,35 +41,29 @@ const getStyle = (p: Partial<Props>) => {
   `
 }
 
-export const StyledWrapper = styled<Partial<Props>, 'span'>('span')`
+export const StyledWrapper = styled('span')<Partial<Props>>`
   ${getStyle}
 `
 
-export const StyledTokens = styled<{}, 'span'>('span')`
+export const StyledTokens = styled('span')<{}>`
   display: inline-block;
 `
 
-export const StyledTokenValue = styled<{}, 'span'>('span')`
+export const StyledTokenValue = styled('span')<{}>`
   color: var(--tokens-value-color);
   font-size: var(--tokens-tokenNum-size);
 `
 
-export const StyledContent = styled<{}, 'span'>('span')`
+export const StyledContent = styled('span')<{}>`
   color: #9E9FAB;
   font-size: var(--tokens-text-size);
   display: inline-block;
   margin-left: 8px;
 `
 
-export const StyledTokenCurrency = styled<StyleProps, 'span'>('span')`
+export const StyledTokenCurrency = styled('span')<{}>`
   font-size: var(--tokens-token-size);
   display: inline-block;
   margin-left: 4px;
-  ${(p) => {
-    if (!p.isAnon) {
-      return 'text-transform: uppercase;'
-    }
-
-    return null
-  }}
+  text-transform: uppercase;
 `

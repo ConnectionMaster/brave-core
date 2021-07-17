@@ -16,8 +16,8 @@ import org.chromium.base.supplier.ObservableSupplier;
 import org.chromium.base.supplier.OneShotCallback;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.tabmodel.IncognitoStateProvider;
+import org.chromium.chrome.browser.theme.ThemeColorProvider;
 import org.chromium.chrome.browser.toolbar.TabCountProvider;
-import org.chromium.chrome.browser.toolbar.ThemeColorProvider;
 import org.chromium.chrome.browser.toolbar.menu_button.MenuButton;
 import org.chromium.chrome.browser.ui.appmenu.AppMenuButtonHelper;
 import org.chromium.ui.modelutil.PropertyModelChangeProcessor;
@@ -95,8 +95,8 @@ public class TabSwitcherBottomToolbarCoordinator {
     /**
      * @param showOnTop Whether to show the tab switcher bottom toolbar on the top of the screen.
      */
-    void showToolbarOnTop(boolean showOnTop) {
-        mMediator.showToolbarOnTop(showOnTop);
+    void showToolbarOnTop(boolean showOnTop, boolean isGridTabSwitcherEnabled) {
+        mMediator.showToolbarOnTop(showOnTop, isGridTabSwitcherEnabled);
     }
 
     /**

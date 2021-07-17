@@ -5,6 +5,8 @@
 
 #include "bat/ads/internal/conversions/conversion_queue_item_info.h"
 
+#include <cstdint>
+
 namespace ads {
 
 ConversionQueueItemInfo::ConversionQueueItemInfo() = default;
@@ -14,8 +16,29 @@ ConversionQueueItemInfo::ConversionQueueItemInfo(
 
 ConversionQueueItemInfo::~ConversionQueueItemInfo() = default;
 
+bool ConversionQueueItemInfo::operator==(
+    const ConversionQueueItemInfo& rhs) const {
+  return campaign_id == rhs.campaign_id &&
+         creative_set_id == rhs.creative_set_id &&
+         creative_instance_id == rhs.creative_instance_id &&
+         advertiser_id == rhs.advertiser_id &&
+         conversion_id == rhs.conversion_id &&
+         advertiser_public_key == rhs.advertiser_public_key &&
+         static_cast<int64_t>(timestamp.ToDoubleT()) ==
+             static_cast<int64_t>(rhs.timestamp.ToDoubleT());
+}
+
+bool ConversionQueueItemInfo::operator!=(
+    const ConversionQueueItemInfo& rhs) const {
+  return !(*this == rhs);
+}
+
 bool ConversionQueueItemInfo::IsValid() const {
-  if (creative_instance_id.empty() || creative_set_id.empty()) {
+  // campaign_id and advertiser_id will be empty for legacy conversions migrated
+  // from |ad_conversions.json| to |database.sqlite| and conversion_id will be
+  // empty for non verifiable conversions
+  if (creative_set_id.empty() || creative_instance_id.empty() ||
+      timestamp.is_null()) {
     return false;
   }
 

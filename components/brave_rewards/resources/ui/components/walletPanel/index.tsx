@@ -62,7 +62,6 @@ export interface Props {
   acEnabled?: boolean
   setMonthlyAction: () => void
   cancelMonthlyAction: () => void
-  onlyAnonWallet?: boolean
 }
 
 interface State {
@@ -91,7 +90,7 @@ export default class WalletPanel extends React.PureComponent<Props, State> {
           showUnVerifiedHelpIcon={
             !this.props.isVerified && this.props.showUnVerified
           }
-          showUnVerified={this.props.showUnVerified}
+          showUnVerified={true}
           refreshingPublisher={this.props.refreshingPublisher}
           onRefreshPublisher={this.props.onRefreshPublisher}
           publisherRefreshed={this.props.publisherRefreshed}
@@ -101,9 +100,9 @@ export default class WalletPanel extends React.PureComponent<Props, State> {
   }
 
   donationDropDown () {
-    const { monthlyAmount, onlyAnonWallet } = this.props
+    const { monthlyAmount } = this.props
     const { showMonthlyActions } = this.state
-    const batFormatString = onlyAnonWallet ? 'bap' : 'bat'
+    const batFormatString = 'bat'
 
     if (!monthlyAmount) {
       return null

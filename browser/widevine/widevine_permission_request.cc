@@ -8,6 +8,7 @@
 #include "brave/browser/widevine/widevine_utils.h"
 #include "brave/grit/brave_generated_resources.h"
 #include "chrome/browser/lifetime/application_lifetime.h"
+#include "components/permissions/request_type.h"
 #include "components/vector_icons/vector_icons.h"
 #include "content/public/browser/web_contents.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -22,12 +23,7 @@ WidevinePermissionRequest::WidevinePermissionRequest(
 
 WidevinePermissionRequest::~WidevinePermissionRequest() = default;
 
-permissions::PermissionRequest::IconId WidevinePermissionRequest::GetIconId()
-    const {
-  return vector_icons::kExtensionIcon;
-}
-
-base::string16 WidevinePermissionRequest::GetMessageTextFragment() const {
+std::u16string WidevinePermissionRequest::GetMessageTextFragment() const {
   return l10n_util::GetStringUTF16(
       GetWidevinePermissionRequestTextFrangmentResourceId(for_restart_));
 }
@@ -41,7 +37,9 @@ void WidevinePermissionRequest::PermissionGranted(bool is_one_time) {
   // Prevent relaunch during the browser test.
   // This will cause abnormal termination during the test.
   if (for_restart_ && !is_test_) {
-    chrome::AttemptRelaunch();
+    // Try relaunch after handling permission grant logics in this turn.
+    base::SequencedTaskRunnerHandle::Get()->PostTask(
+        FROM_HERE, base::BindOnce(&chrome::AttemptRelaunch));
   }
 #endif
   if (!for_restart_)
@@ -60,11 +58,10 @@ void WidevinePermissionRequest::RequestFinished() {
   delete this;
 }
 
-permissions::PermissionRequestType
-WidevinePermissionRequest::GetPermissionRequestType() const {
-  return permissions::PermissionRequestType::PERMISSION_WIDEVINE;
+permissions::RequestType WidevinePermissionRequest::GetRequestType() const {
+  return permissions::RequestType::kWidevine;
 }
 
-base::string16 WidevinePermissionRequest::GetExplanatoryMessageText() const {
+std::u16string WidevinePermissionRequest::GetExplanatoryMessageText() const {
   return l10n_util::GetStringUTF16(IDS_WIDEVINE_INSTALL_MESSAGE);
 }

@@ -24,7 +24,9 @@ enum ContributionProcessor {
   NONE = 0,
   BRAVE_TOKENS = 1,
   UPHOLD = 2,
-  BRAVE_USER_FUNDS = 3
+  BRAVE_USER_FUNDS = 3,
+  BITFLYER = 4,
+  GEMINI = 5
 };
 
 struct ContributionInfo {
@@ -82,6 +84,7 @@ struct PendingContribution {
   uint64 added_date;
   string viewing_id;
   RewardsType type;
+  ContributionProcessor processor = ContributionProcessor.NONE;
 };
 
 struct PendingContributionInfo {
@@ -98,6 +101,7 @@ struct PendingContributionInfo {
   uint64 added_date;
   string viewing_id;
   uint64 expiration_date;
+  ContributionProcessor processor = ContributionProcessor.NONE;
 };
 
 struct VisitData {
@@ -141,7 +145,8 @@ struct MediaEventInfo {
   string status;
 };
 
-struct UpholdWallet {
+struct ExternalWallet {
+  string type;
   string token;
   string address;
   WalletStatus status;
@@ -149,6 +154,7 @@ struct UpholdWallet {
   string add_url;
   string withdraw_url;
   string one_time_string;
+  string code_verifier;
   string user_name;
   string account_url;
   string login_url;
@@ -239,7 +245,17 @@ enum Result {
 enum PublisherStatus {
   NOT_VERIFIED = 0,
   CONNECTED = 1,
-  VERIFIED = 2
+  UPHOLD_VERIFIED = 2,
+  BITFLYER_VERIFIED = 3,
+  GEMINI_VERIFIED = 4
+};
+
+enum DrainStatus {
+  INVALID = 0,
+  PENDING = 1,
+  IN_PROGRESS = 2,
+  DELAYED = 3,
+  COMPLETE = 4
 };
 
 struct ServerPublisherInfo {
@@ -270,7 +286,8 @@ enum UrlMethod {
   GET = 0,
   PUT = 1,
   POST = 2,
-  PATCH = 3
+  PATCH = 3,
+  DEL = 4
 };
 
 enum ActivityMonth {
@@ -481,7 +498,8 @@ enum SKUTransactionType {
   NONE = 0,
   UPHOLD = 1,
   ANONYMOUS_CARD = 2,
-  TOKENS = 3
+  TOKENS = 3,
+  GEMINI = 4
 };
 
 enum SKUTransactionStatus {
@@ -507,6 +525,7 @@ struct UrlRequest {
   string content;
   string content_type;
   bool skip_log;
+  uint32 load_flags = 0;
 };
 
 struct UrlResponse {

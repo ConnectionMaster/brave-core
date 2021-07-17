@@ -4,7 +4,7 @@
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import * as React from 'react'
-import styled from 'brave-ui/theme'
+import styled from 'styled-components'
 import * as Card from '../cardIntro'
 
 const Content = styled('div')`
@@ -48,9 +48,9 @@ export default function CardError () {
         <Heading>
           Oops…
         </Heading>
-        <Card.Text>
-          Brave Today is experiencing some issues. Try again.
-        </Card.Text>
+        <Card.Paragraph>
+          Brave News is experiencing some issues. Try again.
+        </Card.Paragraph>
       </Content>
     </Card.Intro>
   )

@@ -5,12 +5,11 @@
 
 #include "bat/ads/internal/account/wallet/wallet.h"
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <vector>
 
 #include "base/strings/string_number_conversions.h"
-#include "bat/ads/internal/security/security_util.h"
+#include "bat/ads/internal/security/crypto_util.h"
 
 namespace ads {
 
@@ -18,9 +17,7 @@ Wallet::Wallet() = default;
 
 Wallet::~Wallet() = default;
 
-bool Wallet::Set(
-    const std::string& id,
-    const std::string& seed) {
+bool Wallet::Set(const std::string& id, const std::string& seed) {
   const std::vector<uint8_t> secret_key =
       security::GenerateSecretKeyFromSeed(seed);
 

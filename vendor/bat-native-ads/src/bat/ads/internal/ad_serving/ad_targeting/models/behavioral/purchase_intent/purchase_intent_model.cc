@@ -5,8 +5,7 @@
 
 #include "bat/ads/internal/ad_serving/ad_targeting/models/behavioral/purchase_intent/purchase_intent_model.h"
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <map>
 #include <string>
 #include <utility>
@@ -31,7 +30,7 @@ uint16_t CalculateScoreForHistory(
   for (const auto& signal_segment : history) {
     const base::Time signal_decayed_time =
         base::Time::FromDoubleT(signal_segment.timestamp_in_seconds) +
-            base::TimeDelta::FromSeconds(time_window_in_seconds);
+        base::TimeDelta::FromSeconds(time_window_in_seconds);
 
     const base::Time now = base::Time::Now();
 

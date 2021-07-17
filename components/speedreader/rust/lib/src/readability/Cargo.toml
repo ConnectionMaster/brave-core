@@ -8,10 +8,19 @@ repository = "https://github.com/kumabook/readability.git"
 description = "Port of arc90's readability project to rust"
 keywords = ["readability"]
 categories = []
+edition = "2018"
 
 [dependencies]
-regex            = "1"
-url              = "1.7"
+bitflags         = "1.2"
+chrono           = "0.4"
 html5ever        = "0.25.1"
-markup5ever_rcdom = "0.1.0"
+kuchiki = { git = "https://github.com/brave/kuchiki", branch = "speedreader" }
 lazy_static      = "1.4"
+regex            = "1"
+serde_json       = "1.0"
+thiserror        = "1.0.24"
+url              = "1.7"
+
+[dev-dependencies]
+assert_approx_eq = "1.1.0"
+reqwest = { version = "0.11.4", features = ["blocking", "stream"] }

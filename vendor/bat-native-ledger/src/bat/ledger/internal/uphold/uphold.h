@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BRAVELEDGER_UPHOLD_UPHOLD_H_
-#define BRAVELEDGER_UPHOLD_UPHOLD_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_UPHOLD_UPHOLD_H_
+#define BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_UPHOLD_UPHOLD_H_
 
 #include <stdint.h>
 
@@ -74,9 +74,9 @@ class Uphold {
 
   void GetUser(GetUserCallback callback);
 
-  type::UpholdWalletPtr GetWallet();
+  type::ExternalWalletPtr GetWallet();
 
-  bool SetWallet(type::UpholdWalletPtr wallet);
+  bool SetWallet(type::ExternalWalletPtr wallet);
 
  private:
   void ContributionCompleted(
@@ -94,16 +94,18 @@ class Uphold {
 
   void SaveTransferFee(const std::string& contribution_id, const double amount);
 
-  void StartTransferFeeTimer(const std::string& fee_id);
+  void StartTransferFeeTimer(const std::string& fee_id, int attempts);
 
-  void OnTransferFeeCompleted(
-      const type::Result result,
-      const std::string& transaction_id,
-      const std::string& contribution_id);
+  void OnTransferFeeCompleted(const type::Result result,
+                              const std::string& transaction_id,
+                              const std::string& contribution_id,
+                              int attempts);
 
-  void TransferFee(const std::string& contribution_id, const double amount);
+  void TransferFee(const std::string& contribution_id,
+                   const double amount,
+                   int attempts);
 
-  void OnTransferFeeTimerElapsed(const std::string& id);
+  void OnTransferFeeTimerElapsed(const std::string& id, int attempts);
 
   void RemoveTransferFee(const std::string& contribution_id);
 
@@ -119,4 +121,4 @@ class Uphold {
 
 }  // namespace uphold
 }  // namespace ledger
-#endif  // BRAVELEDGER_UPHOLD_UPHOLD_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_LEDGER_SRC_BAT_LEDGER_INTERNAL_UPHOLD_UPHOLD_H_

@@ -51,18 +51,6 @@
     "message": "Detaljer",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Saldoen din",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "BAT-poeng",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "kan brukes i Brave-belønninger for å bidra til dine foretrukne innholdsskapere. BAT-poeng kan ikke veksles inn i BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "på",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Tokenstipender gjort krav på",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Poengtildelinger gjort krav på",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Opptjente midler fra reklamer",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Sikkerhetskopier Brave-lommeboken din.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Les mer",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Enhetsgrensen er nådd",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Lommeboken kan ikke verifiseres, ettersom du har nådd den øvre enhetsgrensen for verifisering.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Brave Rewards-kontoen din venter på et innskudd.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Slå på Ads",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Gratis tokenstipend",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Gratis poengtildeling",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Du har tjent en annonsebelønning!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Lommeboken er verifisert",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Gå til Uphold-kontoen min",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Gå til $provider$-kontoen min",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Koble fra Brave Rewards",
@@ -573,17 +567,9 @@
     "message": "Token ",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "poeng",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Tilskudd til polletter",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Poengtildelinger",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Hallo, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Du må ha minst 25 BAT for å opprette en Uphold-konto. Prøv på nytt senere.\nHvis du allerede har bekreftet Uphold-kontoen din, kan du logge på.",
-    "description": "Text for login button"
+    "message": "Du må ha minst $amount$ BAT for å opprette en Uphold-konto. Om du allerede har en verifisert Uphold-konto, kan du fortsette med innloggingen.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Tilkoblet",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Merk: Transaksjonene dine er synlige for Uphold så snart du autoriserer. De kan for eksempel se kvitteringen og tipsbeløpet ditt.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Merk: Transaksjonene dine kommer til å være synlige for $provider$ når du autoriserer dem. De kan for eksempel se mottakeren og beløpet du tipser.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Tjen tokener og gi tilbake",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Tjen tokener ved å se på personvern-respekterende annonser og støtt favorittnettstedene og innholdsprodusentene dine automatisk.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Hvor ofte ønsker du å se annonser?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(annonser per time)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Hvor mye støtte ønsker du å gi til favorittskaperne dine per måned?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(fra annonseinntektene dine)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Når mottar du belønninger",
+    "message": "Når mottar du belønninger?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Polletter kan brukes til mer enn å støtte skapere. Du kan kjøpe digitalt innhold og andre artikler etter hvert som selgere blir med.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Til sist: La oss konfigurere de grunnleggende innstillingene dine",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Du kan endre dette senere.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Hurra, du er helt klar!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Når du bruker Brave Rewards bidrar du til å gjøre nettet til et bedre sted for alle. Og det er kjempebra!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Bekreft lommeboken din",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "For å gjøre uttak av tokenene du tjener på å se annonser, må du bekrefte lommeboken din.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Gjør det senere",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Bekreft lommeboken min",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "BitFlyer-lommeboken er en tjeneste som administreres av bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Ved å bekrefte lommeboken din og knytte den til en bitFlyer-konto, vil du lettere kunne lagre og administrere tokener du har tjent gjennom Brave Rewards.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Finn ut mer$link_end$ om hvordan du knytter Brave-nettleseren din til bitFlyer-kontoen din.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

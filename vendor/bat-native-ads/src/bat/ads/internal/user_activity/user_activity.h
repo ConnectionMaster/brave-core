@@ -3,27 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_USER_ACTIVITY_USER_ACTIVITY_H_
-#define BAT_ADS_INTERNAL_USER_ACTIVITY_USER_ACTIVITY_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_USER_ACTIVITY_USER_ACTIVITY_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_USER_ACTIVITY_USER_ACTIVITY_H_
 
-#include <stdint.h>
-
-#include <deque>
-#include <map>
+#include "base/time/time.h"
+#include "bat/ads/internal/user_activity/user_activity_event_info.h"
+#include "bat/ads/internal/user_activity/user_activity_event_types.h"
+#include "bat/ads/page_transition_types.h"
 
 namespace ads {
 
-enum class UserActivityEventType {
-  kOpenedNewOrFocusedOnExistingTab,
-  kClosedTab,
-  kPlayedMedia,
-  kBrowserWindowDidBecomeActive,
-  kBrowserWindowDidEnterBackground
-};
-
-using UserActivityEventHistory = std::deque<int64_t>;
-using UserActivityEventHistoryMap =
-    std::map<UserActivityEventType, UserActivityEventHistory>;
+const int kMaximumHistoryEntries = 3600;
 
 class UserActivity {
  public:
@@ -38,15 +28,17 @@ class UserActivity {
 
   static bool HasInstance();
 
-  void RecordEvent(
-      const UserActivityEventType event);
+  void RecordEvent(const UserActivityEventType event_type);
+  void RecordEventForPageTransition(const PageTransitionType type);
+  void RecordEventForPageTransitionFromInt(const int32_t type);
 
-  const UserActivityEventHistoryMap& get_history() const;
+  UserActivityEvents GetHistoryForTimeWindow(
+      const base::TimeDelta time_window) const;
 
  private:
-  UserActivityEventHistoryMap history_;
+  UserActivityEvents history_;
 };
 
 }  // namespace ads
 
-#endif  // BAT_ADS_INTERNAL_USER_ACTIVITY_USER_ACTIVITY_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_USER_ACTIVITY_USER_ACTIVITY_H_

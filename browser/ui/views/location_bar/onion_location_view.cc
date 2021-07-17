@@ -26,6 +26,7 @@
 #include "ui/gfx/geometry/size.h"
 #include "ui/gfx/image/image_skia.h"
 #include "ui/gfx/paint_vector_icon.h"
+#include "ui/gfx/skia_util.h"
 #include "ui/gfx/text_constants.h"
 #include "ui/views/animation/ink_drop_impl.h"
 #include "ui/views/background.h"
@@ -48,11 +49,11 @@ void OnTorProfileCreated(GURL onion_location,
                          Profile::CreateStatus status) {
   if (status != Profile::CreateStatus::CREATE_STATUS_INITIALIZED)
     return;
-  Browser* browser = chrome::FindTabbedBrowser(profile, true);
+  Browser* browser = chrome::FindTabbedBrowser(profile, false);
   if (!browser)
     return;
   content::OpenURLParams open_tor(onion_location, content::Referrer(),
-                                  WindowOpenDisposition::NEW_FOREGROUND_TAB,
+                                  WindowOpenDisposition::SWITCH_TO_TAB,
                                   ui::PAGE_TRANSITION_TYPED, false);
   browser->OpenURL(open_tor);
 }
@@ -93,11 +94,11 @@ class OnionLocationButtonView : public views::LabelButton {
     SetEnabledTextColors(kTextColor);
     SetHorizontalAlignment(gfx::ALIGN_RIGHT);
     SetImageLabelSpacing(6);
-    SetInkDropMode(InkDropMode::ON);
+    ink_drop()->SetMode(views::InkDropHost::InkDropMode::ON);
     SetBorder(views::CreateEmptyBorder(
         GetLayoutInsets(LOCATION_BAR_ICON_INTERIOR_PADDING)));
     SetHasInkDropActionOnClick(true);
-    SetInkDropVisibleOpacity(kToolbarInkDropVisibleOpacity);
+    ink_drop()->SetVisibleOpacity(kToolbarInkDropVisibleOpacity);
     UpdateBorder();
     // Ensure focus ring follows border
     views::HighlightPathGenerator::Install(

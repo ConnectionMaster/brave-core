@@ -8,10 +8,30 @@
 
 #import <Foundation/Foundation.h>
 
+@class BraveBookmarksAPI;
+@class BraveHistoryAPI;
+@class BraveSyncProfileServiceIOS;
+@class BraveWalletAPI;
+
 NS_ASSUME_NONNULL_BEGIN
+
+typedef bool (^BraveCoreLogHandler)(int severity,
+                                    NSString* file,
+                                    int line,
+                                    size_t messageStart,
+                                    NSString* formattedMessage);
 
 OBJC_EXPORT
 @interface BraveCoreMain : NSObject
+
+@property(nullable, nonatomic, readonly) BraveBookmarksAPI* bookmarksAPI;
+
+@property(nullable, nonatomic, readonly) BraveHistoryAPI* historyAPI;
+
+@property(nullable, nonatomic, readonly)
+    BraveSyncProfileServiceIOS* syncProfileService;
+
++ (void)setLogHandler:(nullable BraveCoreLogHandler)logHandler;
 
 - (instancetype)init;
 
@@ -20,6 +40,8 @@ OBJC_EXPORT
 - (void)scheduleLowPriorityStartupTasks;
 
 - (void)setUserAgent:(NSString*)userAgent;
+
+@property(nullable, nonatomic, readonly) BraveWalletAPI* wallet;
 
 @end
 

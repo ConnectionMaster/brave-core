@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_BUNDLE_CREATIVE_AD_INFO_H_
-#define BAT_ADS_INTERNAL_BUNDLE_CREATIVE_AD_INFO_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_BUNDLE_CREATIVE_AD_INFO_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_BUNDLE_CREATIVE_AD_INFO_H_
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -17,8 +16,7 @@ namespace ads {
 
 struct CreativeAdInfo {
   CreativeAdInfo();
-  CreativeAdInfo(
-      const CreativeAdInfo& info);
+  CreativeAdInfo(const CreativeAdInfo& info);
   ~CreativeAdInfo();
 
   std::string creative_instance_id;
@@ -32,7 +30,10 @@ struct CreativeAdInfo {
   double ptr = 0.0;
   bool conversion = false;
   unsigned int per_day = 0;
+  unsigned int per_week = 0;
+  unsigned int per_month = 0;
   unsigned int total_max = 0;
+  std::string split_test_group;
   std::string segment;
   std::vector<std::string> geo_targets;
   std::string target_url;
@@ -43,4 +44,4 @@ using CreativeAdList = std::vector<CreativeAdInfo>;
 
 }  // namespace ads
 
-#endif  // BAT_ADS_INTERNAL_BUNDLE_CREATIVE_AD_INFO_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_BUNDLE_CREATIVE_AD_INFO_H_

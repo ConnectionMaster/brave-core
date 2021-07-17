@@ -110,9 +110,7 @@ class TranslateManagerTest : public ::testing::Test {
  protected:
   TranslateManagerTest()
       : registration_(&prefs_),
-        translate_prefs_(&prefs_,
-                         translate::testing::accept_languages_prefs,
-                         translate::testing::preferred_languages_prefs),
+        translate_prefs_(&prefs_),
         manager_(TranslateDownloadManager::GetInstance()),
         mock_translate_client_(&driver_, &prefs_),
         mock_language_model_({MockLanguageModel::LanguageDetails("en", 1.0)}) {}
@@ -145,14 +143,6 @@ class TranslateManagerTest : public ::testing::Test {
         has_language_changed ? "en" : "de", true);
     EXPECT_EQ(has_language_changed,
               translate_manager_->GetLanguageState()->HasLanguageChanged());
-  }
-
-  void SetLanguageTooOftenDenied(const std::string& language) {
-    translate_prefs_.UpdateLastDeniedTime(language);
-    translate_prefs_.UpdateLastDeniedTime(language);
-
-    EXPECT_TRUE(translate_prefs_.IsTooOftenDenied(language));
-    EXPECT_FALSE(translate_prefs_.IsTooOftenDenied("other_language"));
   }
 
   // Required to instantiate a net::test::MockNetworkChangeNotifier, because it

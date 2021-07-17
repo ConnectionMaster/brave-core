@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_CLIENT_CLIENT_INFO_H_
-#define BAT_ADS_INTERNAL_CLIENT_CLIENT_INFO_H_
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_CLIENT_CLIENT_INFO_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_CLIENT_CLIENT_INFO_H_
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <deque>
 #include <map>
 #include <string>
@@ -24,19 +23,17 @@ struct AdPreferencesInfo;
 
 struct ClientInfo {
   ClientInfo();
-  ClientInfo(
-      const ClientInfo& state);
+  ClientInfo(const ClientInfo& state);
   ~ClientInfo();
 
   std::string ToJson();
-  Result FromJson(
-      const std::string& json);
+  Result FromJson(const std::string& json);
 
   AdPreferencesInfo ad_preferences;
   std::deque<AdHistoryInfo> ads_shown_history;
-  std::map<std::string, uint64_t> seen_ad_notifications;
-  std::map<std::string, uint64_t> seen_advertisers;
-  uint64_t next_ad_serving_interval_timestamp_ = 0;
+  std::map<std::string, std::map<std::string, bool>> seen_ads;
+  std::map<std::string, std::map<std::string, bool>> seen_advertisers;
+  uint64_t next_ad_serving_interval_timestamp = 0;
   TextClassificationProbabilitiesList text_classification_probabilities;
   PurchaseIntentSignalHistoryMap purchase_intent_signal_history;
   std::string version_code;
@@ -44,4 +41,4 @@ struct ClientInfo {
 
 }  // namespace ads
 
-#endif  // BAT_ADS_INTERNAL_CLIENT_CLIENT_INFO_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_CLIENT_CLIENT_INFO_H_

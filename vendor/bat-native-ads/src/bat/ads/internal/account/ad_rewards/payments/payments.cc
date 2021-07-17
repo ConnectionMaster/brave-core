@@ -10,38 +10,46 @@
 #include "base/json/json_reader.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/stringprintf.h"
-#include "third_party/re2/src/re2/re2.h"
+#include "bat/ads/internal/account/confirmations/confirmations_state.h"
+#include "bat/ads/internal/ads_client_helper.h"
+#include "bat/ads/internal/features/ad_rewards/ad_rewards_features.h"
 #include "bat/ads/internal/logging.h"
+#include "bat/ads/internal/number_util.h"
+#include "bat/ads/pref_names.h"
+#include "third_party/re2/src/re2/re2.h"
 
 namespace ads {
-
-namespace {
-const int kNextPaymentDay = 5;
-}  // namespace
 
 Payments::Payments() = default;
 
 Payments::~Payments() = default;
 
-bool Payments::SetFromJson(
-    const std::string& json) {
-  base::Optional<base::Value> value = base::JSONReader::Read(json);
+bool Payments::SetFromJson(const std::string& json) {
+  absl::optional<base::Value> value = base::JSONReader::Read(json);
   if (!value || !value->is_list()) {
+    BLOG(0, "Failed to parse payment balance");
     return false;
   }
 
   base::ListValue* list = nullptr;
   if (!value->GetAsList(&list)) {
+    BLOG(0, "Failed to parse payment balance");
     return false;
   }
 
-  payments_ = GetFromList(list);
+  const PaymentList payments = GetFromList(list);
+  if (!DidReconcile(payments)) {
+    BLOG(0, "Payment balance not ready");
+    return false;
+  }
+
+  payments_ = payments;
+  ConfirmationsState::Get()->Save();
 
   return true;
 }
 
-bool Payments::SetFromDictionary(
-    base::Value* dictionary) {
+bool Payments::SetFromDictionary(base::Value* dictionary) {
   DCHECK(dictionary);
 
   base::Value* payments_list = dictionary->FindListKey("payments");
@@ -54,13 +62,13 @@ bool Payments::SetFromDictionary(
   for (auto& value : payments_list->GetList()) {
     base::DictionaryValue* dictionary = nullptr;
     if (!value.GetAsDictionary(&dictionary)) {
-     continue;
+      continue;
     }
 
     PaymentInfo payment;
 
     // Balance
-    const base::Optional<double> balance = dictionary->FindDoubleKey("balance");
+    const absl::optional<double> balance = dictionary->FindDoubleKey("balance");
     if (!balance) {
       continue;
     }
@@ -101,7 +109,7 @@ base::Value Payments::GetAsList() {
     dictionary.SetKey("balance", base::Value(payment.balance));
     dictionary.SetKey("month", base::Value(payment.month));
     dictionary.SetKey("transaction_count",
-        base::Value(std::to_string(payment.transaction_count)));
+                      base::Value(std::to_string(payment.transaction_count)));
 
     list.Append(std::move(dictionary));
   }
@@ -110,28 +118,7 @@ base::Value Payments::GetAsList() {
 }
 
 double Payments::GetBalance() const {
-  double balance = 0.0;
-
-  for (const auto& payment : payments_) {
-    balance += payment.balance;
-  }
-
-  return balance;
-}
-
-bool Payments::DidReconcileBalance(
-    const double last_balance,
-    const double unreconciled_estimated_pending_rewards) const {
-  if (unreconciled_estimated_pending_rewards == 0.0) {
-    return true;
-  }
-
-  const double delta = GetBalance() - last_balance;
-  if (delta >= unreconciled_estimated_pending_rewards) {
-    return true;
-  }
-
-  return false;
+  return GetBalanceForPayments(payments_);
 }
 
 base::Time Payments::CalculateNextPaymentDate(
@@ -142,7 +129,7 @@ base::Time Payments::CalculateNextPaymentDate(
 
   int month = now_exploded.month;
 
-  if (now_exploded.day_of_month <= kNextPaymentDay) {
+  if (now_exploded.day_of_month <= features::GetAdRewardsNextPaymentDay()) {
     const std::string previous_month = GetPreviousTransactionMonth(time);
     if (HasPendingBalanceForTransactionMonth(previous_month)) {
       // If last month has a pending balance, then the next payment date will
@@ -187,7 +174,8 @@ base::Time Payments::CalculateNextPaymentDate(
   base::Time::Exploded next_payment_date_exploded = now_exploded;
   next_payment_date_exploded.year = year;
   next_payment_date_exploded.month = month;
-  next_payment_date_exploded.day_of_month = kNextPaymentDay;
+  next_payment_date_exploded.day_of_month =
+      features::GetAdRewardsNextPaymentDay();
   next_payment_date_exploded.hour = 23;
   next_payment_date_exploded.minute = 59;
   next_payment_date_exploded.second = 59;
@@ -195,14 +183,13 @@ base::Time Payments::CalculateNextPaymentDate(
 
   base::Time next_payment_date;
   const bool success = base::Time::FromUTCExploded(next_payment_date_exploded,
-      &next_payment_date);
+                                                   &next_payment_date);
   DCHECK(success);
 
   return next_payment_date;
 }
 
-PaymentInfo Payments::GetForThisMonth(
-    const base::Time& time) const {
+PaymentInfo Payments::GetForMonth(const base::Time& time) const {
   const std::string month = GetTransactionMonth(time);
   const PaymentInfo payment = GetPaymentForTransactionMonth(month);
   return payment;
@@ -210,13 +197,37 @@ PaymentInfo Payments::GetForThisMonth(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-PaymentList Payments::GetFromList(
-    base::ListValue* list) const {
+double Payments::GetBalanceForPayments(const PaymentList& payments) const {
+  double balance = 0.0;
+
+  for (const auto& payment : payments) {
+    balance += payment.balance;
+  }
+
+  return balance;
+}
+
+bool Payments::DidReconcile(const PaymentList& payments) const {
+  const double new_balance = GetBalanceForPayments(payments);
+
+  const double old_balance = GetBalance();
+
+  const double unreconciled_transactions =
+      AdsClientHelper::Get()->GetDoublePref(prefs::kUnreconciledTransactions);
+
+  if (DoubleIsLess(new_balance, old_balance + unreconciled_transactions)) {
+    return false;
+  }
+
+  return true;
+}
+
+PaymentList Payments::GetFromList(base::ListValue* list) const {
   DCHECK(list);
 
   PaymentList payments;
 
-  for (auto& value : *list) {
+  for (auto& value : list->GetList()) {
     base::DictionaryValue* dictionary = nullptr;
     if (!value.GetAsDictionary(&dictionary)) {
       continue;
@@ -232,8 +243,8 @@ PaymentList Payments::GetFromList(
       continue;
     }
 
-    if (!GetTransactionCountFromDictionary(
-        dictionary, &payment.transaction_count)) {
+    if (!GetTransactionCountFromDictionary(dictionary,
+                                           &payment.transaction_count)) {
       continue;
     }
 
@@ -243,9 +254,8 @@ PaymentList Payments::GetFromList(
   return payments;
 }
 
-bool Payments::GetBalanceFromDictionary(
-    base::DictionaryValue* dictionary,
-    double* balance) const {
+bool Payments::GetBalanceFromDictionary(base::DictionaryValue* dictionary,
+                                        double* balance) const {
   DCHECK(dictionary);
   DCHECK(balance);
 
@@ -266,9 +276,8 @@ bool Payments::GetBalanceFromDictionary(
   return true;
 }
 
-bool Payments::GetMonthFromDictionary(
-    base::DictionaryValue* dictionary,
-    std::string* month) const {
+bool Payments::GetMonthFromDictionary(base::DictionaryValue* dictionary,
+                                      std::string* month) const {
   DCHECK(dictionary);
   DCHECK(month);
 
@@ -331,8 +340,7 @@ PaymentInfo Payments::GetPaymentForTransactionMonth(
   return PaymentInfo();
 }
 
-std::string Payments::GetTransactionMonth(
-    const base::Time& time) const {
+std::string Payments::GetTransactionMonth(const base::Time& time) const {
   base::Time::Exploded time_exploded;
   time.UTCExplode(&time_exploded);
 
@@ -353,9 +361,8 @@ std::string Payments::GetPreviousTransactionMonth(
   return GetFormattedTransactionMonth(time_exploded.year, time_exploded.month);
 }
 
-std::string Payments::GetFormattedTransactionMonth(
-    const int year,
-    const int month) const {
+std::string Payments::GetFormattedTransactionMonth(const int year,
+                                                   const int month) const {
   return base::StringPrintf("%04d-%02d", year, month);
 }
 

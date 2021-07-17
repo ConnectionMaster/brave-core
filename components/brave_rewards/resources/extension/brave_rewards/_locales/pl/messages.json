@@ -51,18 +51,6 @@
     "message": "Szczegóły",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Twoje saldo",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Punkty BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "można używać jako Nagrody Brave, aby wspierać ulubionych twórców treści. Punktów BAT nie można wymienić na BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "na",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Tokeny odebrane",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Przyjęte dotacje punktów",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Zarobki z reklam",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Utwórz kopię zapasową portfela.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Dowiedz się więcej",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Osiągnięto limit urządzeń",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Nie można zweryfikować portfela, ponieważ osiągnięto limit zweryfikowanych urządzeń.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Twoje konto nagród Brave czeka na depozyt.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Włącz reklamy\n",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Bezpłatne tokeny",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Dotacja darmowych punktów",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Otrzymujesz nagrodę za reklamy!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Portfel zweryfikowany",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Przejdź do mojego konta Uphold",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Przejdź do mojego konta $provider$",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Rozłącz Nagrody Brave",
@@ -573,17 +567,9 @@
     "message": "Token",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "punkty",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Przyznane tokeny",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Punkt odebrany",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Cześć, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Aby utworzyć konto Uphold, musisz mieć co najmniej 25 BAT. Spróbuj ponownie później. Jeśli już masz zweryfikowane konto Uphold, kontynuuj logowanie.",
-    "description": "Text for login button"
+    "message": "Musisz mieć minimalną kwotę $amount$ BAT, aby utworzyć konto Uphold. Jeśli masz już zweryfikowane konto Uphold, kontynuuj logowanie.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Połączone",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Uwaga: Twoje transakcje będą widoczne dla platformy Uphold po autoryzacji, na przykład widoczne będą odbiorca oraz kwota napiwków.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Uwaga: po autoryzacji Twoje transakcje będą widoczne dla $provider$; serwis będzie mógł na przykład zobaczyć dane odbiorcy i kwotę Twoich napiwków.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Zarabiaj tokeny i obdarowuj innych",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Zarabiaj tokeny, oglądając reklamy z poszanowaniem prywatności i automatycznie wspieraj ulubione strony oraz twórców treści.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Jak często chcesz widzieć reklamy?",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(reklam na godzinę)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "W jakim wymiarze miesięcznie chcesz udzielać wsparcia ulubionym twórcom?",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(z Twoich zarobków z reklam)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -702,7 +716,7 @@
     "description": ""
   },
   "onboardingPanelScheduleHeader": {
-    "message": "Kiedy przekazywane są nagrody",
+    "message": "Kiedy przekazywane są nagrody?",
     "description": ""
   },
   "onboardingPanelScheduleText": {
@@ -733,6 +747,14 @@
     "message": "Żetony mogą być wykorzystane poza zakresem wspierających twórców. Możesz zakupić cyfrowe treści i inne towary, gdy kupcy wchodzą na pokład.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Na koniec skonfigurujmy podstawowe ustawienia.",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Można to później zmienić.",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Huraa, jesteście gotowi!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Poprzez korzystanie z Nagród Brave pomagasz sprawić, aby sieć była lepszym miejscem dla wszystkich. I to świetnie!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Zweryfikuj portfel",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Aby wypłacić tokeny zarobione za wyświetlanie reklam, musisz zweryfikować portfel.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Zrób to później",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Zweryfikuj mój portfel",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Portfel bitFlyer jest zarządzany przez bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Weryfikując swój portfel i łącząc go z kontem bitFlyer, możesz łatwiej przechowywać i zarządzać tokenami zdobytymi dzięki Brave Rewards",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Dowiedz się więcej$link_end$ o tym, jak połączyć przeglądarkę Brave z kontem bitFlyer.",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

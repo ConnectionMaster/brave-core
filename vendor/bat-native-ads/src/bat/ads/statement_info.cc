@@ -15,42 +15,33 @@ namespace ads {
 
 StatementInfo::StatementInfo() = default;
 
-StatementInfo::StatementInfo(
-    const StatementInfo& info) = default;
+StatementInfo::StatementInfo(const StatementInfo& info) = default;
 
 StatementInfo::~StatementInfo() = default;
 
-bool StatementInfo::operator==(
-    const StatementInfo& rhs) const {
-  return DoubleEquals(estimated_pending_rewards,
-          rhs.estimated_pending_rewards) &&
-      next_payment_date == rhs.next_payment_date &&
-      ads_received_this_month == rhs.ads_received_this_month &&
-      DoubleEquals(earnings_this_month, rhs.earnings_this_month) &&
-      DoubleEquals(earnings_last_month, rhs.earnings_last_month) &&
-      transactions == rhs.transactions &&
-      uncleared_transactions == rhs.uncleared_transactions;
+bool StatementInfo::operator==(const StatementInfo& rhs) const {
+  return next_payment_date == rhs.next_payment_date &&
+         ads_received_this_month == rhs.ads_received_this_month &&
+         DoubleEquals(earnings_this_month, rhs.earnings_this_month) &&
+         DoubleEquals(earnings_last_month, rhs.earnings_last_month) &&
+         cleared_transactions == rhs.cleared_transactions &&
+         uncleared_transactions == rhs.uncleared_transactions;
 }
 
-bool StatementInfo::operator!=(
-    const StatementInfo& rhs) const {
+bool StatementInfo::operator!=(const StatementInfo& rhs) const {
   return !(*this == rhs);
 }
 
 std::string StatementInfo::ToJson() const {
   base::Value dictionary(base::Value::Type::DICTIONARY);
 
-  // Estimated pending rewards
-  dictionary.SetKey("estimated_pending_rewards",
-      base::Value(estimated_pending_rewards));
-
   // Next payment date
   dictionary.SetKey("next_payment_date",
-      base::Value(std::to_string(next_payment_date)));
+                    base::Value(std::to_string(next_payment_date)));
 
   // Ads received this month
   dictionary.SetKey("ads_received_this_month",
-      base::Value(std::to_string(ads_received_this_month)));
+                    base::Value(ads_received_this_month));
 
   // Earnings this month
   dictionary.SetKey("earnings_this_month", base::Value(earnings_this_month));
@@ -59,13 +50,13 @@ std::string StatementInfo::ToJson() const {
   dictionary.SetKey("earnings_last_month", base::Value(earnings_last_month));
 
   // Transactions
-  base::Value transactions_list = GetTransactionsAsList();
+  base::Value transactions_list = GetClearedTransactionsAsList();
   dictionary.SetKey("transactions", base::Value(std::move(transactions_list)));
 
   // Uncleared transactions
   base::Value uncleared_transactions_list = GetUnclearedTransactionsAsList();
   dictionary.SetKey("uncleared_transactions",
-      base::Value(std::move(uncleared_transactions_list)));
+                    base::Value(std::move(uncleared_transactions_list)));
 
   // Write to JSON
   std::string json;
@@ -74,9 +65,8 @@ std::string StatementInfo::ToJson() const {
   return json;
 }
 
-bool StatementInfo::FromJson(
-    const std::string& json) {
-  base::Optional<base::Value> value = base::JSONReader::Read(json);
+bool StatementInfo::FromJson(const std::string& json) {
+  absl::optional<base::Value> value = base::JSONReader::Read(json);
   if (!value || !value->is_dict()) {
     return false;
   }
@@ -86,32 +76,20 @@ bool StatementInfo::FromJson(
     return false;
   }
 
-  estimated_pending_rewards =
-      GetEstimatedPendingRewardsFromDictionary(dictionary);
-
   next_payment_date = GetNextPaymentDateFromDictionary(dictionary);
 
   ads_received_this_month = GetAdsReceivedThisMonthFromDictionary(dictionary);
 
   earnings_this_month = GetEarningsThisMonthFromDictionary(dictionary);
-
   earnings_last_month = GetEarningsLastMonthFromDictionary(dictionary);
 
-  transactions = GetTransactionsFromDictionary(dictionary);
-
+  cleared_transactions = GetClearedTransactionsFromDictionary(dictionary);
   uncleared_transactions = GetUnclearedTransactionsFromDictionary(dictionary);
 
   return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-double StatementInfo::GetEstimatedPendingRewardsFromDictionary(
-    base::DictionaryValue* dictionary) const {
-  DCHECK(dictionary);
-
-  return dictionary->FindDoubleKey("estimated_pending_rewards").value_or(0.0);
-}
 
 uint64_t StatementInfo::GetNextPaymentDateFromDictionary(
     base::DictionaryValue* dictionary) const {
@@ -134,18 +112,7 @@ uint64_t StatementInfo::GetAdsReceivedThisMonthFromDictionary(
     base::DictionaryValue* dictionary) const {
   DCHECK(dictionary);
 
-  const std::string* value =
-      dictionary->FindStringKey("ads_received_this_month");
-  if (!value) {
-    return 0;
-  }
-
-  uint64_t value_as_uint64 = 0;
-  if (!base::StringToUint64(*value, &value_as_uint64)) {
-    return 0;
-  }
-
-  return value_as_uint64;
+  return dictionary->FindIntKey("ads_received_this_month").value_or(0);
 }
 
 double StatementInfo::GetEarningsThisMonthFromDictionary(
@@ -162,10 +129,10 @@ double StatementInfo::GetEarningsLastMonthFromDictionary(
   return dictionary->FindDoubleKey("earnings_last_month").value_or(0.0);
 }
 
-base::Value StatementInfo::GetTransactionsAsList() const {
+base::Value StatementInfo::GetClearedTransactionsAsList() const {
   base::Value list(base::Value::Type::LIST);
 
-  for (const auto& transaction : transactions) {
+  for (const auto& transaction : cleared_transactions) {
     base::Value dictionary(base::Value::Type::DICTIONARY);
     transaction.ToDictionary(&dictionary);
 
@@ -175,7 +142,7 @@ base::Value StatementInfo::GetTransactionsAsList() const {
   return list;
 }
 
-TransactionList StatementInfo::GetTransactionsFromDictionary(
+TransactionList StatementInfo::GetClearedTransactionsFromDictionary(
     base::DictionaryValue* dictionary) const {
   DCHECK(dictionary);
 

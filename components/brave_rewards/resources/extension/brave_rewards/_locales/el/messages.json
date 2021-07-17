@@ -51,18 +51,6 @@
     "message": "Λεπτομέρειες",
     "description": "Title for grant section in wallet panel summary"
   },
-  "yourBalance": {
-    "message": "Το Υπόλοιπό Σας",
-    "description": "Wallet panel title for anon wallets"
-  },
-  "batPoints": {
-    "message": "Πόντοι BAT",
-    "description": "BAT Points text"
-  },
-  "batPointsMessage": {
-    "message": "μπορεί να χρησιμοποιηθεί στις Ανταμοιβές Brave για συνεισφορά στους αγαπημένους σας δημιουργούς περιεχομένου. Οι Πόντοι BAT δεν μπορούν να ανταλλαγούν με BAT.",
-    "description": "Text for BAT Point helper message"
-  },
   "on": {
     "message": "ανοιχτό ",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -161,10 +149,6 @@
     "message": "Το Κέρμα Επιχορηγήσεων Αποκτήθηκε",
     "description": "Title for grant section in wallet summary"
   },
-  "pointGrantClaimed": {
-    "message": "Χορηγίες Πόντων που Διεκδικήθηκαν",
-    "description": "Title for point grant section in wallet summary"
-  },
   "earningsAds": {
     "message": "Κέρδη από Διαφημίσεις",
     "description": "Title for ads section in wallet summary"
@@ -234,6 +218,18 @@
   "backupWalletNotification": {
     "message": "Παρακαλώ κρατήστε αντίγραφο ασφαλείας του Brave πορτοφολιού σας.",
     "description": "Description for backup wallet notification"
+  },
+  "deviceLimitReachedLearnMore": {
+    "message": "Μάθετε περισσότερα",
+    "description": "Notification button text to learn more about device limit"
+  },
+  "deviceLimitReachedTitle": {
+    "message": "Φτάσατε το Όριο Συσκευών",
+    "description": "Title for device limit reached notification"
+  },
+  "deviceLimitReachedNotification": {
+    "message": "Δεν είναι δυνατή η επαλήθευση του πορτοφολιού σας, επειδή έχετε φτάσει το μέγιστο όριο επαληθευμένων συσκευών.",
+    "description": "Description for device limit reached notification"
   },
   "insufficientFundsNotification": {
     "message": "Ο λογαριασμός σας Ανταμοιβών Brave αναμένει μια κατάθεση.",
@@ -411,10 +407,6 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
-  "bap": {
-    "message": "BAP",
-    "description": "BAT Points abbreviation text"
-  },
   "turnOnAds": {
     "message": "Ενεργοποιήστε τις Διαφημίσεις",
     "description": "Prompt to turn on Ads via notification"
@@ -483,10 +475,6 @@
     "message": "Δωρεάν Χορηγία Τόκεν",
     "description": "Token title on success screen"
   },
-  "grantFinishPointTitleUGP": {
-    "message": "Χορήγηση Δωρεάν Πόντου",
-    "description": "Point title on success screen"
-  },
   "grantFinishTitleAds": {
     "message": "Κερδίσατε μια Ανταμοιβή Διαφημίσεων!",
     "description": "Cosmetic text upon captcha success for ads"
@@ -515,9 +503,15 @@
     "message": "Πορτοφόλι Επαληθεύτηκε",
     "description": "Displayed in wallet that tells users that he is verified"
   },
-  "walletGoToUphold":  {
-    "message": "Μετάβαση στον λογαριασμό μου Uphold",
-    "description": "CTA to open uphold account"
+  "walletGoToProvider":  {
+    "message": "Μεταβείτε στον $provider$ λογαριασμό σας ",
+    "description": "CTA to open an external wallet account",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "walletDisconnect":  {
     "message": "Αποσύνδεση από τις Ανταμοιβές Brave",
@@ -573,17 +567,9 @@
     "message": "Διακριτικό",
     "description": "BAT Token text"
   },
-  "points":  {
-    "message": "πόντοι",
-    "description": "BAT Points text"
-  },
   "tokenGrants":  {
     "message": "Κέρμα Επιχορηγήσεων",
     "description": "BAT Tokens Grant Text"
-  },
-  "pointGrants":  {
-    "message": "Πόντος Eπιχορηγήσεων",
-    "description": "BAT Points Grant Text"
   },
   "greetingsVerified":  {
     "message": "Γεια σας, $name$!",
@@ -612,8 +598,14 @@
     "description": "Text for login button"
   },
   "loginMessageText":  {
-    "message": "Πρέπει να έχετε τουλάχιστον 25 BAT για να δημιουργήσετε έναν λογαριασμό Uphold. Παρακαλούμε δοκιμάστε ξανά αργότερα.\nΕάν έχετε ήδη έναν επαληθευμένο λογαριασμό Uphold, συνδεθείτε.",
-    "description": "Text for login button"
+    "message": "Πρέπει να έχετε ελάχιστο $amount$ BAT για να δημιουργήσετε έναν Upholod λογαριασμό. Αν έχετε ήδη επαληθευμένο λογαριασμό, συνεχίστε για να συνδεθείτε.",
+    "description": "Text for login button",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "15"
+      }
+    }
   },
   "walletConnected":  {
     "message": "Σε σύνδεση",
@@ -624,8 +616,14 @@
     "description": "Status button that tells user that he is currently pending"
   },
   "walletVerificationNote3":  {
-    "message": "Σημείωση: Οι συναλλαγές σας θα είναι ορατές στο Uphold μόλις εξουσιοδοτήσετε. Για παράδειγμα, θα μπορούν να δουν τον παραλήπτη και το ποσό των φιλοδωρημάτων σας.",
-    "description": "Displayed in login modal for uphold"
+    "message": "Σημείωση: Οι συναλλαγές σας θα είναι ορατές στον $provider$ μόλις εξουσιοδοτήσετε. Για παράδειγμα, θα είναι ορατά ο παραλήπτης και το ποσό των φιλοδωρημάτων σας.",
+    "description": "Displayed in login modal for external wallet providers",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Uphold"
+      }
+    }
   },
   "onboardingEarnHeader": {
     "message": "Κερδίστε μάρκες και δώστε πίσω",
@@ -633,6 +631,22 @@
   },
   "onboardingEarnText": {
     "message": "Κερδίστε μάρκες προβάλλοντας διαφημίσεις που σέβονται το απόρρητο και υποστηρίξτε αυτόματα τους αγαπημένους σας ιστότοπους και δημιουργούς περιεχομένου.",
+    "description": ""
+  },
+  "onboardingSetupAdsHeader": {
+    "message": "Πόσο συχνά θέλετε να βλέπετε διαφημίσεις;",
+    "description": ""
+  },
+  "onboardingSetupAdsSubheader": {
+    "message": "(διαφημίσεις ανά ώρα)",
+    "description": ""
+  },
+  "onboardingSetupContributeHeader": {
+    "message": "Πόση μηνιαία υποστήριξη θέλετε να δώσετε στους αγαπημένους σας δημιουργούς;",
+    "description": ""
+  },
+  "onboardingSetupContributeSubheader": {
+    "message": "(από τα κέρδη των διαφημίσεών σας)",
     "description": ""
   },
   "onboardingStartUsingRewards": {
@@ -733,6 +747,14 @@
     "message": "Τα token μπορούν να χρησιμοποιηθούν όχι μόνο για την υποστήριξη των δημιουργών. Θα μπορείτε να αγοράσετε ψηφιακό περιεχόμενο και άλλα προϊόντα όταν αρχίσουν να συμμετέχουν έμποροι.",
     "description": ""
   },
+  "onboardingPanelSetupHeader": {
+    "message": "Τέλος, ας σας βοηθήσουμε να ρυθμίσετε τις βασικές ρυθμίσεις",
+    "description": ""
+  },
+  "onboardingPanelSetupText": {
+    "message": "Ξεκινήστε να χρησιμοποιείτε το Brave Rewards",
+    "description": ""
+  },
   "onboardingPanelCompleteHeader": {
     "message": "Γιούπι! Είναι όλα έτοιμα!",
     "description": ""
@@ -740,5 +762,41 @@
   "onboardingPanelCompleteText": {
     "message": "Χρησιμοποιώντας τις Ανταμοιβές Brave βοηθάτε να γίνει το διαδίκτυο ένα καλύτερο μέρος για όλους. Και αυτό είναι φοβερό!",
     "description": ""
+  },
+  "onboardingPanelVerifyHeader": {
+    "message": "Επαληθεύστε το πορτοφόλι σας",
+    "description": ""
+  },
+  "onboardingPanelVerifySubtext": {
+    "message": "Για να κάνετε ανάληψη των μαρκών που κερδίσατε από την προβολή διαφημίσεων, θα πρέπει να επαληθεύσετε το πορτοφόλι σας.",
+    "description": ""
+  },
+  "onboardingPanelVerifyLater": {
+    "message": "Επαλήθευση αργότερα",
+    "description": ""
+  },
+  "onboardingPanelVerifyNow": {
+    "message": "Επαλήθευση πορτοφολιού",
+    "description": ""
+  },
+  "onboardingPanelBitflyerNote": {
+    "message": "Το πορτοφόλι bitFlyer είναι μια υπηρεσία που διαχειρίζεται η bitFlyer, Inc.",
+    "description": ""
+  },
+  "onboardingPanelBitflyerText": {
+    "message": "Με την επαλήθευση και σύνδεση του πορτοφολιού σας με έναν λογαριασμό bitFlyer, θα έχετε τη δυνατότητα να αποθηκεύετε και να διαχειρίζεστε πιο εύκολα τις μάρκες που έχετε κερδίσει μέσω Brave Rewards",
+    "description": ""
+  },
+  "onboardingPanelBitflyerLearnMore": {
+    "message": "$link_begin$Μάθετε περισσότερα$link_end$ σχετικά με τον τρόπο σύνδεσης του Brave browser με τον λογαριασμό σας bitFlyer. ",
+    "description": "",
+    "placeholders": {
+      "link_begin": {
+        "content": "$1"
+      },
+      "link_end": {
+        "content": "$2"
+      }
+    }
   }
 }

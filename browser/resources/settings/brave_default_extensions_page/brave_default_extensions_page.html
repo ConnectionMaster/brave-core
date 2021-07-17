@@ -1,13 +1,13 @@
 <link rel="import" href="chrome://resources/html/cr.html">
 <link rel="import" href="chrome://resources/html/polymer.html">
 
-<link rel="import" href="chrome://resources/cr_elements/cr_link_row/cr_link_row.html">
 <link rel="import" href="chrome://resources/html/i18n_behavior.html">
 <link rel="import" href="chrome://resources/html/web_ui_listener_behavior.html">
 <link rel="import" href="brave_default_extensions_browser_proxy.html">
-<link rel="import" href="../settings_page/settings_section.html">
-<link rel="import" href="../settings_shared_css.html">
-<link rel="import" href="../settings_vars_css.html">
+<script type="module" src="../settings_page/settings_section.js"></script>
+<script type="module" src="../settings_shared_css.js"></script>
+<script type="module" src="../settings_vars_css.js"></script>
+<script type="module" src="chrome://resources/cr_elements/cr_link_row/cr_link_row.js"></script>
 
 <dom-module id="settings-brave-default-extensions-page">
   <template>
@@ -66,20 +66,8 @@
       }
     </style>
 
-    <div class="settings-box first">
-      <div class="start">$i18n{braveWeb3ProviderDesc}</div>
-      <settings-dropdown-menu id="braveWeb3ProvidersType"
-                              pref="{{prefs.brave.wallet.web3_provider}}"
-                              menu-options="[[braveWeb3Providers_]]">
-      </settings-dropdown-menu>
-    </div>
-    <settings-toggle-button id="braveWalletEnabled"
-        class="cr-row"
-        pref="{{prefs.brave.wallet.load_on_startup}}"
-        label="$i18n{loadCryptoWalletsOnStartupDesc}">
-    </settings-toggle-button>
     <settings-toggle-button id="googleLoginForExtensions"
-        class="cr-row"
+        class="cr-row first"
         pref="{{prefs.signin.allowed_on_next_startup}}"
         learn-more-url="$i18n{googleLoginLearnMoreURL}"
         label="$i18n{googleLoginForExtensionsDesc}">
@@ -97,46 +85,23 @@
         sub-label="$i18n{hangoutsEnabledDesc}"
         on-settings-boolean-control-change="onHangoutsEnabledChange_">
     </settings-toggle-button>
-    <template is="dom-if" if="{{ ipfsEnabled_ }}">
-      <div class="settings-box">
-        <div class="start">$i18n{resolveIPFSURLDesc}</div>
-        <settings-dropdown-menu id="ipfsResolveMethodType"
-                                pref="{{prefs.brave.ipfs.resolve_method}}"
-                                menu-options="[[ipfsResolveMethod_]]">
-        </settings-dropdown-menu>
-      </div>
+    <template is="dom-if" if="{{ decentralizedDnsEnabled_ }}">
       <div class="settings-box">
         <div class="flex cr-padded-text">
-          <div>$i18n{ipfsPublicGatewayDesc}</div>
-          <div class="secondary" id="defaultIPFSGateway">
-            {{prefs.brave.ipfs.public_gateway_address.value}}
-          </div>
+          <div class="start">$i18n{resolveUnstoppableDomainsDesc}</div>
+          <div class="secondary">$i18nRaw{resolveUnstoppableDomainsSubDesc}</div>
         </div>
-        <cr-button id="changeIPFSGateway"
-            on-click="onChangeIPFSGatewayDialogTapped_">
-          $i18n{ipfsChangeGatewayButtonLabel}
-        </cr-button>
+        <settings-dropdown-menu id="unstoppableDomainsResolveMethodType"
+                                pref="{{prefs.brave.unstoppable_domains.resolve_method}}"
+                                menu-options="[[unstoppableDomainsResolveMethod_]]">
       </div>
-      <settings-toggle-button id="ipfsAutoGatewayFallbackEnabled"
-          class="cr-row"
-          pref="{{prefs.brave.ipfs.auto_fallback_to_gateway}}"
-          label=$i18n{ipfsAutoFallbackToGatewayLabel}
-          sub-label=$i18n{ipfsAutoFallbackToGatewayDesc}>
-      </settings-toggle-button>
-      <settings-toggle-button id="ipfsAutoRedirectGateway"
-        class="cr-row"
-        pref="{{prefs.brave.ipfs.auto_redirect_gateway}}"
-        label="$i18n{ipfsAutoRedirectGatewayLabel}"
-        sub-label="$i18n{ipfsAutoRedirectGatewayDesc}">
-      </settings-toggle-button>
+      <div class="settings-box">
+        <div class="start">$i18n{resolveENSDesc}</div>
+        <settings-dropdown-menu id="ensResolveMethodType"
+                                pref="{{prefs.brave.ens.resolve_method}}"
+                                menu-options="[[ensResolveMethod_]]">
+      </div>
     </template>
-    <settings-toggle-button id="ipfsCompanionEnabled"
-        class="cr-row"
-        pref="{{prefs.brave.ipfs_companion_enabled}}"
-        label="IPFS Companion"
-        sub-label="$i18n{ipfsCompanionEnabledDesc}"
-        on-settings-boolean-control-change="onIPFSCompanionEnabledChange_">
-    </settings-toggle-button>
     <settings-toggle-button id="mediaRouterEnabled"
         class="cr-row"
         pref="{{prefs.brave.enable_media_router}}"
@@ -170,16 +135,10 @@
         on-settings-boolean-control-change="onWebTorrentEnabledChange_">
     </settings-toggle-button>
     <settings-toggle-button
-        class="cr-row"
-        pref="{{prefs.brave.ask_widevine_install}}"
-        label="Widevine"
-        sub-label="$i18n{appearanceSettingsAskWidevineInstallDesc}">
-    </settings-toggle-button>
-    <settings-toggle-button
         id="widevineEnabled"
         class="cr-row"
         pref=""
-        label="$i18n{widevineEnabledLabel}"
+        label="Widevine"
         sub-label="$i18n{widevineEnabledDesc}"
         on-settings-boolean-control-change="onWidevineEnabledChange_"
         checked="[[widevineEnabled_]]">
@@ -201,10 +160,6 @@
         on-click="openWebStoreUrl_" external>
       </cr-link-row>
     </div>
-  <template is="dom-if" if="[[showChangeIPFSGatewayDialog_]]" restamp>
-    <change-ipfs-gateway-dialog prefs="{{prefs}}" on-close="onChangeIPFSGatewayDialogClosed_">
-    </change-ipfs-gateway-dialog>
-  </template>
   <template is="dom-if" if="{{ showRestartToast_ }}">
     <div id="needsRestart">
         <div class="flex-container">

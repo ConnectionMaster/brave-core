@@ -1,8 +1,8 @@
 diff --git a/components/sync_device_info/device_info_sync_bridge.cc b/components/sync_device_info/device_info_sync_bridge.cc
-index be551b72676b6232ab73b2ae01199ad59c6a8a30..46fe5662666e3a83196c190bc2c18decd432dd5f 100644
+index 5d56e530777392c6e0846f4ad4c3f281e6e67962..2421ab2c36f0120ee70bf464423cf53b742c55fe 100644
 --- a/components/sync_device_info/device_info_sync_bridge.cc
 +++ b/components/sync_device_info/device_info_sync_bridge.cc
-@@ -173,6 +173,7 @@ std::unique_ptr<DeviceInfoSpecifics> MakeLocalDeviceSpecifics(
+@@ -258,6 +258,7 @@ std::unique_ptr<DeviceInfoSpecifics> MakeLocalDeviceSpecifics(
          GetSpecificsFieldNumberFromModelType(data_type));
    }
  
@@ -10,7 +10,7 @@ index be551b72676b6232ab73b2ae01199ad59c6a8a30..46fe5662666e3a83196c190bc2c18dec
    return specifics;
  }
  
-@@ -308,7 +309,7 @@ base::Optional<ModelError> DeviceInfoSyncBridge::ApplySyncChanges(
+@@ -402,7 +403,7 @@ absl::optional<ModelError> DeviceInfoSyncBridge::ApplySyncChanges(
      // Each device is the authoritative source for itself, ignore any remote
      // changes that have a cache guid that is or was this local device.
      if (device_info_prefs_->IsRecentLocalCacheGuid(guid)) {

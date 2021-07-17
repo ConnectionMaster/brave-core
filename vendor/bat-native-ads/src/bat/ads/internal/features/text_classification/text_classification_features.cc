@@ -12,24 +12,32 @@ namespace ads {
 namespace features {
 
 namespace {
-  const char kFeatureName[] = "TextClassification";
-  const char kFieldTrialParameterPageProbabilitiesHistorySize[] =
-      "page_probabilities_history_size";
+const char kFeatureName[] = "TextClassification";
+const char kFieldTrialParameterPageProbabilitiesHistorySize[] =
+    "page_probabilities_history_size";
+const char kFieldTrialParameterResourceVersion[] =
+    "text_classification_resource_version";
+const int kDefaultResourceVersion = 1;
 }  // namespace
 
-const base::Feature kTextClassification {
-  kFeatureName,
-  base::FEATURE_ENABLED_BY_DEFAULT
-};
+const base::Feature kTextClassification{kFeatureName,
+                                        base::FEATURE_ENABLED_BY_DEFAULT};
 
 bool IsTextClassificationEnabled() {
   return base::FeatureList::IsEnabled(kTextClassification);
 }
 
 int GetTextClassificationProbabilitiesHistorySize() {
+  return GetFieldTrialParamByFeatureAsInt(
+      kTextClassification, kFieldTrialParameterPageProbabilitiesHistorySize,
+      ad_targeting::processor::
+          kDefaultTextClassificationProbabilitiesHistorySize);
+}
+
+int GetTextClassificationResourceVersion() {
   return GetFieldTrialParamByFeatureAsInt(kTextClassification,
-      kFieldTrialParameterPageProbabilitiesHistorySize, ad_targeting::
-          processor::kDefaultTextClassificationProbabilitiesHistorySize);
+                                          kFieldTrialParameterResourceVersion,
+                                          kDefaultResourceVersion);
 }
 
 }  // namespace features

@@ -8,22 +8,21 @@
 #include "chrome/browser/profiles/profile_avatar_icon_util.h"
 #include "chrome/browser/profiles/profile_manager.h"
 
-
 #include "../../../../../../../chrome/browser/ui/views/profiles/avatar_toolbar_button_delegate.cc"
 
-void BraveAvatarToolbarButtonDelegate::Init(AvatarToolbarButton* button,
-                                            Profile* profile) {
-  profile_ = profile;
-  AvatarToolbarButtonDelegate::Init(button, profile);
-}
+BraveAvatarToolbarButtonDelegate::BraveAvatarToolbarButtonDelegate(
+    AvatarToolbarButton* button,
+    Profile* profile)
+    : AvatarToolbarButtonDelegate(button, profile), profile_(profile) {}
 
 AvatarToolbarButton::State BraveAvatarToolbarButtonDelegate::GetState() const {
   AvatarToolbarButton::State state = AvatarToolbarButtonDelegate::GetState();
-  if (state == AvatarToolbarButton::State::kGenericProfile) {
-    ProfileAttributesEntry* entry;
-    if (g_browser_process->profile_manager()
+  if (state == AvatarToolbarButton::State::kNormal) {
+    ProfileAttributesEntry* entry =
+        g_browser_process->profile_manager()
             ->GetProfileAttributesStorage()
-            .GetProfileAttributesWithPath(profile_->GetPath(), &entry) &&
+            .GetProfileAttributesWithPath(profile_->GetPath());
+    if (entry &&
         entry->GetAvatarIconIndex() == profiles::GetPlaceholderAvatarIndex()) {
       return AvatarToolbarButton::State::kNormal;
     }

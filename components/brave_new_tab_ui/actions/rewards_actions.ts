@@ -11,10 +11,6 @@ export const onAdsEnabled = (enabled: boolean) => action(types.ON_ADS_ENABLED, {
   enabled
 })
 
-export const onAdsEstimatedEarnings = (amount: number) => action(types.ON_ADS_ESTIMATED_EARNINGS, {
-  amount
-})
-
 export const onBalanceReport = (properties: {month: number, year: number, report: NewTab.RewardsBalanceReport}) => action(types.ON_BALANCE_REPORT, {
   month: properties.month,
   year: properties.year,
@@ -34,6 +30,10 @@ export const onBalance = (balance: NewTab.RewardsBalance) => action(types.ON_BAL
   balance
 })
 
+export const onAdsAccountStatement = (adsAccountStatement: NewTab.AdsAccountStatement) => action(types.ON_ADS_ACCOUNT_STATEMENT, {
+  adsAccountStatement
+})
+
 export const setInitialRewardsData = (initialRewardsData: InitialRewardsData) => action(types.SET_INITIAL_REWARDS_DATA, initialRewardsData)
 
 export const setPreInitialRewardsData = (preInitialRewardsData: PreInitialRewardsData) => action(types.SET_PRE_INITIAL_REWARDS_DATA, preInitialRewardsData)
@@ -41,10 +41,6 @@ export const setPreInitialRewardsData = (preInitialRewardsData: PreInitialReward
 export const onPromotionFinish = (result: NewTab.RewardsResult, promotion: NewTab.Promotion) => action(types.ON_PROMOTION_FINISH, {
   result,
   promotion
-})
-
-export const setOnlyAnonWallet = (onlyAnonWallet: boolean) => action(types.SET_ONLY_ANON_WALLET, {
-  onlyAnonWallet
 })
 
 export const onCompleteReset = (success: boolean) => action(types.ON_COMPLETE_RESET, {

@@ -42,6 +42,15 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
       chrome.send('brave_rewards.recoverWallet', [key])
       break
     }
+    case types.ON_EXTERNAL_WALLET_PROVIDER_LIST: {
+      if (!action.payload.list) {
+        break
+      }
+
+      state = { ...state }
+      state.externalWalletProviderList = action.payload.list
+      break
+    }
     case types.ON_RECOVER_WALLET_DATA: {
       state = { ...state }
       const result = action.payload.result
@@ -101,9 +110,6 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
         .reduce((accumulator: number, item: Rewards.PendingContribution) => {
           return accumulator + item.amount
         }, 0)
-      if (total > 0) {
-        state.firstLoad = false
-      }
       state.pendingContributionTotal = total
       break
     }
@@ -135,7 +141,7 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
       } else if (status === 1) { // on ledger::type::Result::LEDGER_ERROR
         ui.walletServerProblem = true
       } else if (status === 24) { // on ledger::type::Result::EXPIRED_TOKEN
-        chrome.send('brave_rewards.getExternalWallet', ['uphold'])
+        chrome.send('brave_rewards.getExternalWallet')
         state.balance.total = action.payload.balance.total || 0
       }
 
@@ -146,14 +152,14 @@ const walletReducer: Reducer<Rewards.State | undefined> = (state: Rewards.State,
       break
     }
     case types.GET_EXTERNAL_WALLET: {
-      chrome.send('brave_rewards.getExternalWallet', [action.payload.type])
+      chrome.send('brave_rewards.getExternalWallet')
       break
     }
     case types.ON_EXTERNAL_WALLET: {
       state = { ...state }
 
       if (action.payload.result === 24) { // on ledger::type::Result::EXPIRED_TOKEN
-        chrome.send('brave_rewards.getExternalWallet', ['uphold'])
+        chrome.send('brave_rewards.getExternalWallet')
         break
       }
 
