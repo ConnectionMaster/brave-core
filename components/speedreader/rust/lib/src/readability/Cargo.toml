@@ -11,7 +11,7 @@ categories = []
 edition = "2018"
 
 [dependencies]
-bitflags         = "1.2"
+bitflags         = "2.0"
 html5ever        = "0.25.1"
 kuchiki = { git = "https://github.com/brave/kuchiki", branch = "speedreader" }
 lazy_static      = "1.4"
