@@ -265,10 +265,10 @@
   "devDependencies": {
     "@babel/core": "7.16.0",
     "@dump247/storybook-state": "1.6.1",
-    "@storybook/addon-essentials": "6.4.13",
+    "@storybook/addon-essentials": "6.5.16",
     "@storybook/addon-knobs": "6.4.0",
-    "@storybook/addons": "6.4.13",
-    "@storybook/react": "6.4.13",
+    "@storybook/addons": "6.5.16",
+    "@storybook/react": "6.5.16",
     "@testing-library/react-hooks": "7.0.2",
     "@types/array-move": "2.0.0",
     "@types/bluebird": "3.5.36",
