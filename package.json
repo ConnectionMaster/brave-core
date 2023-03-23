@@ -347,7 +347,7 @@
     "@types/react-router-dom": "^5.1.9",
     "@types/webtorrent": "^0.109.0",
     "@noble/bls12-381": "1.0.1",
-    "array-move": "^2.2.1",
+    "array-move": "^4.0.0",
     "bignumber.js": "^9.0.2",
     "bluebird": "^3.5.1",
     "core-js": "^3.9.1",
