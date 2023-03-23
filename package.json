@@ -287,7 +287,7 @@
     "@types/recharts": "1.8.19",
     "@types/redux-logger": "3.0.8",
     "@types/styled-components": "5.1.9",
-    "@typescript-eslint/eslint-plugin": "4.33.0",
+    "@typescript-eslint/eslint-plugin": "5.56.0",
     "acorn": "8.0.5",
     "babel-loader": "8.2.3",
     "brave-ui": "github:brave/brave-ui#5b2069a51eea6ec4577b433bb9e48b5ab2aabbe9",
