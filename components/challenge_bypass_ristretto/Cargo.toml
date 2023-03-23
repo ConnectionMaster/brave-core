@@ -7,7 +7,7 @@ version = "1.0.0-pre.4"
 base64 = "0.9.3"
 challenge-bypass-ristretto = { version = "1.0.0", features = ["base64"] }
 hmac = "0.10"
-rand = "0.7"
+rand = "0.8"
 sha2 = "0.9"
 
 [lib]
