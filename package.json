@@ -298,7 +298,7 @@
     "emptykit.css": "1.0.1",
     "enhanced-resolve": "5.8.3",
     "enzyme": "3.11.0",
-    "enzyme-adapter-react-16": "1.15.6",
+    "enzyme-adapter-react-16": "1.15.7",
     "eslint": "7.32.0",
     "eslint-config-standard-with-typescript": "21.0.1",
     "eslint-plugin-import": "2.25.2",
