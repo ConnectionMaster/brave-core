@@ -293,7 +293,7 @@
     "brave-ui": "github:brave/brave-ui#5b2069a51eea6ec4577b433bb9e48b5ab2aabbe9",
     "chalk": "4.1.0",
     "commander": "2.20.3",
-    "css-loader": "3.6.0",
+    "css-loader": "6.7.3",
     "csstype": "2.6.15",
     "emptykit.css": "1.0.1",
     "enhanced-resolve": "5.8.3",
