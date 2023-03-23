@@ -314,7 +314,7 @@
     "jest": "26.6.3",
     "jest-junit": "13.0.0",
     "less": "3.13.1",
-    "less-loader": "4.1.0",
+    "less-loader": "11.1.0",
     "log-update": "3.4.0",
     "mkdirp": "0.5.5",
     "mz": "2.7.0",
