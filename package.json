@@ -285,7 +285,7 @@
     "@types/react-sortable-hoc": "0.7.1",
     "@types/react-window": "1.8.2",
     "@types/recharts": "1.8.19",
-    "@types/redux-logger": "3.0.8",
+    "@types/redux-logger": "3.0.9",
     "@types/styled-components": "5.1.9",
     "@typescript-eslint/eslint-plugin": "4.33.0",
     "acorn": "8.0.5",
