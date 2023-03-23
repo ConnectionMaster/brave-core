@@ -316,7 +316,7 @@
     "less": "3.13.1",
     "less-loader": "4.1.0",
     "log-update": "3.4.0",
-    "mkdirp": "0.5.5",
+    "mkdirp": "2.1.6",
     "mz": "2.7.0",
     "react": "16.14.0",
     "react-beautiful-dnd": "11.0.5",
