@@ -18,7 +18,7 @@ rand = { version = "0.7", features = ["wasm-bindgen"] }
 serde_json = "1.0"
 http-signature-rs = { git = "https://github.com/brave-intl/http-signature-rs", rev = "31e4abc" }
 ed25519-dalek = "1.0.1"
-sha2 = "0.9"
+sha2 = "0.10"
 data-encoding = "2.1.2"
 tracing = "0.1"
 bigdecimal = { version = "0.1", features = ["serde"] }
