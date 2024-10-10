@@ -211,6 +211,24 @@ static constexpr webui::LocalizedString kStrings[] = {
     {"navigationExploreLabel", IDS_REWARDS_NAVIGATION_EXPLORE_LABEL},
     {"navigationHomeLabel", IDS_REWARDS_NAVIGATION_HOME_LABEL},
     {"newBadgeText", IDS_REWARDS_NEW_BADGE_TEXT},
+    {"notificationAutoContributeCompletedText",
+     IDS_REWARDS_NOTIFICATION_AUTO_CONTRIBUTE_COMPLETED_TEXT},
+    {"notificationAutoContributeCompletedTitle",
+     IDS_REWARDS_NOTIFICATION_AUTO_CONTRIBUTE_COMPLETED_TITLE},
+    {"notificationWalletDisconnectedAction",
+     IDS_REWARDS_NOTIFICATION_WALLET_DISCONNECTED_ACTION},
+    {"notificationWalletDisconnectedText",
+     IDS_REWARDS_NOTIFICATION_WALLET_DISCONNECTED_TEXT},
+    {"notificationWalletDisconnectedTitle",
+     IDS_REWARDS_NOTIFICATION_WALLET_DISCONNECTED_TITLE},
+    {"notificationMonthlyContributionFailedTitle",
+     IDS_REWARDS_NOTIFICATION_MONTHLY_CONTRIBUTION_FAILED_TITLE},
+    {"notificationMonthlyContributionFailedText",
+     IDS_REWARDS_NOTIFICATION_MONTHLY_CONTRIBUTION_FAILED_TEXT},
+    {"notificationMonthlyTipCompletedText",
+     IDS_REWARDS_NOTIFICATION_MONTHLY_TIP_COMPLETED_TEXT},
+    {"notificationMonthlyTipCompletedTitle",
+     IDS_REWARDS_NOTIFICATION_MONTHLY_TIP_COMPLETED_TITLE},
     {"onboardingButtonLabel", IDS_REWARDS_ONBOARDING_BUTTON_LABEL},
     {"onboardingErrorCountryDeclaredText",
      IDS_BRAVE_REWARDS_ONBOARDING_ERROR_TEXT_DECLARE_COUNTRY},
@@ -263,7 +281,10 @@ static constexpr webui::LocalizedString kStrings[] = {
     {"tosUpdateAcceptButtonLabel", IDS_REWARDS_TOS_UPDATE_BUTTON_LABEL},
     {"tosUpdateLink", IDS_REWARDS_TOS_UPDATE_LINK_TEXT},
     {"tosUpdateRequiredText", IDS_REWARDS_TOS_UPDATE_TEXT},
-    {"tosUpdateRequiredTitle", IDS_REWARDS_TOS_UPDATE_HEADING}};
+    {"tosUpdateRequiredTitle", IDS_REWARDS_TOS_UPDATE_HEADING},
+    {"wdpCheckboxLabel", IDS_REWARDS_WDP_CHECKBOX_LABEL},
+    {"wdpOptInText", IDS_REWARDS_WDP_OPT_IN_TEXT},
+    {"wdpOptInTitle", IDS_REWARDS_WDP_OPT_IN_TITLE}};
 
 }  // namespace
 

@@ -29,6 +29,7 @@
 #include "brave/components/brave_rewards/common/mojom/rewards.mojom.h"
 #include "brave/components/brave_rewards/common/pref_names.h"
 #include "brave/components/brave_rewards/common/rewards_util.h"
+#include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/country_code_util.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
 #include "chrome/browser/browser_process.h"
@@ -631,9 +632,62 @@ void RewardsPageHandler::ToggleAdInappropriate(
       base::IgnoreArgs<bool>(std::move(callback)));
 }
 
+void RewardsPageHandler::GetRewardsNotifications(
+    GetRewardsNotificationsCallback callback) {
+  auto* notification_service = rewards_service_->GetNotificationService();
+  if (!notification_service) {
+    std::move(callback).Run({});
+    return;
+  }
+  std::vector<mojom::RewardsNotificationPtr> notifications;
+  for (auto [_, value] : notification_service->GetAllNotifications()) {
+    std::optional<mojom::RewardsNotificationType> type;
+    switch (value.type_) {
+      case RewardsNotificationService::REWARDS_NOTIFICATION_AUTO_CONTRIBUTE:
+        type = mojom::RewardsNotificationType::kAutoContribute;
+        break;
+      case RewardsNotificationService::REWARDS_NOTIFICATION_TIPS_PROCESSED:
+        type = mojom::RewardsNotificationType::kTipsProcessed;
+        break;
+      case RewardsNotificationService::REWARDS_NOTIFICATION_GENERAL:
+        type = mojom::RewardsNotificationType::kGeneral;
+        break;
+      default:
+        break;
+    }
+    if (type) {
+      auto notification = mojom::RewardsNotification::New();
+      notification->id = value.id_;
+      notification->type = type.value();
+      notification->timestamp =
+          base::Time::FromSecondsSinceUnixEpoch(value.timestamp_);
+      notification->args = /* copy */ value.args_;
+      notifications.push_back(std::move(notification));
+    }
+  }
+  std::move(callback).Run(std::move(notifications));
+}
+
+void RewardsPageHandler::ClearRewardsNotification(
+    const std::string& id,
+    ClearRewardsNotificationCallback callback) {
+  auto* notification_service = rewards_service_->GetNotificationService();
+  if (notification_service) {
+    notification_service->DeleteNotification(id);
+  }
+  std::move(callback).Run();
+}
+
 void RewardsPageHandler::EnableRewards(const std::string& country_code,
                                        EnableRewardsCallback callback) {
   rewards_service_->CreateRewardsWallet(country_code, std::move(callback));
+}
+
+void RewardsPageHandler::SetWebDiscoveryProjectEnabled(
+    bool enabled,
+    SetWebDiscoveryProjectEnabledCallback callback) {
+  prefs_->SetBoolean(kWebDiscoveryEnabled, enabled);
+  std::move(callback).Run();
 }
 
 void RewardsPageHandler::BeginExternalWalletLogin(

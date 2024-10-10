@@ -149,6 +149,15 @@ export const localeStrings = {
   navigationExploreLabel: 'Explore',
   navigationHomeLabel: 'Home',
   newBadgeText: 'NEW',
+  notificationAutoContributeCompletedText: 'You\'ve contributed $1.',
+  notificationAutoContributeCompletedTitle: 'Auto-Contribute',
+  notificationWalletDisconnectedAction: 'Log in again',
+  notificationWalletDisconnectedText: 'This happens from time to time to keep your $1 account secure. While logged out, you will continue to receive payouts, but won\'t be able to see your balance or send contributions from your $1 account.',
+  notificationWalletDisconnectedTitle: 'You are logged out',
+  notificationMonthlyContributionFailedTitle: 'Monthly contribution failed',
+  notificationMonthlyContributionFailedText: 'There was a problem processing your contribution.',
+  notificationMonthlyTipCompletedText: 'Your monthly contributions have been processed.',
+  notificationMonthlyTipCompletedTitle: 'Contributions',
   onboardingButtonLabel: 'Start using Brave Rewards',
   onboardingErrorCountryDeclaredText: 'Unfortunately, there was an error while trying to set your country. Please try again.',
   onboardingErrorDisabledText: 'New signups for Brave Rewards are currently disabled in your region. However, you can always try again later. $1Learn more$2',
@@ -195,7 +204,10 @@ export const localeStrings = {
   tosUpdateLink: 'See $1Brave Rewards Terms of Service$2',
   tosUpdateRequiredText: 'We’ve updated the Terms of Service for Brave Rewards. We’ve made these updates to clarify our terms and ensure they cover new features. If you continue to use Brave Rewards, you are agreeing to the updated Terms of Service. If you do not agree, you can $1reset$2 Brave Rewards, which will disable the feature.',
   tosUpdateRequiredTitle: 'Updated Terms of Service',
-  unconnectedAdsViewedText: 'You\'ve seen $1# Ads$2 this month'
+  unconnectedAdsViewedText: 'You\'ve seen $1# Ads$2 this month',
+  wdpCheckboxLabel: 'Yes, I’d also like to contribute to Brave Search and opt in to $1Web Discovery Project$2.',
+  wdpOptInText: 'Contribute some anonymous search & browsing data to refine Brave Search with Web Discovery Project. It’s completely open-source.',
+  wdpOptInTitle: 'Web Discovery Project'
 }
 
 export type StringKey = keyof typeof localeStrings

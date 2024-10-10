@@ -227,13 +227,31 @@ public class UserAssetsStore: ObservableObject, WalletObserverStore {
     isAddingAsset = true
     let success = await assetManager.addUserAsset(token, isAutoDiscovery: false)
     isAddingAsset = false
+    if success {
+      update()
+    }
     return success
   }
 
   @MainActor func removeUserAsset(
     token: BraveWallet.BlockchainToken
   ) async -> Bool {
+    guard
+      let storeToRemoveIndex = assetStores.firstIndex(where: {
+        $0.token.id == token.id
+      }),
+      let storeToRemove = assetStores[safe: storeToRemoveIndex]
+    else {
+      return false
+    }
+    // `assetStores` updates
+    assetStores.remove(at: storeToRemoveIndex)
+    // asset manager updates
     let success = await assetManager.removeUserAsset(token)
+    // if asset manager udpates failed, add the token back to `assetStores`
+    if !success {
+      assetStores.insert(storeToRemove, at: storeToRemoveIndex)
+    }
     return success
   }
 
@@ -272,6 +290,50 @@ public class UserAssetsStore: ObservableObject, WalletObserverStore {
         }
       )
     }
+  }
+
+  @MainActor func isDuplicate(
+    address: String,
+    tokenId: String,
+    network: BraveWallet.NetworkInfo,
+    isNFT: Bool
+  ) async -> Bool {
+    let allUserAssetsExcludeDeleted = await assetManager.getAllUserAssetsInNetworkAssets(
+      networks: [network],
+      includingUserDeleted: false
+    )
+    let allTokens = await self.blockchainRegistry.allTokens(
+      in: [network],
+      includingUserDeleted: false
+    )
+    var existedInUserAsset = false
+    var existedInTokenRegistry = false
+    if !isNFT || network.coin != .eth {
+      existedInUserAsset =
+        allUserAssetsExcludeDeleted.flatMap(\.tokens).first(where: {
+          $0.contractAddress.caseInsensitiveCompare(address) == .orderedSame
+        }) != nil
+      existedInTokenRegistry =
+        allTokens.flatMap(\.tokens).first(where: {
+          $0.contractAddress.caseInsensitiveCompare(address) == .orderedSame
+        }) != nil
+    } else {
+      var tokenIdToHex = "0x"
+      if let tokenIdValue = Int16(tokenId) {
+        tokenIdToHex = "0x\(String(format: "%02x", tokenIdValue))"
+      }
+      existedInUserAsset =
+        allUserAssetsExcludeDeleted.flatMap(\.tokens).first(where: {
+          $0.contractAddress.caseInsensitiveCompare(address) == .orderedSame
+            && $0.tokenId == tokenIdToHex
+        }) != nil
+      existedInTokenRegistry =
+        allTokens.flatMap(\.tokens).first(where: {
+          $0.contractAddress.caseInsensitiveCompare(address) == .orderedSame
+            && $0.tokenId == tokenIdToHex
+        }) != nil
+    }
+    return existedInUserAsset || existedInTokenRegistry
   }
 
   @MainActor func networkInfo(
