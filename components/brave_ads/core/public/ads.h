@@ -9,10 +9,10 @@
 #include <memory>
 #include <string>
 
+#include "base/values.h"
 #include "brave/components/brave_ads/core/mojom/brave_ads.mojom-forward.h"
 #include "brave/components/brave_ads/core/public/ads_callback.h"
 #include "brave/components/brave_ads/core/public/ads_observer_interface.h"
-#include "brave/components/brave_ads/core/public/export.h"
 #include "brave/components/brave_ads/core/public/service/ads_service_callback.h"
 
 namespace base {
@@ -24,7 +24,7 @@ namespace brave_ads {
 class AdsClient;
 struct NotificationAdInfo;
 
-class ADS_EXPORT Ads {
+class Ads {
  public:
   Ads() = default;
 
@@ -91,6 +91,12 @@ class ADS_EXPORT Ads {
       const std::string& creative_instance_id,
       mojom::InlineContentAdEventType mojom_ad_event_type,
       TriggerAdEventCallback callback) = 0;
+
+  // Called to parse and save creative new tab page ads. The callback takes one
+  // argument - `bool` is set to `true` if successful otherwise `false`.
+  virtual void ParseAndSaveCreativeNewTabPageAds(
+      base::Value::Dict data,
+      ParseAndSaveCreativeNewTabPageAdsCallback callback) = 0;
 
   // Called to serve a new tab page ad. The callback takes one argument -
   // `NewTabPageAdInfo` containing the info for the ad.

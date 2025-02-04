@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_wallet/browser/brave_wallet_service.h"
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <optional>
@@ -12,7 +13,6 @@
 
 #include "base/containers/contains.h"
 #include "base/notreached.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/string_util.h"
 #include "base/values.h"
 #include "brave/components/brave_wallet/browser/account_discovery_manager.h"
@@ -32,6 +32,7 @@
 #include "brave/components/brave_wallet/common/brave_wallet_types.h"
 #include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/brave_wallet/common/encoding_utils.h"
+#include "brave/components/brave_wallet/common/eth_address.h"
 #include "brave/components/brave_wallet/common/fil_address.h"
 #include "brave/components/brave_wallet/common/solana_utils.h"
 #include "brave/components/brave_wallet/common/value_conversion_utils.h"
@@ -619,14 +620,14 @@ void BraveWalletService::SetNetworkForSelectedAccountOnActiveOrigin(
 
 bool BraveWalletService::HasPendingDecryptRequestForOrigin(
     const url::Origin& origin) const {
-  return base::ranges::any_of(pending_decrypt_requests_, [origin](auto& req) {
+  return std::ranges::any_of(pending_decrypt_requests_, [origin](auto& req) {
     return req.second.origin == origin;
   });
 }
 
 bool BraveWalletService::HasPendingGetEncryptionPublicKeyRequestForOrigin(
     const url::Origin& origin) const {
-  return base::ranges::any_of(
+  return std::ranges::any_of(
       pending_get_encryption_public_key_requests_,
       [origin](auto& req) { return req.second.origin == origin; });
 }
@@ -1601,7 +1602,11 @@ void BraveWalletService::ConvertFEVMToFVMAddress(
     ConvertFEVMToFVMAddressCallback callback) {
   base::flat_map<std::string, std::string> result;
   for (const auto& fevm_address : fevm_addresses) {
-    auto address = FilAddress::FromFEVMAddress(is_mainnet, fevm_address);
+    auto eth_address = EthAddress::FromHex(fevm_address);
+    if (!eth_address.IsValid()) {
+      continue;
+    }
+    auto address = FilAddress::FromFEVMAddress(is_mainnet, eth_address);
     DCHECK(result.find(fevm_address) == result.end());
     if (!address.IsEmpty()) {
       result[fevm_address] = address.EncodeAsString();

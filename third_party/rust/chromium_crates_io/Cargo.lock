@@ -102,6 +102,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonymous-credentials"
+version = "0.1.4"
+dependencies = [
+ "brave-miracl",
+ "cxx",
+ "lazy_static",
+ "rand 0.8.5",
+ "thiserror",
+]
+
+[[package]]
 name = "ansi_term"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -110,8 +121,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anstyle"
+version = "1.0.10"
+
+[[package]]
 name = "anyhow"
-version = "1.0.93"
+version = "1.0.95"
 
 [[package]]
 name = "arrayref"
@@ -259,6 +274,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "brave-miracl"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "brave-news-cxx"
 version = "1.0.0"
 dependencies = [
@@ -378,10 +398,12 @@ name = "chromium"
 version = "0.1.0"
 dependencies = [
  "adblock-cxx",
+ "anonymous-credentials",
  "brave-news-cxx",
  "brave_wallet",
  "challenge-bypass-ristretto-cxx",
  "constellation-cxx",
+ "document-extractor",
  "filecoin-cxx",
  "json-cxx",
  "skus-cxx",
@@ -422,6 +444,34 @@ dependencies = [
  "crypto-common",
  "inout",
  "zeroize",
+]
+
+[[package]]
+name = "clap"
+version = "4.5.23"
+dependencies = [
+ "clap_builder",
+]
+
+[[package]]
+name = "clap_builder"
+version = "4.5.23"
+dependencies = [
+ "anstyle",
+ "clap_lex",
+ "strsim",
+]
+
+[[package]]
+name = "clap_lex"
+version = "0.7.4"
+
+[[package]]
+name = "codespan-reporting"
+version = "0.11.1"
+dependencies = [
+ "termcolor",
+ "unicode-width",
 ]
 
 [[package]]
@@ -560,30 +610,44 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
 ]
 
 [[package]]
 name = "cxx"
-version = "1.0.129"
+version = "1.0.135"
 dependencies = [
  "cc",
+ "cxxbridge-cmd",
  "cxxbridge-flags",
  "cxxbridge-macro",
+ "foldhash",
  "link-cplusplus",
 ]
 
 [[package]]
+name = "cxxbridge-cmd"
+version = "1.0.135"
+dependencies = [
+ "clap",
+ "codespan-reporting",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.91",
+]
+
+[[package]]
 name = "cxxbridge-flags"
-version = "1.0.129"
+version = "1.0.135"
 
 [[package]]
 name = "cxxbridge-macro"
-version = "1.0.129"
+version = "1.0.135"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "rustversion",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -645,6 +709,15 @@ dependencies = [
  "block-buffer 0.10.4",
  "crypto-common",
  "subtle",
+]
+
+[[package]]
+name = "document-extractor"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "html5ever",
+ "kuchikiki",
 ]
 
 [[package]]
@@ -760,6 +833,10 @@ dependencies = [
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "foldhash"
+version = "0.1.4"
 
 [[package]]
 name = "forest_bigint"
@@ -1126,7 +1203,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bytes",
  "fnv",
- "itoa 1.0.11",
+ "itoa 1.0.14",
 ]
 
 [[package]]
@@ -1228,7 +1305,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "itoa"
-version = "1.0.11"
+version = "1.0.14"
 
 [[package]]
 name = "js-sys"
@@ -1295,7 +1372,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "libc"
-version = "0.2.162"
+version = "0.2.169"
 
 [[package]]
 name = "libm"
@@ -1486,7 +1563,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
  "synstructure 0.13.1",
 ]
 
@@ -1547,7 +1624,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -1632,7 +1709,7 @@ dependencies = [
  "libc",
  "redox_syscall",
  "smallvec",
- "windows-sys",
+ "windows-sys 0.45.0",
 ]
 
 [[package]]
@@ -1812,7 +1889,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.89"
+version = "1.0.92"
 dependencies = [
  "unicode-ident",
 ]
@@ -1999,6 +2076,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustversion"
+version = "1.0.18"
+
+[[package]]
 name = "ryu"
 version = "1.0.18"
 
@@ -2055,11 +2136,11 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.23"
+version = "1.0.24"
 
 [[package]]
 name = "serde"
-version = "1.0.214"
+version = "1.0.216"
 dependencies = [
  "serde_derive",
 ]
@@ -2074,11 +2155,11 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.214"
+version = "1.0.216"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -2094,9 +2175,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.132"
+version = "1.0.134"
 dependencies = [
- "itoa 1.0.11",
+ "itoa 1.0.14",
  "memchr",
  "ryu",
  "serde",
@@ -2350,6 +2431,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "strsim"
+version = "0.11.1"
+
+[[package]]
 name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2366,7 +2451,7 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.87"
+version = "2.0.91"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2391,7 +2476,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -2407,6 +2492,13 @@ dependencies = [
  "futf",
  "mac",
  "utf-8",
+]
+
+[[package]]
+name = "termcolor"
+version = "1.4.1"
+dependencies = [
+ "winapi-util",
 ]
 
 [[package]]
@@ -2429,7 +2521,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -2447,7 +2539,7 @@ version = "0.3.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "deranged",
- "itoa 1.0.11",
+ "itoa 1.0.14",
  "num-conv",
  "powerfmt",
  "serde",
@@ -2514,7 +2606,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
 ]
 
 [[package]]
@@ -2560,7 +2652,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.13"
+version = "1.0.14"
 
 [[package]]
 name = "unicode-normalization"
@@ -2569,6 +2661,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "tinyvec",
 ]
+
+[[package]]
+name = "unicode-width"
+version = "0.1.14"
 
 [[package]]
 name = "unicode-xid"
@@ -2656,7 +2752,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
  "wasm-bindgen-shared",
 ]
 
@@ -2676,7 +2772,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -2701,6 +2797,13 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "winapi-util"
+version = "0.1.9"
+dependencies = [
+ "windows-sys 0.52.0",
+]
+
+[[package]]
 name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2710,7 +2813,7 @@ name = "windows"
 version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "windows-targets",
+ "windows-targets 0.42.2",
 ]
 
 [[package]]
@@ -2718,7 +2821,14 @@ name = "windows-sys"
 version = "0.45.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "windows-targets",
+ "windows-targets 0.42.2",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.52.0"
+dependencies = [
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -2726,13 +2836,27 @@ name = "windows-targets"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "windows_aarch64_gnullvm",
- "windows_aarch64_msvc",
- "windows_i686_gnu",
- "windows_i686_msvc",
- "windows_x86_64_gnu",
- "windows_x86_64_gnullvm",
- "windows_x86_64_msvc",
+ "windows_aarch64_gnullvm 0.42.2",
+ "windows_aarch64_msvc 0.42.2",
+ "windows_i686_gnu 0.42.2",
+ "windows_i686_msvc 0.42.2",
+ "windows_x86_64_gnu 0.42.2",
+ "windows_x86_64_gnullvm 0.42.2",
+ "windows_x86_64_msvc 0.42.2",
+]
+
+[[package]]
+name = "windows-targets"
+version = "0.52.6"
+dependencies = [
+ "windows_aarch64_gnullvm 0.52.6",
+ "windows_aarch64_msvc 0.52.6",
+ "windows_i686_gnu 0.52.6",
+ "windows_i686_gnullvm",
+ "windows_i686_msvc 0.52.6",
+ "windows_x86_64_gnu 0.52.6",
+ "windows_x86_64_gnullvm 0.52.6",
+ "windows_x86_64_msvc 0.52.6",
 ]
 
 [[package]]
@@ -2741,9 +2865,17 @@ version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "windows_aarch64_gnullvm"
+version = "0.52.6"
+
+[[package]]
 name = "windows_aarch64_msvc"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "windows_aarch64_msvc"
+version = "0.52.6"
 
 [[package]]
 name = "windows_i686_gnu"
@@ -2751,9 +2883,21 @@ version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "windows_i686_gnu"
+version = "0.52.6"
+
+[[package]]
+name = "windows_i686_gnullvm"
+version = "0.52.6"
+
+[[package]]
 name = "windows_i686_msvc"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "windows_i686_msvc"
+version = "0.52.6"
 
 [[package]]
 name = "windows_x86_64_gnu"
@@ -2761,14 +2905,26 @@ version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "windows_x86_64_gnu"
+version = "0.52.6"
+
+[[package]]
 name = "windows_x86_64_gnullvm"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "windows_x86_64_gnullvm"
+version = "0.52.6"
+
+[[package]]
 name = "windows_x86_64_msvc"
 version = "0.42.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "windows_x86_64_msvc"
+version = "0.52.6"
 
 [[package]]
 name = "winnow"
@@ -2869,7 +3025,7 @@ version = "0.7.35"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.87",
+ "syn 2.0.91",
 ]
 
 [[package]]

@@ -23,7 +23,7 @@
 #include "brave/browser/ui/webui/skus_internals_ui.h"
 #include "brave/components/ai_rewriter/common/buildflags/buildflags.h"
 #include "brave/components/brave_federated/features.h"
-#include "brave/components/brave_rewards/common/features.h"
+#include "brave/components/brave_rewards/core/features.h"
 #include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/constants/webui_url_constants.h"
@@ -201,8 +201,7 @@ WebUIFactoryFunction GetWebUIFactoryFunction(WebUI* web_ui,
       // in WebUI.
       url.host_piece() == chrome::kChromeUINewTabHost ||
       url.host_piece() == chrome::kChromeUISettingsHost ||
-      ((url.host_piece() == kWelcomeHost ||
-        url.host_piece() == chrome::kChromeUIWelcomeURL) &&
+      ((url.host_piece() == kWelcomeHost || url.host_piece() == kWelcomeURL) &&
        !profile->IsGuestSession()) ||
 #endif  // BUILDFLAG(IS_ANDROID)
 #if BUILDFLAG(ENABLE_TOR)

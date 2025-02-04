@@ -48,8 +48,6 @@ class CreativePromotedContentAds final : public TableInterface {
   void Save(const CreativePromotedContentAdList& creative_ads,
             ResultCallback callback);
 
-  void Delete(ResultCallback callback) const;
-
   void GetForCreativeInstanceId(
       const std::string& creative_instance_id,
       GetCreativePromotedContentAdCallback callback) const;
@@ -73,7 +71,7 @@ class CreativePromotedContentAds final : public TableInterface {
                int to_version) override;
 
  private:
-  void MigrateToV45(const mojom::DBTransactionInfoPtr& mojom_db_transaction);
+  void MigrateToV47(const mojom::DBTransactionInfoPtr& mojom_db_transaction);
 
   void Insert(const mojom::DBTransactionInfoPtr& mojom_db_transaction,
               const CreativePromotedContentAdList& creative_ads);

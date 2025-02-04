@@ -5,15 +5,12 @@
 
 #include "brave/components/ntp_background_images/browser/ntp_sponsored_images_source.h"
 
-#include <optional>
 #include <utility>
-#include <vector>
 
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
 #include "base/memory/ref_counted_memory.h"
-#include "base/strings/stringprintf.h"
 #include "base/task/thread_pool.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/ntp_background_images/browser/ntp_sponsored_images_data.h"
@@ -127,14 +124,13 @@ base::FilePath NTPSponsoredImagesSource::GetLocalFilePathFor(
     for (const auto& background : campaign.backgrounds) {
       const auto logo_basename_from_data =
           background.logo.image_file.BaseName();
-      const auto wallpaper_basename_from_data =
-          background.image_file.BaseName();
+      const auto wallpaper_basename_from_data = background.file_path.BaseName();
 
       if (logo_basename_from_data == basename_from_path)
         return background.logo.image_file;
 
       if (wallpaper_basename_from_data == basename_from_path)
-        return background.image_file;
+        return background.file_path;
     }
   }
 
@@ -161,8 +157,7 @@ bool NTPSponsoredImagesSource::IsValidPath(const std::string& path) const {
     for (const auto& background : campaign.backgrounds) {
       const auto logo_basename_from_data =
           background.logo.image_file.BaseName();
-      const auto wallpaper_basename_from_data =
-          background.image_file.BaseName();
+      const auto wallpaper_basename_from_data = background.file_path.BaseName();
 
       if (logo_basename_from_data == basename_from_path ||
           wallpaper_basename_from_data == basename_from_path)

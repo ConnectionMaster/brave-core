@@ -154,8 +154,7 @@ import org.chromium.chrome.browser.preferences.BravePref;
 import org.chromium.chrome.browser.preferences.BravePrefServiceBridge;
 import org.chromium.chrome.browser.preferences.ChromeSharedPreferences;
 import org.chromium.chrome.browser.preferences.Pref;
-import org.chromium.chrome.browser.preferences.PrefChangeRegistrar;
-import org.chromium.chrome.browser.preferences.PrefChangeRegistrar.PrefObserver;
+import org.chromium.chrome.browser.preferences.PrefServiceUtil;
 import org.chromium.chrome.browser.preferences.website.BraveShieldsContentSettings;
 import org.chromium.chrome.browser.prefetch.settings.PreloadPagesSettingsBridge;
 import org.chromium.chrome.browser.prefetch.settings.PreloadPagesState;
@@ -221,6 +220,8 @@ import org.chromium.chrome.browser.vpn.wireguard.WireguardConfigUtils;
 import org.chromium.components.browser_ui.settings.SettingsNavigation;
 import org.chromium.components.embedder_support.util.UrlConstants;
 import org.chromium.components.embedder_support.util.UrlUtilities;
+import org.chromium.components.prefs.PrefChangeRegistrar;
+import org.chromium.components.prefs.PrefChangeRegistrar.PrefObserver;
 import org.chromium.components.safe_browsing.BraveSafeBrowsingApiHandler;
 import org.chromium.components.search_engines.TemplateUrl;
 import org.chromium.components.user_prefs.UserPrefs;
@@ -1000,6 +1001,15 @@ public abstract class BraveActivity extends ChromeActivity
         safeBrowsingBridge.setSafeBrowsingState(SafeBrowsingState.NO_SAFE_BROWSING);
     }
 
+    // Shows SafeBrowsing errors if the switch in Developer Options is on
+    @Override
+    public void maybeShowSafeBrowsingError(String error) {
+        if (ChromeSharedPreferences.getInstance()
+                .readBoolean(BravePreferenceKeys.BRAVE_SAFE_BROWSING_ERRORS, false)) {
+            Toast.makeText(BraveActivity.this, error, Toast.LENGTH_LONG).show();
+        }
+    }
+
     @Override
     public boolean isSafeBrowsingEnabled() {
         return mSafeBrowsingFlagEnabled;
@@ -1033,7 +1043,7 @@ public abstract class BraveActivity extends ChromeActivity
 
         BraveHelper.maybeMigrateSettings();
 
-        PrefChangeRegistrar mPrefChangeRegistrar = new PrefChangeRegistrar();
+        PrefChangeRegistrar mPrefChangeRegistrar = PrefServiceUtil.createFor(getCurrentProfile());
         mPrefChangeRegistrar.addObserver(BravePref.SCHEDULED_CAPTCHA_ID, this);
 
         if (UserPrefs.get(ProfileManager.getLastUsedRegularProfile())
@@ -1320,7 +1330,9 @@ public abstract class BraveActivity extends ChromeActivity
                 BraveSearchEngineUtils.getTemplateUrlByShortName(
                         getCurrentProfile(),
                         BraveSearchEngineUtils.getDSEShortName(getCurrentProfile(), false));
-        if (BRAVE_SEARCH_ENGINE_KEYWORD.equals(defaultSearchEngineTemplateUrl.getKeyword())) {
+        if (defaultSearchEngineTemplateUrl != null
+                && BRAVE_SEARCH_ENGINE_KEYWORD.equals(
+                        defaultSearchEngineTemplateUrl.getKeyword())) {
             UserPrefs.get(getCurrentProfile()).setBoolean(Pref.SEARCH_SUGGEST_ENABLED, true);
         }
     }
@@ -1836,7 +1848,7 @@ public abstract class BraveActivity extends ChromeActivity
             Tab tab = tabModel.getTabAt(index);
             if (tab != null) {
                 tab.setClosing(true);
-                tabModel.closeTabs(TabClosureParams.closeTab(tab).build());
+                tabModel.getTabRemover().closeTabs(TabClosureParams.closeTab(tab).build(), false);
             }
         }
     }

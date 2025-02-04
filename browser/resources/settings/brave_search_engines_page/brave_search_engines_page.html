@@ -1,4 +1,4 @@
-<style include="cr-shared-style iron-flex settings-shared">
+<style include="cr-shared-style settings-shared">
   .default-search-engine .cr-row {
     --cr-section-min-height: 55px;
     gap: 12px;
@@ -71,8 +71,8 @@
       sub-label="$i18n{searchSuggestDesc}">
   </settings-toggle-button>
 </template>
-<if expr="enable_extensions">
-<settings-toggle-button id="webDiscoveryEnabled"
+<if expr="enable_extensions or enable_web_discovery_native">
+<settings-toggle-button id="webDiscoveryEnabledExtension"
     class="cr-row"
     pref="{{prefs.brave.web_discovery_enabled}}"
     label="$i18n{braveWebDiscoveryLabel}"

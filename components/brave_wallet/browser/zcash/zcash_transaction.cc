@@ -5,12 +5,12 @@
 
 #include "brave/components/brave_wallet/browser/zcash/zcash_transaction.h"
 
+#include <algorithm>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
 
-#include "base/ranges/algorithm.h"
 #include "base/strings/string_number_conversions.h"
 #include "brave/components/brave_wallet/browser/zcash/zcash_serializer.h"
 #include "brave/components/brave_wallet/common/hex_utils.h"
@@ -293,6 +293,7 @@ base::Value::Dict ZCashTransaction::ToValue() const {
   dict.Set("to", to_);
   dict.Set("amount", base::NumberToString(amount_));
   dict.Set("fee", base::NumberToString(fee_));
+  dict.Set("expiry_height", base::NumberToString(expiry_height_));
   if (memo_) {
     dict.Set("memo", base::HexEncode(memo_.value()));
   }
@@ -386,6 +387,12 @@ std::optional<ZCashTransaction> ZCashTransaction::FromValue(
     return std::nullopt;
   }
 
+  if (value.Find("expiry_height")) {
+    if (!ReadUint32StringTo(value, "expiry_height", result.expiry_height_)) {
+      return std::nullopt;
+    }
+  }
+
   if (value.Find("memo")) {
     OrchardMemo memo;
     if (!ReadHexByteArrayTo<kOrchardMemoSize>(value, "memo", memo)) {
@@ -402,8 +409,8 @@ bool ZCashTransaction::IsTransparentPartSigned() const {
     return false;
   }
 
-  return base::ranges::all_of(transparent_part_.inputs,
-                              [](auto& input) { return input.IsSigned(); });
+  return std::ranges::all_of(transparent_part_.inputs,
+                             [](auto& input) { return input.IsSigned(); });
 }
 
 uint64_t ZCashTransaction::TotalInputsAmount() const {

@@ -262,16 +262,6 @@ void CreativePromotedContentAds::Save(
                    std::move(callback));
 }
 
-void CreativePromotedContentAds::Delete(ResultCallback callback) const {
-  mojom::DBTransactionInfoPtr mojom_db_transaction =
-      mojom::DBTransactionInfo::New();
-
-  DeleteTable(mojom_db_transaction, GetTableName());
-
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
-}
-
 void CreativePromotedContentAds::GetForCreativeInstanceId(
     const std::string& creative_instance_id,
     GetCreativePromotedContentAdCallback callback) const {
@@ -468,8 +458,13 @@ void CreativePromotedContentAds::Migrate(
   CHECK(mojom_db_transaction);
 
   switch (to_version) {
-    case 45: {
-      MigrateToV45(mojom_db_transaction);
+    case 47: {
+      MigrateToV47(mojom_db_transaction);
+      break;
+    }
+
+    default: {
+      // No migration needed.
       break;
     }
   }
@@ -477,7 +472,7 @@ void CreativePromotedContentAds::Migrate(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void CreativePromotedContentAds::MigrateToV45(
+void CreativePromotedContentAds::MigrateToV47(
     const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
   CHECK(mojom_db_transaction);
 

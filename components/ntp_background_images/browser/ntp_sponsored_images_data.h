@@ -6,7 +6,6 @@
 #ifndef BRAVE_COMPONENTS_NTP_BACKGROUND_IMAGES_BROWSER_NTP_SPONSORED_IMAGES_DATA_H_
 #define BRAVE_COMPONENTS_NTP_BACKGROUND_IMAGES_BROWSER_NTP_SPONSORED_IMAGES_DATA_H_
 
-#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -55,8 +54,11 @@ struct Logo {
   ~Logo();
 };
 
+enum class WallpaperType { kImage };
+
 struct SponsoredBackground {
-  base::FilePath image_file;
+  WallpaperType wallpaper_type;
+  base::FilePath file_path;
   gfx::Point focal_point;
   brave_ads::ConditionMatcherMap condition_matchers;
   std::string background_color;
@@ -68,7 +70,7 @@ struct SponsoredBackground {
 
   SponsoredBackground();
   // For unit test.
-  SponsoredBackground(const base::FilePath& image_file_path,
+  SponsoredBackground(const base::FilePath& file_path,
                       const gfx::Point& point,
                       const Logo& test_logo,
                       const std::string& creative_instance_id);
@@ -93,7 +95,7 @@ struct Campaign {
 // For SR, campaign list has only one item.
 struct NTPSponsoredImagesData {
   NTPSponsoredImagesData();
-  NTPSponsoredImagesData(const std::string& json_string,
+  NTPSponsoredImagesData(const base::Value::Dict& data,
                          const base::FilePath& installed_dir);
   NTPSponsoredImagesData(const NTPSponsoredImagesData& data);
   NTPSponsoredImagesData& operator=(const NTPSponsoredImagesData& data);

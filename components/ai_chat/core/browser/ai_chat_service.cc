@@ -5,6 +5,7 @@
 
 #include "brave/components/ai_chat/core/browser/ai_chat_service.h"
 
+#include <algorithm>
 #include <array>
 #include <compare>
 #include <functional>
@@ -24,7 +25,6 @@
 #include "base/logging.h"
 #include "base/notreached.h"
 #include "base/numerics/clamped_math.h"
-#include "base/ranges/algorithm.h"
 #include "base/task/task_traits.h"
 #include "base/task/thread_pool.h"
 #include "base/time/time.h"
@@ -72,8 +72,8 @@ std::vector<mojom::Conversation*> FilterVisibleConversations(
     }
     conversations.push_back(conversation.get());
   }
-  base::ranges::sort(conversations, std::greater<>(),
-                     &mojom::Conversation::updated_time);
+  std::ranges::sort(conversations, std::greater<>(),
+                    &mojom::Conversation::updated_time);
   return conversations;
 }
 
@@ -128,6 +128,9 @@ AIChatService::AIChatService(
                           weak_ptr_factory_.GetWeakPtr()));
 
   MaybeInitStorage();
+
+  // Get current premium status to report metrics
+  GetPremiumStatus(base::DoNothing());
 }
 
 AIChatService::~AIChatService() = default;
@@ -624,8 +627,9 @@ void AIChatService::OnPremiumStatusReceived(GetPremiumStatusCallback callback,
 #endif
 
   last_premium_status_ = status;
-  if (ai_chat::HasUserOptedIn(profile_prefs_) && ai_chat_metrics_ != nullptr) {
-    ai_chat_metrics_->OnPremiumStatusUpdated(false, status, info.Clone());
+  if (ai_chat_metrics_ != nullptr) {
+    ai_chat_metrics_->OnPremiumStatusUpdated(
+        ai_chat::HasUserOptedIn(profile_prefs_), false, status, info.Clone());
   }
   model_service_->OnPremiumStatus(status);
   std::move(callback).Run(status, std::move(info));
@@ -758,6 +762,7 @@ void AIChatService::HandleFirstEntry(
   if (ai_chat_metrics_ != nullptr) {
     if (handler->GetConversationHistory().size() == 1) {
       ai_chat_metrics_->RecordNewChat();
+      ai_chat_metrics_->RecordNewPrompt();
     }
   }
 }

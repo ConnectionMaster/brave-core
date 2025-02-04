@@ -686,7 +686,6 @@ Config.prototype.buildArgs = function () {
     // in the future to see if this is no longer needed
     // https://github.com/brave/brave-browser/issues/29934
     args.ios_partition_alloc_enabled = false
-    args.use_partition_alloc = false
 
     args.ios_provider_target = "//brave/ios/browser/providers:brave_providers"
 
@@ -1172,7 +1171,7 @@ Object.defineProperty(Config.prototype, 'outputDir', {
     if (this.targetOS && this.targetOS !== this.hostOS) {
       buildConfigDir = this.targetOS + '_' + buildConfigDir
     }
-    if (this.targetEnvironment) {
+    if (this.targetEnvironment && this.targetEnvironment != 'device') {
       buildConfigDir = buildConfigDir + "_" + this.targetEnvironment
     }
     if (this.isChromium) {

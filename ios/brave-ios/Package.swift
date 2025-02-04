@@ -288,6 +288,7 @@ var package = Package(
       dependencies: [
         "BraveCore",
         "BraveShared",
+        "BraveStrings",
         "BraveUI",
         "DesignSystem",
         "Preferences",
@@ -572,9 +573,6 @@ var braveTarget: PackageDescription.Target = .target(
     ),
     .copy(
       "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Paged/TrackingProtectionStats.js"
-    ),
-    .copy(
-      "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Paged/RewardsReportingScript.js"
     ),
     .copy(
       "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Paged/WalletEthereumProviderScript.js"

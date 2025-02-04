@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_ads/browser/ads_service_impl.h"
 
+#include <algorithm>
 #include <optional>
 #include <utility>
 
@@ -21,7 +22,6 @@
 #include "base/logging.h"
 #include "base/metrics/histogram_macros.h"
 #include "base/notreached.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/task/sequenced_task_runner.h"
@@ -51,9 +51,9 @@
 #include "brave/components/brave_ads/core/public/user_attention/user_idle_detection/user_idle_detection_feature.h"
 #include "brave/components/brave_ads/resources/grit/bat_ads_resources.h"
 #include "brave/components/brave_news/common/pref_names.h"
-#include "brave/components/brave_rewards/browser/rewards_service.h"
-#include "brave/components/brave_rewards/common/mojom/rewards.mojom-forward.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
+#include "brave/components/brave_rewards/content/rewards_service.h"
+#include "brave/components/brave_rewards/core/mojom/rewards.mojom-forward.h"
+#include "brave/components/brave_rewards/core/pref_names.h"
 #include "brave/components/l10n/common/country_code_util.h"
 #include "brave/components/l10n/common/locale_util.h"
 #include "brave/components/l10n/common/prefs.h"
@@ -1283,6 +1283,19 @@ void AdsServiceImpl::OnFailedToPrefetchNewTabPageAd(
                                /*intentional*/ base::DoNothing());
 }
 
+void AdsServiceImpl::ParseAndSaveCreativeNewTabPageAds(
+    const base::Value::Dict& data,
+    ParseAndSaveCreativeNewTabPageAdsCallback callback) {
+  if (!bat_ads_associated_remote_.is_bound()) {
+    return std::move(callback).Run(/*success*/ false);
+  }
+
+  // Since `data` contains small JSON from a CRX component, cloning it has
+  // no performance impact.
+  bat_ads_associated_remote_->ParseAndSaveCreativeNewTabPageAds(
+      data.Clone(), std::move(callback));
+}
+
 void AdsServiceImpl::TriggerNewTabPageAdEvent(
     const std::string& placement_id,
     const std::string& creative_instance_id,
@@ -1586,9 +1599,9 @@ void AdsServiceImpl::GetSiteHistory(int max_count,
               site_history.push_back(result.url().GetWithEmptyPath());
             }
 
-            base::ranges::sort(site_history);
-            site_history.erase(base::ranges::unique(site_history),
-                               site_history.cend());
+            std::ranges::sort(site_history);
+            auto to_remove = std::ranges::unique(site_history);
+            site_history.erase(to_remove.begin(), to_remove.end());
             std::move(callback).Run(site_history);
           },
           std::move(callback)),

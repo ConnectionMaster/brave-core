@@ -19,7 +19,7 @@
 #include "brave/components/brave_ads/core/browser/service/ads_service.h"
 #include "brave/components/brave_ads/core/mojom/brave_ads.mojom-shared.h"
 #include "brave/components/brave_ads/core/public/prefs/pref_provider.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
+#include "brave/components/brave_rewards/core/pref_names.h"
 #include "brave/components/ntp_background_images/browser/brave_ntp_custom_background_service.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_data.h"
 #include "brave/components/ntp_background_images/browser/ntp_p3a_helper.h"
@@ -145,17 +145,14 @@ void ViewCounterService::BrandedWallpaperWillBeDisplayed(
     const std::string& wallpaper_id,
     const std::string& creative_instance_id,
     const std::string& campaign_id) {
-  if (ads_service_) {
-    ads_service_->TriggerNewTabPageAdEvent(
-        wallpaper_id, creative_instance_id,
-        brave_ads::mojom::NewTabPageAdEventType::kViewedImpression,
-        /*intentional*/ base::DoNothing());
-
-    if (ntp_p3a_helper_) {
-      // Should only report to P3A if rewards is disabled, as required by spec.
-      ntp_p3a_helper_->RecordView(creative_instance_id, campaign_id);
-    }
+  if (ntp_p3a_helper_) {
+    // Report P3A viewed impression ad event if Brave Rewards are disabled.
+    ntp_p3a_helper_->RecordView(creative_instance_id, campaign_id);
   }
+
+  MaybeTriggerNewTabPageAdEvent(
+      wallpaper_id, creative_instance_id,
+      brave_ads::mojom::NewTabPageAdEventType::kViewedImpression);
 
   branded_new_tab_count_state_->AddDelta(1);
   UpdateP3AValues();
@@ -442,19 +439,33 @@ void ViewCounterService::BrandedWallpaperLogoClicked(
     const std::string& creative_instance_id,
     const std::string& destination_url,
     const std::string& wallpaper_id) {
+  if (ntp_p3a_helper_) {
+    // Report P3A clicked ad event to if Brave Rewards are disabled.
+    ntp_p3a_helper_->RecordNewTabPageAdEvent(
+        brave_ads::mojom::NewTabPageAdEventType::kClicked,
+        creative_instance_id);
+  }
+
+  MaybeTriggerNewTabPageAdEvent(
+      wallpaper_id, creative_instance_id,
+      brave_ads::mojom::NewTabPageAdEventType::kClicked);
+}
+
+void ViewCounterService::MaybeTriggerNewTabPageAdEvent(
+    const std::string& placement_id,
+    const std::string& creative_instance_id,
+    brave_ads::mojom::NewTabPageAdEventType mojom_ad_event_type) {
   if (!ads_service_) {
+    // If `brave_ads::kShouldAlwaysRunBraveAdsServiceFeature` flag is disabled,
+    // `ads_service_` will be null if the user has not joined Brave Rewards.
     return;
   }
 
-  ads_service_->TriggerNewTabPageAdEvent(
-      wallpaper_id, creative_instance_id,
-      brave_ads::mojom::NewTabPageAdEventType::kClicked,
-      /*intentional*/ base::DoNothing());
-
-  if (ntp_p3a_helper_) {
-    // Should only report to P3A if ads are disabled, as required by spec.
-    ntp_p3a_helper_->RecordClickAndMaybeLand(creative_instance_id);
-  }
+  // If `brave_ads::kShouldAlwaysTriggerBraveNewTabPageAdEventsFeature` flag is
+  // disabled `AdsService::TriggerNewTabPageAdEvent` will be no-op.
+  ads_service_->TriggerNewTabPageAdEvent(placement_id, creative_instance_id,
+                                         mojom_ad_event_type,
+                                         /*intentional*/ base::DoNothing());
 }
 
 bool ViewCounterService::ShouldShowBrandedWallpaper() const {

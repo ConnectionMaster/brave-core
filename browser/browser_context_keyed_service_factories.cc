@@ -12,6 +12,7 @@
 #include "brave/browser/brave_federated/brave_federated_service_factory.h"
 #include "brave/browser/brave_news/brave_news_controller_factory.h"
 #include "brave/browser/brave_rewards/rewards_service_factory.h"
+#include "brave/browser/brave_search/backup_results_service_factory.h"
 #include "brave/browser/brave_shields/ad_block_pref_service_factory.h"
 #include "brave/browser/brave_shields/brave_farbling_service_factory.h"
 #include "brave/browser/brave_wallet/asset_ratio_service_factory.h"
@@ -43,6 +44,7 @@
 #include "brave/components/request_otr/common/buildflags/buildflags.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
 #include "brave/components/tor/buildflags/buildflags.h"
+#include "brave/components/web_discovery/buildflags/buildflags.h"
 
 #if BUILDFLAG(ENABLE_BRAVE_VPN)
 #include "brave/browser/brave_vpn/brave_vpn_service_factory.h"
@@ -88,6 +90,10 @@
 
 #if BUILDFLAG(ENABLE_REQUEST_OTR)
 #include "brave/browser/request_otr/request_otr_service_factory.h"
+#endif
+
+#if BUILDFLAG(ENABLE_WEB_DISCOVERY_NATIVE)
+#include "brave/browser/web_discovery/web_discovery_service_factory.h"
 #endif
 
 namespace brave {
@@ -182,6 +188,12 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
 
   ai_chat::AIChatServiceFactory::GetInstance();
   ai_chat::ModelServiceFactory::GetInstance();
+
+  brave_search::BackupResultsServiceFactory::GetInstance();
+
+#if BUILDFLAG(ENABLE_WEB_DISCOVERY_NATIVE)
+  web_discovery::WebDiscoveryServiceFactory::GetInstance();
+#endif
 }
 
 }  // namespace brave

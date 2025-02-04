@@ -294,7 +294,7 @@ void BraveTabContainer::UpdateLayoutOrientation() {
 void BraveTabContainer::PaintBoundingBoxForTiles(
     gfx::Canvas& canvas,
     const SplitViewBrowserData* split_view_data) {
-  base::ranges::for_each(split_view_data->tiles(), [&](const auto& tile) {
+  std::ranges::for_each(split_view_data->tiles(), [&](const auto& tile) {
     PaintBoundingBoxForTile(canvas, tile);
   });
 }
@@ -313,8 +313,8 @@ void BraveTabContainer::PaintBoundingBoxForTile(gfx::Canvas& canvas,
   const int offset =
       IsPinnedTabContainer() ? 0 : tab_strip_model->IndexOfFirstNonPinnedTab();
 
-  auto tab1_index = tab_strip_model->GetIndexOfTab(tile.first) - offset;
-  auto tab2_index = tab_strip_model->GetIndexOfTab(tile.second) - offset;
+  auto tab1_index = tab_strip_model->GetIndexOfTab(tile.first.Get()) - offset;
+  auto tab2_index = tab_strip_model->GetIndexOfTab(tile.second.Get()) - offset;
   if (!controller_->IsValidModelIndex(tab1_index) ||
       !controller_->IsValidModelIndex(tab2_index)) {
     // In case the tiled tab is not in this container, this can happen.
@@ -353,7 +353,8 @@ void BraveTabContainer::PaintBoundingBoxForTile(gfx::Canvas& canvas,
   canvas.DrawRoundRect(bounding_rects, kRadius, flags);
 
   auto active_tab_handle =
-      tab_strip_model->GetTabHandleAt(tab_strip_model->active_index());
+      tab_strip_model->GetTabAtIndex(tab_strip_model->active_index())
+          ->GetHandle();
   if (!is_vertical_tab && active_tab_handle != tile.first &&
       active_tab_handle != tile.second &&
       !GetTabAtModelIndex(tab1_index)->IsMouseHovered() &&
@@ -391,11 +392,15 @@ void BraveTabContainer::CompleteAnimationAndLayout() {
     return;
   }
 
+  if (tabs::utils::ShouldShowVerticalTabs(tab_slot_controller_->GetBrowser())) {
+    last_layout_size_ = size();
+  }
+
   TabContainerImpl::CompleteAnimationAndLayout();
 
   // Should force tabs to layout as they might not change bounds, which makes
   // insets not updated.
-  base::ranges::for_each(children(), &views::View::DeprecatedLayoutImmediately);
+  std::ranges::for_each(children(), &views::View::DeprecatedLayoutImmediately);
 }
 
 void BraveTabContainer::PaintChildren(const views::PaintInfo& paint_info) {
@@ -432,11 +437,28 @@ void BraveTabContainer::SetTabSlotVisibility() {
   for (Tab* tab : layout_helper_->GetTabs()) {
     if (std::optional<tab_groups::TabGroupId> group = tab->group();
         group && !group_views_.contains(*group)) {
-      tab->set_group(std::nullopt);
+      tab->SetGroup(std::nullopt);
     }
   }
 
   TabContainerImpl::SetTabSlotVisibility();
+}
+
+void BraveTabContainer::InvalidateIdealBounds() {
+  if (tabs::utils::ShouldShowVerticalTabs(tab_slot_controller_->GetBrowser())) {
+    last_layout_size_ = gfx::Size();
+  }
+
+  TabContainerImpl::InvalidateIdealBounds();
+}
+
+void BraveTabContainer::Layout(PassKey) {
+  if (tabs::utils::ShouldShowVerticalTabs(tab_slot_controller_->GetBrowser()) &&
+      last_layout_size_ == size()) {
+    return;
+  }
+
+  LayoutSuperclass<TabContainerImpl>(this);
 }
 
 std::optional<BrowserRootView::DropIndex> BraveTabContainer::GetDropIndex(
@@ -773,8 +795,8 @@ void BraveTabContainer::UpdateTabsBorderInTile(const TabTile& tile) {
   const int offset =
       IsPinnedTabContainer() ? 0 : tab_strip_model->IndexOfFirstNonPinnedTab();
 
-  auto tab1_index = tab_strip_model->GetIndexOfTab(tile.first) - offset;
-  auto tab2_index = tab_strip_model->GetIndexOfTab(tile.second) - offset;
+  auto tab1_index = tab_strip_model->GetIndexOfTab(tile.first.Get()) - offset;
+  auto tab2_index = tab_strip_model->GetIndexOfTab(tile.second.Get()) - offset;
 
   if (!controller_->IsValidModelIndex(tab1_index) ||
       !controller_->IsValidModelIndex(tab2_index)) {

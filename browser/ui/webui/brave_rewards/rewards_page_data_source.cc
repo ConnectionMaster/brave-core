@@ -9,13 +9,12 @@
 
 #include "base/feature_list.h"
 #include "brave/components/brave_adaptive_captcha/server_util.h"
-#include "brave/components/brave_rewards/common/features.h"
+#include "brave/components/brave_rewards/core/features.h"
 #include "brave/components/brave_rewards/resources/grit/brave_rewards_resources.h"
 #include "brave/components/brave_rewards/resources/grit/rewards_page_generated_map.h"
 #include "brave/components/constants/webui_url_constants.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/webui/favicon_source.h"
-#include "chrome/browser/ui/webui/webui_util.h"
 #include "components/favicon_base/favicon_url_parser.h"
 #include "components/grit/brave_components_resources.h"
 #include "components/grit/brave_components_strings.h"
@@ -23,6 +22,7 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_ui.h"
 #include "content/public/browser/web_ui_data_source.h"
+#include "ui/webui/webui_util.h"
 
 namespace brave_rewards {
 
@@ -122,6 +122,7 @@ static constexpr webui::LocalizedString kStrings[] = {
      IDS_REWARDS_AUTHORIZE_UPHOLD_INSUFFICIENT_CAPABILITIES_TEXT},
     {"authorizeUpholdInsufficientCapabilitiesTitle",
      IDS_REWARDS_AUTHORIZE_UPHOLD_INSUFFICIENT_CAPABILITIES_TITLE},
+    {"batUtilityTitle", IDS_REWARDS_BAT_UTILITY_TITLE},
     {"benefitsStoreSubtext", IDS_REWARDS_BENEFITS_STORE_SUBTEXT},
     {"benefitsStoreText", IDS_REWARDS_BENEFITS_STORE_TEXT},
     {"benefitsTitle", IDS_REWARDS_BENEFITS_TITLE},
@@ -305,7 +306,7 @@ void CreateAndAddRewardsPageDataSource(content::WebUI& web_ui,
   source->AddString("platform", "desktop");
 #endif
 
-  source->AddBoolean("isBubble", host == kRewardsPageTopHost);
+  source->AddBoolean("isAutoResizeBubble", host == kRewardsPageTopHost);
 
   source->AddBoolean(
       "animatedBackgroundEnabled",

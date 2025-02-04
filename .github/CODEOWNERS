@@ -35,10 +35,10 @@ browser/ui/webui/brave_rewards_ui.cc @brave/rewards-client
 browser/ui/webui/brave_rewards_ui.h @brave/rewards-client
 components/brave_rewards/ @brave/rewards-client
 components/services/bat_rewards/ @brave/rewards-client
-components/brave_rewards/core/common/signer.cc @brave/sec-team
-components/brave_rewards/core/common/signer.h @brave/sec-team
-components/brave_rewards/core/common/request_signer.cc @brave/sec-team
-components/brave_rewards/core/common/request_signer.h @brave/sec-team
+components/brave_rewards/core/engine/util/signer.cc @brave/sec-team
+components/brave_rewards/core/engine/util/signer.h @brave/sec-team
+components/brave_rewards/core/engine/util/request_signer.cc @brave/sec-team
+components/brave_rewards/core/engine/util/request_signer.h @brave/sec-team
 
 # Ads
 browser/brave_ads/**/*.cc @brave/ads-client
@@ -210,3 +210,9 @@ docs/gni_sources.md @brave/sources-gni-reviewers
 **/*.grd @brave/string-reviewers-team
 **/*.grdp @brave/string-reviewers-team
 components/brave_extension/extension/brave_extension/_locales/en_US/messages.json @brave/string-reviewers-team
+
+# Browser commands available via Brave Education content
+browser/ui/webui/brave_browser_command/brave_browser_command_handler.cc @brave/sec-team
+browser/resources/brave_education/brave_education_app.ts @brave/sec-team
+components/brave_education/education_urls.* @brave/sec-team
+ui/webui/resources/js/brave_browser_command/brave_browser_command.mojom @brave/sec-team

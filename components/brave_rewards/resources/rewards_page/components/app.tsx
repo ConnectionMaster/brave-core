@@ -91,6 +91,9 @@ export function App() {
 
   function getClassNames() {
     const list: string[] = []
+    if (embedder.isAutoResizeBubble) {
+      list.push('is-auto-resize-bubble')
+    }
     if (embedder.isBubble) {
       list.push('is-bubble')
     }

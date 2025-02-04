@@ -5,6 +5,7 @@
 
 #include "brave/browser/ui/browser_commands.h"
 
+#include <algorithm>
 #include <memory>
 #include <numeric>
 #include <stack>
@@ -17,7 +18,6 @@
 #include "base/i18n/file_util_icu.h"
 #include "base/i18n/time_formatting.h"
 #include "base/path_service.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/app/brave_command_ids.h"
 #include "brave/browser/brave_shields/brave_shields_tab_helper.h"
@@ -131,7 +131,7 @@ std::optional<tabs::TabHandle> GetActiveTabHandle(Browser* browser) {
   }
 
   const int active_tab_index = model->GetIndexOfWebContents(active_contents);
-  return model->GetTabHandleAt(active_tab_index);
+  return model->GetTabAtIndex(active_tab_index)->GetHandle();
 }
 
 std::vector<int> GetSelectedIndices(Browser* browser) {
@@ -742,7 +742,7 @@ bool CanBringAllTabs(Browser* browser) {
     return false;
   }
 
-  return base::ranges::any_of(
+  return std::ranges::any_of(
       *BrowserList::GetInstance(),
       [&](const Browser* from) { return CanTakeTabs(from, browser); });
 }
@@ -755,7 +755,7 @@ void BringAllTabs(Browser* browser) {
   // Find all browsers with the same profile
   std::vector<Browser*> browsers;
   base::flat_set<Browser*> browsers_to_close;
-  base::ranges::copy_if(
+  std::ranges::copy_if(
       *BrowserList::GetInstance(), std::back_inserter(browsers),
       [&](const Browser* from) { return CanTakeTabs(from, browser); });
 
@@ -767,9 +767,9 @@ void BringAllTabs(Browser* browser) {
       base::FeatureList::IsEnabled(tabs::features::kBraveSharedPinnedTabs) &&
       browser->profile()->GetPrefs()->GetBoolean(brave_tabs::kSharedPinnedTab);
 
-  base::ranges::for_each(browsers, [&detached_pinned_tabs,
-                                    &detached_unpinned_tabs, &browsers_to_close,
-                                    shared_pinned_tab_enabled](auto* other) {
+  std::ranges::for_each(browsers, [&detached_pinned_tabs,
+                                   &detached_unpinned_tabs, &browsers_to_close,
+                                   shared_pinned_tab_enabled](auto* other) {
     static_cast<BraveBrowser*>(other)
         ->set_ignore_enable_closing_last_tab_pref();
 
@@ -813,8 +813,8 @@ void BringAllTabs(Browser* browser) {
   }
 
   if (shared_pinned_tab_enabled) {
-    base::ranges::for_each(browsers_to_close,
-                           [](auto* other) { other->window()->Close(); });
+    std::ranges::for_each(browsers_to_close,
+                          [](auto* other) { other->window()->Close(); });
   }
 }
 
@@ -1015,7 +1015,7 @@ void NewSplitViewForTab(Browser* browser,
   }
 
   auto* model = browser->tab_strip_model();
-  const int tab_index = model->GetIndexOfTab(*tab);
+  const int tab_index = model->GetIndexOfTab(tab->Get());
   const int new_tab_index = model->IsTabPinned(tab_index)
                                 ? model->IndexOfFirstNonPinnedTab()
                                 : tab_index + 1;
@@ -1028,8 +1028,9 @@ void NewSplitViewForTab(Browser* browser,
                      /*foreground*/ true);
   }
 
-  split_view_data->TileTabs({.first = model->GetTabHandleAt(tab_index),
-                             .second = model->GetTabHandleAt(new_tab_index)});
+  split_view_data->TileTabs(
+      {.first = model->GetTabAtIndex(tab_index)->GetHandle(),
+       .second = model->GetTabAtIndex(new_tab_index)->GetHandle()});
 }
 
 void TileTabs(Browser* browser, const std::vector<int>& indices) {
@@ -1057,15 +1058,16 @@ void TileTabs(Browser* browser, const std::vector<int>& indices) {
   auto* model = browser->tab_strip_model();
   auto tab1 = indices[0];
   auto tab2 = indices[1];
-  CHECK(!split_view_data->IsTabTiled(model->GetTabHandleAt(tab1)));
-  CHECK(!split_view_data->IsTabTiled(model->GetTabHandleAt(tab2)));
+  CHECK(!split_view_data->IsTabTiled(model->GetTabAtIndex(tab1)->GetHandle()));
+  CHECK(!split_view_data->IsTabTiled(model->GetTabAtIndex(tab2)->GetHandle()));
 
   if (tab2 < tab1) {
     std::swap(tab1, tab2);
   }
 
-  split_view_data->TileTabs({.first = model->GetTabHandleAt(tab1),
-                             .second = model->GetTabHandleAt(tab2)});
+  split_view_data->TileTabs(
+      {.first = model->GetTabAtIndex(tab1)->GetHandle(),
+       .second = model->GetTabAtIndex(tab2)->GetHandle()});
 }
 
 void BreakTiles(Browser* browser, const std::vector<int>& indices) {
@@ -1081,7 +1083,7 @@ void BreakTiles(Browser* browser, const std::vector<int>& indices) {
   auto* model = browser->tab_strip_model();
   for (auto index : indices) {
     // The tile could have already been broken from the earlier iteration.
-    if (auto tab_handle = model->GetTabHandleAt(index);
+    if (auto tab_handle = model->GetTabAtIndex(index)->GetHandle();
         split_view_data->IsTabTiled(tab_handle)) {
       split_view_data->BreakTile(tab_handle);
     }
@@ -1104,8 +1106,9 @@ bool IsTabsTiled(Browser* browser, const std::vector<int>& indices) {
 
   auto* model = browser->tab_strip_model();
 
-  return base::ranges::any_of(indices, [&](auto index) {
-    return split_view_data->IsTabTiled(model->GetTabHandleAt(index));
+  return std::ranges::any_of(indices, [&](auto index) {
+    return split_view_data->IsTabTiled(
+        model->GetTabAtIndex(index)->GetHandle());
   });
 }
 
@@ -1128,8 +1131,9 @@ bool CanTileTabs(Browser* browser, const std::vector<int>& indices) {
   }
 
   auto* model = browser->tab_strip_model();
-  return base::ranges::none_of(indices, [&](auto index) {
-    return split_view_data->IsTabTiled(model->GetTabHandleAt(index));
+  return std::ranges::none_of(indices, [&](auto index) {
+    return split_view_data->IsTabTiled(
+        model->GetTabAtIndex(index)->GetHandle());
   });
 }
 
@@ -1152,8 +1156,8 @@ void SwapTabsInTile(Browser* browser) {
   auto tile = *split_view_data->GetTile(tab);
   split_view_data->SwapTabsInTile(tile);
 
-  model->MoveWebContentsAt(model->GetIndexOfTab(tile.second),
-                           model->GetIndexOfTab(tile.first),
+  model->MoveWebContentsAt(model->GetIndexOfTab(tile.second.Get()),
+                           model->GetIndexOfTab(tile.first.Get()),
                            /*select_after_move*/ false);
 }
 

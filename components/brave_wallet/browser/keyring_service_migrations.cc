@@ -45,6 +45,28 @@ constexpr char kEncryptedMnemonicDeprecated[] = "encrypted_mnemonic";
 constexpr char kImportedAccountCoinTypeDeprecated[] = "coin_type";
 constexpr char kSelectedAccountDeprecated[] = "selected_account";
 
+std::string GetRootPath(mojom::KeyringId keyring_id) {
+  if (keyring_id == mojom::KeyringId::kDefault) {
+    return "m/44'/60'/0'/0";
+  } else if (keyring_id == mojom::KeyringId::kSolana) {
+    return "m/44'/501'";
+  } else if (keyring_id == mojom::KeyringId::kFilecoin) {
+    return "m/44'/461'/0'/0";
+  } else if (keyring_id == mojom::KeyringId::kFilecoinTestnet) {
+    return "m/44'/1'/0'/0";
+  } else if (keyring_id == mojom::KeyringId::kBitcoin84) {
+    return "m/84'/0'";
+  } else if (keyring_id == mojom::KeyringId::kBitcoin84Testnet) {
+    return "m/84'/1'";
+  } else if (keyring_id == mojom::KeyringId::kZCashMainnet) {
+    return "m/44'/133'";
+  } else if (keyring_id == mojom::KeyringId::kZCashTestnet) {
+    return "m/44'/1'";
+  }
+
+  NOTREACHED() << keyring_id;
+}
+
 std::optional<uint32_t> ExtractAccountIndex(mojom::KeyringId keyring_id,
                                             const std::string& path) {
   CHECK(keyring_id == mojom::KeyringId::kDefault ||
@@ -60,7 +82,7 @@ std::optional<uint32_t> ExtractAccountIndex(mojom::KeyringId keyring_id,
   // For all types remove root path and slash. For Solana also remove '/0'.
 
   auto account_index = std::string_view(path);
-  auto root_path = HDKeyring::GetRootPath(keyring_id);
+  auto root_path = GetRootPath(keyring_id);
   if (!account_index.starts_with(root_path)) {
     return std::nullopt;
   }
@@ -304,8 +326,7 @@ void MaybeMigratePBKDF2Iterations(PrefService* profile_prefs,
 
     auto deprecated_encryptor =
         PasswordEncryptor::DeriveKeyFromPasswordUsingPbkdf2(
-            password, *deprecated_salt, kPbkdf2IterationsLegacy,
-            kPbkdf2KeySize);
+            password, *deprecated_salt, kPbkdf2IterationsLegacy);
     if (!deprecated_encryptor) {
       continue;
     }
@@ -320,7 +341,7 @@ void MaybeMigratePBKDF2Iterations(PrefService* profile_prefs,
                                                     /*force_create = */ true);
 
     auto encryptor = PasswordEncryptor::DeriveKeyFromPasswordUsingPbkdf2(
-        password, salt, kPbkdf2Iterations, kPbkdf2KeySize);
+        password, salt, kPbkdf2Iterations);
     if (!encryptor) {
       continue;
     }
@@ -398,7 +419,7 @@ void MaybeMigrateToWalletMnemonic(PrefService* profile_prefs,
 
   auto deprecated_eth_encryptor =
       PasswordEncryptor::DeriveKeyFromPasswordUsingPbkdf2(
-          password, *deprecated_eth_salt, kPbkdf2Iterations, kPbkdf2KeySize);
+          password, *deprecated_eth_salt, kPbkdf2Iterations);
   if (!deprecated_eth_encryptor) {
     return;
   }
@@ -469,7 +490,7 @@ void MaybeMigrateToWalletMnemonic(PrefService* profile_prefs,
 
     auto deprecated_encryptor =
         PasswordEncryptor::DeriveKeyFromPasswordUsingPbkdf2(
-            password, *deprecated_salt, kPbkdf2Iterations, kPbkdf2KeySize);
+            password, *deprecated_salt, kPbkdf2Iterations);
     if (!deprecated_encryptor) {
       continue;
     }

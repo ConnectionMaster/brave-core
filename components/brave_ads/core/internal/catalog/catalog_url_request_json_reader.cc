@@ -5,13 +5,13 @@
 
 #include "brave/components/brave_ads/core/internal/catalog/catalog_url_request_json_reader.h"
 
-#include "base/ranges/algorithm.h"
+#include <algorithm>
+
 #include "base/time/time.h"
 #include "base/trace_event/trace_event.h"
 #include "brave/components/brave_ads/core/internal/ads_client/ads_client_util.h"
 #include "brave/components/brave_ads/core/internal/catalog/campaign/catalog_campaign_info.h"
 #include "brave/components/brave_ads/core/internal/catalog/campaign/creative_set/catalog_conversion_info.h"
-#include "brave/components/brave_ads/core/internal/catalog/campaign/creative_set/creative/new_tab_page_ad/catalog_new_tab_page_ad_wallpaper_info.h"
 #include "brave/components/brave_ads/core/internal/catalog/catalog_info.h"
 #include "brave/components/brave_ads/core/internal/common/logging_util.h"
 #include "brave/components/brave_ads/core/internal/common/url/url_util.h"
@@ -241,8 +241,8 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
             continue;
           }
 
-          creative_set.conversions.erase(
-              base::ranges::remove_if(
+          auto to_remove =
+              std::ranges::remove_if(
                   creative_set.conversions,
                   [&creative_set,
                    &creative](const CatalogConversionInfo& conversion) {
@@ -252,8 +252,8 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
                            (!ShouldSupportUrl(conversion_url_pattern) ||
                             !SameDomainOrHost(creative.payload.target_url,
                                               conversion_url_pattern));
-                  }),
-              creative_set.conversions.cend());
+                  });
+          creative_set.conversions.erase(to_remove.begin(), to_remove.end());
 
           creative_set.creative_notification_ads.push_back(creative);
         } else if (code == "inline_content_all_v1") {
@@ -286,8 +286,8 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
             continue;
           }
 
-          creative_set.conversions.erase(
-              base::ranges::remove_if(
+          auto to_remove =
+              std::ranges::remove_if(
                   creative_set.conversions,
                   [&creative_set,
                    &creative](const CatalogConversionInfo& conversion) {
@@ -297,8 +297,8 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
                            (!ShouldSupportUrl(conversion_url_pattern) ||
                             !SameDomainOrHost(creative.payload.target_url,
                                               conversion_url_pattern));
-                  }),
-              creative_set.conversions.cend());
+                  });
+          creative_set.conversions.erase(to_remove.begin(), to_remove.end());
 
           creative_set.creative_inline_content_ads.push_back(creative);
         } else if (code == "new_tab_page_all_v1") {
@@ -316,12 +316,6 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
           const auto& payload = creative_node["payload"].GetObject();
           const auto& logo = payload["logo"].GetObject();
           creative.payload.company_name = logo["companyName"].GetString();
-          creative.payload.image_url = GURL(logo["imageUrl"].GetString());
-          if (!ShouldSupportUrl(creative.payload.image_url)) {
-            BLOG(1, "Image URL for creative instance id "
-                        << creative_instance_id << " is unsupported");
-            continue;
-          }
           creative.payload.alt = logo["alt"].GetString();
           creative.payload.target_url =
               GURL(logo["destinationUrl"].GetString());
@@ -331,8 +325,8 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
             continue;
           }
 
-          creative_set.conversions.erase(
-              base::ranges::remove_if(
+          auto to_remove =
+              std::ranges::remove_if(
                   creative_set.conversions,
                   [&creative_set,
                    &creative](const CatalogConversionInfo& conversion) {
@@ -342,12 +336,10 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
                            (!ShouldSupportUrl(conversion_url_pattern) ||
                             !SameDomainOrHost(creative.payload.target_url,
                                               conversion_url_pattern));
-                  }),
-              creative_set.conversions.cend());
+                  });
+          creative_set.conversions.erase(to_remove.begin(), to_remove.end());
 
           for (const auto& wallpaper_node : payload["wallpapers"].GetArray()) {
-            CatalogNewTabPageAdWallpaperInfo wallpaper;
-            std::string image_url = wallpaper_node["imageUrl"].GetString();
             // SmartNTTs are targeted locally by the browser and only shown to
             // users if the configured conditions match. Non-smart capable
             // browsers that predate the introduction of this feature should
@@ -357,19 +349,11 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
             // NTT in the catalog and come up with a new versionable JSON
             // schema, we can remove this.
             constexpr char kSmartNTTPrefix[] = "[SmartNTT]";
+            std::string image_url = wallpaper_node["imageUrl"].GetString();
             if (image_url.starts_with(kSmartNTTPrefix)) {
               image_url =
                   image_url.substr(/*pos=*/std::strlen(kSmartNTTPrefix));
             }
-            wallpaper.image_url = GURL(image_url);
-            if (!ShouldSupportUrl(wallpaper.image_url)) {
-              BLOG(1, "Image URL for creative instance id "
-                          << creative_instance_id << " is unsupported");
-              continue;
-            }
-            wallpaper.focal_point = CatalogNewTabPageAdWallpaperFocalPointInfo{
-                .x = wallpaper_node["focalPoint"]["x"].GetInt(),
-                .y = wallpaper_node["focalPoint"]["y"].GetInt()};
 
             // For Rewards users, these matchers should be placed in the catalog
             // under "wallpapers" with the "imageUrl" prefixed with "[SmartNTT]"
@@ -381,20 +365,13 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
                      wallpaper_node["conditionMatchers"].GetArray()) {
                   if (condition_matchers_node["prefPath"].IsString() &&
                       condition_matchers_node["condition"].IsString()) {
-                    wallpaper.condition_matchers.emplace(
+                    creative.payload.condition_matchers.emplace(
                         condition_matchers_node["prefPath"].GetString(),
                         condition_matchers_node["condition"].GetString());
                   }
                 }
               }
             }
-            creative.payload.wallpapers.push_back(wallpaper);
-          }
-
-          if (creative.payload.wallpapers.empty()) {
-            BLOG(1, "Failed to parse wallpapers for creative instance id "
-                        << creative_instance_id);
-            continue;
           }
 
           creative_set.creative_new_tab_page_ads.push_back(creative);
@@ -421,8 +398,8 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
             continue;
           }
 
-          creative_set.conversions.erase(
-              base::ranges::remove_if(
+          auto to_remove =
+              std::ranges::remove_if(
                   creative_set.conversions,
                   [&creative_set,
                    &creative](const CatalogConversionInfo& conversion) {
@@ -432,8 +409,8 @@ std::optional<CatalogInfo> ReadCatalogImpl(const std::string& json) {
                            (!ShouldSupportUrl(conversion_url_pattern) ||
                             !SameDomainOrHost(creative.payload.target_url,
                                               conversion_url_pattern));
-                  }),
-              creative_set.conversions.cend());
+                  });
+          creative_set.conversions.erase(to_remove.begin(), to_remove.end());
 
           creative_set.creative_promoted_content_ads.push_back(creative);
         } else {

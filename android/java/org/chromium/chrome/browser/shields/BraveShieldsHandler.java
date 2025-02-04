@@ -510,11 +510,6 @@ public class BraveShieldsHandler
         initWebcompatReporterService();
     }
 
-    private void shareStats() {
-        View shareStatsLayout = BraveStatsUtil.getLayout(R.layout.brave_stats_share_layout);
-        BraveStatsUtil.updateBraveShareStatsLayoutAndShare(shareStatsLayout);
-    }
-
     private void setToggleView(boolean shouldShow) {
         if (shouldShow) {
             mSecondaryLayout.setVisibility(View.VISIBLE);
@@ -747,10 +742,16 @@ public class BraveShieldsHandler
             fingerprintingSwitchLayout.setVisibility(View.GONE);
         }
 
+        Tab currentActiveTab = mIconFetcher.getTab();
+        final boolean isPrivateWindow =
+                currentActiveTab != null ? currentActiveTab.isIncognito() : false;
+
         TextView blockElementsText =
                 mSecondaryLayout.findViewById(R.id.brave_shields_block_element_text);
         blockElementsText.setVisibility(
-                ChromeFeatureList.isEnabled(BraveFeatureList.BRAVE_SHIELDS_ELEMENT_PICKER)
+                !isPrivateWindow
+                                && ChromeFeatureList.isEnabled(
+                                        BraveFeatureList.BRAVE_SHIELDS_ELEMENT_PICKER)
                         ? View.VISIBLE
                         : View.GONE);
         blockElementsText.setOnClickListener(

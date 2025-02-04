@@ -237,16 +237,6 @@ void CreativeNotificationAds::Save(
                    std::move(callback));
 }
 
-void CreativeNotificationAds::Delete(ResultCallback callback) const {
-  mojom::DBTransactionInfoPtr mojom_db_transaction =
-      mojom::DBTransactionInfo::New();
-
-  DeleteTable(mojom_db_transaction, GetTableName());
-
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
-}
-
 void CreativeNotificationAds::GetForSegments(
     const SegmentList& segments,
     GetCreativeNotificationAdsCallback callback) const {
@@ -387,13 +377,13 @@ void CreativeNotificationAds::Migrate(
   CHECK(mojom_db_transaction);
 
   switch (to_version) {
-    case 37: {
-      MigrateToV37(mojom_db_transaction);
+    case 47: {
+      MigrateToV47(mojom_db_transaction);
       break;
     }
 
-    case 45: {
-      MigrateToV45(mojom_db_transaction);
+    default: {
+      // No migration needed.
       break;
     }
   }
@@ -401,18 +391,13 @@ void CreativeNotificationAds::Migrate(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// static
-void CreativeNotificationAds::MigrateToV37(
+void CreativeNotificationAds::MigrateToV47(
     const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
   CHECK(mojom_db_transaction);
 
+  // Embeddings are deprecated.
   DropTable(mojom_db_transaction, "embeddings");
   DropTable(mojom_db_transaction, "text_embedding_html_events");
-}
-
-void CreativeNotificationAds::MigrateToV45(
-    const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
-  CHECK(mojom_db_transaction);
 
   // We can safely recreate the table because it will be repopulated after
   // downloading the catalog.

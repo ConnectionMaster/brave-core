@@ -5,12 +5,11 @@
 
 #include "brave/components/ntp_background_images/browser/ntp_sponsored_images_data.h"
 
+#include <algorithm>
 #include <optional>
 #include <utility>
 
-#include "base/json/json_reader.h"
 #include "base/logging.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/stringprintf.h"
 #include "base/uuid.h"
 #include "brave/components/brave_ads/core/public/ad_units/new_tab_page_ad/new_tab_page_ad_info.h"
@@ -115,11 +114,11 @@ Logo::~Logo() = default;
 
 SponsoredBackground::SponsoredBackground() = default;
 SponsoredBackground::SponsoredBackground(
-    const base::FilePath& image_file_path,
+    const base::FilePath& file_path,
     const gfx::Point& point,
     const Logo& test_logo,
     const std::string& creative_instance_id)
-    : image_file(image_file_path),
+    : file_path(file_path),
       focal_point(point),
       creative_instance_id(creative_instance_id),
       logo(test_logo) {}
@@ -137,17 +136,10 @@ bool Campaign::IsValid() const {
 
 NTPSponsoredImagesData::NTPSponsoredImagesData() = default;
 NTPSponsoredImagesData::NTPSponsoredImagesData(
-    const std::string& json_string,
+    const base::Value::Dict& data,
     const base::FilePath& installed_dir)
     : NTPSponsoredImagesData() {
-  std::optional<base::Value> json_value = base::JSONReader::Read(json_string);
-  if (!json_value || !json_value->is_dict()) {
-    DVLOG(2) << "Read json data failed. Invalid JSON data";
-    return;
-  }
-  base::Value::Dict& root = json_value->GetDict();
-
-  std::optional<int> incomingSchemaVersion = root.FindInt(kSchemaVersionKey);
+  std::optional<int> incomingSchemaVersion = data.FindInt(kSchemaVersionKey);
   const bool schemaVersionIsValid =
       incomingSchemaVersion && *incomingSchemaVersion == kExpectedSchemaVersion;
   if (!schemaVersionIsValid) {
@@ -161,7 +153,7 @@ NTPSponsoredImagesData::NTPSponsoredImagesData(
 
   url_prefix = base::StringPrintf("%s://%s/", content::kChromeUIScheme,
                                   kBrandedWallpaperHost);
-  if (auto* name = root.FindString(kThemeNameKey)) {
+  if (auto* name = data.FindString(kThemeNameKey)) {
     theme_name = *name;
     url_prefix += kSuperReferralPath;
   } else {
@@ -177,18 +169,18 @@ NTPSponsoredImagesData::NTPSponsoredImagesData(
   // `campaigns2` array, fall back to `campaigns`, and then fall back to the
   // root `campaign` for backward compatibility. Non-smart capable browsers
   // continue to read the `campaigns` array.
-  if (auto* campaigns2_value = root.FindList(kCampaigns2Key)) {
+  if (auto* campaigns2_value = data.FindList(kCampaigns2Key)) {
     ParseCampaignsList(*campaigns2_value, installed_dir);
-  } else if (auto* campaigns_value = root.FindList(kCampaignsKey)) {
+  } else if (auto* campaigns_value = data.FindList(kCampaignsKey)) {
     ParseCampaignsList(*campaigns_value, installed_dir);
   } else {
     // Get a global campaign directly if the campaign list doesn't exist.
-    const auto campaign = GetCampaignFromValue(root, installed_dir);
+    const auto campaign = GetCampaignFromValue(data, installed_dir);
     if (campaign.IsValid())
       campaigns.push_back(campaign);
   }
 
-  ParseSRProperties(root, installed_dir);
+  ParseSRProperties(data, installed_dir);
 
   PrintCampaignsParsingResult();
 }
@@ -234,7 +226,7 @@ Campaign NTPSponsoredImagesData::GetCampaignFromValue(
       }
 
       SponsoredBackground background;
-      background.image_file = installed_dir.AppendASCII(*image_url);
+      background.file_path = installed_dir.AppendASCII(*image_url);
 
       if (auto* focal_point = wallpaper.FindDict(kWallpaperFocalPointKey)) {
         background.focal_point = {focal_point->FindInt(kXKey).value_or(0),
@@ -351,12 +343,12 @@ std::optional<base::Value::Dict> NTPSponsoredImagesData::GetBackgroundAt(
   data.Set(kWallpaperIDKey, base::Uuid::GenerateRandomV4().AsLowercaseString());
 
   const auto background_file_path =
-      campaign.backgrounds[background_index].image_file;
+      campaign.backgrounds[background_index].file_path;
   const std::string wallpaper_image_url =
       url_prefix + background_file_path.BaseName().AsUTF8Unsafe();
 
-  data.Set(kWallpaperImageURLKey, wallpaper_image_url);
-  data.Set(kWallpaperImagePathKey, background_file_path.AsUTF8Unsafe());
+  data.Set(kWallpaperURLKey, wallpaper_image_url);
+  data.Set(kWallpaperFilePathKey, background_file_path.AsUTF8Unsafe());
   data.Set(kWallpaperFocalPointXKey,
            campaign.backgrounds[background_index].focal_point.x());
   data.Set(kWallpaperFocalPointYKey,
@@ -476,16 +468,6 @@ bool NTPSponsoredImagesData::AdInfoMatchesSponsoredImage(
     return false;
   }
 
-  const std::string ad_image_filename = ad_info.image_url.ExtractFileName();
-  if (ad_image_filename.empty()) {
-    return false;
-  }
-
-  if (base::FilePath::FromUTF8Unsafe(ad_image_filename).BaseName() !=
-      background.logo.image_file.BaseName()) {
-    return false;
-  }
-
   if (ad_info.alt != background.logo.alt_text) {
     return false;
   }
@@ -494,23 +476,7 @@ bool NTPSponsoredImagesData::AdInfoMatchesSponsoredImage(
     return false;
   }
 
-  const auto it = base::ranges::find_if(
-      ad_info.wallpapers, [&background](const auto& wallpaper_info) {
-        const std::string wallpaper_image_filename =
-            wallpaper_info.image_url.ExtractFileName();
-        if (wallpaper_image_filename.empty()) {
-          return false;
-        }
-
-        if (base::FilePath::FromUTF8Unsafe(wallpaper_image_filename)
-                .BaseName() != background.image_file.BaseName()) {
-          return false;
-        }
-        return wallpaper_info.focal_point.x == background.focal_point.x() &&
-               wallpaper_info.focal_point.y == background.focal_point.y();
-      });
-
-  return it != ad_info.wallpapers.end();
+  return true;
 }
 
 }  // namespace ntp_background_images

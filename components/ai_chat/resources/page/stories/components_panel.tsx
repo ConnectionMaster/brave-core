@@ -499,7 +499,7 @@ const meta: Meta<CustomArgs> = {
   ]
 }
 
-function StoryContext(props: React.PropsWithChildren<{args: CustomArgs, setArgs: (newArgs: Partial<CustomArgs>) => void}>) {
+function StoryContext(props: React.PropsWithChildren<{ args: CustomArgs, setArgs: (newArgs: Partial<CustomArgs>) => void }>) {
   const isSmall = useIsSmall()
 
   const options = { args: props.args }
@@ -576,6 +576,7 @@ function StoryContext(props: React.PropsWithChildren<{args: CustomArgs, setArgs:
   const inputText = options.args.inputText
 
   const conversationContext: ConversationContext = {
+    historyInitialized: true,
     conversationUuid: CONVERSATIONS[1].uuid,
     conversationHistory: options.args.hasConversation ? HISTORY : [],
     associatedContentInfo: siteInfo,

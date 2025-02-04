@@ -8,6 +8,7 @@ import("//brave/browser/shell_integrations/buildflags/buildflags.gni")
 import("//brave/browser/ui/config.gni")
 import("//brave/build/config.gni")
 import("//brave/components/ai_rewriter/common/buildflags/buildflags.gni")
+import("//brave/components/brave_education/buildflags.gni")
 import("//brave/components/brave_vpn/common/buildflags/buildflags.gni")
 import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
 import("//brave/components/commander/common/buildflags/buildflags.gni")
@@ -17,6 +18,7 @@ import("//brave/components/request_otr/common/buildflags/buildflags.gni")
 import("//brave/components/speedreader/common/buildflags/buildflags.gni")
 import("//brave/components/text_recognition/common/buildflags/buildflags.gni")
 import("//brave/components/tor/buildflags/buildflags.gni")
+import("//brave/components/web_discovery/buildflags/buildflags.gni")
 import("//build/config/features.gni")
 import("//chrome/common/features.gni")
 import("//components/gcm_driver/config.gni")
@@ -24,7 +26,7 @@ import("//mojo/public/tools/bindings/mojom.gni")
 import("//printing/buildflags/buildflags.gni")
 import("//third_party/widevine/cdm/widevine.gni")
 
-# See //chrome/browser/ui:ui_public_depdendencies.
+# See //chrome/browser/ui:ui_public_dependencies.
 group("ui_public_dependencies") {
   visibility = [
     "//brave/browser/ui",
@@ -57,7 +59,12 @@ source_set("ui") {
     "//brave/components/brave_shields/core/browser",
     "//brave/components/webcompat/core/common",
     "//chrome/browser/ui:browser_navigator_params_headers",
+    "//chrome/browser/ui/tabs:tabs_public",
   ]
+
+  if (!is_android) {
+    deps += [ "//brave/browser/ui/tabs:impl" ]
+  }
 
   allow_circular_includes_from = brave_ui_allow_circular_includes_from
   deps += brave_ui_allow_circular_includes_from
@@ -109,7 +116,11 @@ source_set("ui") {
       "webui/webcompat_reporter/webcompat_reporter_ui.cc",
       "webui/webcompat_reporter/webcompat_reporter_ui.h",
     ]
-    deps += [ "//brave/components/webcompat_reporter/common:mojom" ]
+    deps += [
+      "//brave/browser/ui/webui/brave_browser_command",
+      "//brave/components/webcompat_reporter/common:mojom",
+      "//brave/ui/webui/resources/js/brave_browser_command:mojo_bindings",
+    ]
   }
 
   if (enable_print_preview) {
@@ -152,6 +163,10 @@ source_set("ui") {
       "//brave/components/ai_rewriter/resources/page:generated_resources",
       "//components/web_modal",
     ]
+  }
+
+  if (enable_brave_education) {
+    deps += [ "webui/brave_education" ]
   }
 
   if (!is_android) {
@@ -471,7 +486,6 @@ source_set("ui") {
 
   if (toolkit_views) {
     sources += [
-      "side_panel/brave_side_panel_utils.h",
       "views/bookmarks/bookmark_bar_instructions_view.cc",
       "views/bookmarks/bookmark_bar_instructions_view.h",
       "views/bookmarks/brave_bookmark_bar_view.cc",
@@ -616,11 +630,13 @@ source_set("ui") {
     ]
 
     deps += [
+      "//brave/browser/ui/side_panel",
       "//chrome/browser/devtools",
       "//chrome/browser/ui/download",
       "//chrome/browser/ui/exclusive_access",
       "//chrome/browser/ui/javascript_dialogs",
       "//chrome/browser/ui/views/bubble",
+      "//chrome/browser/ui/views/download",
       "//chrome/browser/ui/views/toolbar",
       "//components/bookmarks/browser",
     ]
@@ -785,12 +801,12 @@ source_set("ui") {
     "//brave/components/brave_news/browser",
     "//brave/components/brave_news/common",
     "//brave/components/brave_perf_predictor/common",
-    "//brave/components/brave_rewards/browser",
-    "//brave/components/brave_rewards/common",
-    "//brave/components/brave_rewards/common:features",
-    "//brave/components/brave_rewards/common/mojom",
-    "//brave/components/brave_rewards/common/mojom:webui",
-    "//brave/components/brave_rewards/core:headers",
+    "//brave/components/brave_rewards/content",
+    "//brave/components/brave_rewards/core",
+    "//brave/components/brave_rewards/core:features",
+    "//brave/components/brave_rewards/core/engine:headers",
+    "//brave/components/brave_rewards/core/mojom",
+    "//brave/components/brave_rewards/core/mojom:webui",
     "//brave/components/brave_rewards/resources",
     "//brave/components/brave_rewards/resources:internals_generated_resources",
     "//brave/components/brave_rewards/resources:page_generated_resources",
@@ -840,6 +856,7 @@ source_set("ui") {
     "//brave/components/tor/buildflags",
     "//brave/components/url_sanitizer/browser",
     "//brave/components/vector_icons",
+    "//brave/components/web_discovery/buildflags",
     "//brave/components/webui",
     "//chrome/app:command_ids",
     "//chrome/app/vector_icons:vector_icons",
@@ -851,7 +868,6 @@ source_set("ui") {
     "//chrome/browser/ui/color:color_headers",
     "//chrome/browser/ui/color:mixers",
     "//chrome/browser/ui/webui",
-    "//chrome/browser/ui/webui:webui_util",
     "//chrome/common",
     "//components/bookmarks/common",
     "//components/content_settings/browser",
@@ -905,6 +921,10 @@ source_set("ui") {
         "//brave/components/brave_vpn/common/wireguard",
       ]
     }
+  }
+
+  if (enable_web_discovery_native) {
+    deps += [ "//brave/components/web_discovery/common" ]
   }
 
   if (is_linux) {
@@ -1062,7 +1082,7 @@ source_set("ui") {
       "//brave/components/brave_private_new_tab_ui/common",
       "//brave/components/brave_private_new_tab_ui/common:mojom",
       "//brave/components/brave_private_new_tab_ui/resources/page:generated_resources",
-      "//brave/components/brave_rewards/browser",
+      "//brave/components/brave_rewards/content",
       "//brave/components/brave_rewards/resources/rewards_panel:brave_rewards_panel_generated",
       "//brave/components/brave_rewards/resources/tip_panel:tip_panel_generated",
       "//brave/components/brave_shields/resources/cookie_list_opt_in:cookie_list_opt_in_generated",

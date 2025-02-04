@@ -93,8 +93,13 @@ void GeoTargets::Migrate(
   CHECK(mojom_db_transaction);
 
   switch (to_version) {
-    case 45: {
-      MigrateToV45(mojom_db_transaction);
+    case 47: {
+      MigrateToV47(mojom_db_transaction);
+      break;
+    }
+
+    default: {
+      // No migration needed.
       break;
     }
   }
@@ -102,7 +107,7 @@ void GeoTargets::Migrate(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GeoTargets::MigrateToV45(
+void GeoTargets::MigrateToV47(
     const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
   CHECK(mojom_db_transaction);
 
