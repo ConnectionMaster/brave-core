@@ -23,6 +23,7 @@ export interface CharCountContext {
 }
 
 export type ConversationContext = SendFeedbackState & CharCountContext & {
+  historyInitialized: boolean
   conversationUuid?: string
   conversationHistory: Mojom.ConversationTurn[]
   associatedContentInfo?: Mojom.SiteInfo
@@ -60,6 +61,9 @@ export type ConversationContext = SendFeedbackState & CharCountContext & {
   setIsToolsMenuOpen: (isOpen: boolean) => void
   handleVoiceRecognition?: () => void
   conversationHandler?: Mojom.ConversationHandlerRemote
+
+  showAttachments: boolean
+  setShowAttachments: (show: boolean) => void
 }
 
 export const defaultCharCountContext: CharCountContext = {
@@ -69,6 +73,7 @@ export const defaultCharCountContext: CharCountContext = {
 }
 
 const defaultContext: ConversationContext = {
+  historyInitialized: false,
   conversationHistory: [],
   allModels: [],
   suggestedQuestions: [],
@@ -98,6 +103,8 @@ const defaultContext: ConversationContext = {
   resetSelectedActionType: () => { },
   handleActionTypeClick: () => { },
   setIsToolsMenuOpen: () => { },
+  showAttachments: false,
+  setShowAttachments: () => { },
   ...defaultSendFeedbackState,
   ...defaultCharCountContext
 }
@@ -155,7 +162,15 @@ export const ConversationReactContext =
 
 export function ConversationContextProvider(props: React.PropsWithChildren) {
   const [context, setContext] =
-    React.useState<ConversationContext>(defaultContext)
+    React.useState<ConversationContext>({
+      ...defaultContext,
+      setShowAttachments: (showAttachments: boolean) => {
+        setContext((value) => ({
+          ...value,
+          showAttachments
+        }))
+      }
+    })
 
   const aiChatContext = useAIChat()
   const { conversationHandler, callbackRouter, selectedConversationId, updateSelectedConversationId } = useActiveChat()
@@ -173,6 +188,10 @@ export function ConversationContextProvider(props: React.PropsWithChildren) {
     }))
   }
 
+  React.useEffect(() => {
+    context.setShowAttachments(!!aiChatContext.isStandalone && !aiChatContext.visibleConversations.some(c => c.uuid === context.conversationUuid))
+  }, [context.conversationUuid])
+
   const getModelContext = (
     currentModelKey: string,
     allModels: Mojom.Model[]
@@ -189,7 +208,8 @@ export function ConversationContextProvider(props: React.PropsWithChildren) {
       const { conversationHistory } =
         await conversationHandler.getConversationHistory()
       setPartialContext({
-        conversationHistory
+        conversationHistory,
+        historyInitialized: true
       })
     }
 
@@ -535,4 +555,11 @@ export function ConversationContextProvider(props: React.PropsWithChildren) {
 
 export function useConversation() {
   return React.useContext(ConversationReactContext)
+}
+
+export function useSupportsAttachments() {
+  const aiChatContext = useAIChat()
+  const conversationContext = useConversation()
+  return aiChatContext.isStandalone
+    && !aiChatContext.visibleConversations.find(c => c.uuid === conversationContext.conversationUuid)
 }

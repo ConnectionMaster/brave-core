@@ -7,23 +7,22 @@
 
 #include <algorithm>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
+#include "base/check_op.h"
 #include "base/containers/extend.h"
 #include "base/containers/span.h"
 #include "base/numerics/byte_conversions.h"
-#include "base/types/expected.h"
+#include "brave/components/brave_wallet/common/bech32.h"
 #include "brave/components/brave_wallet/common/btc_like_serializer_stream.h"
 #include "brave/components/brave_wallet/common/encoding_utils.h"
 #include "brave/components/brave_wallet/common/f4_jumble.h"
 #include "brave/components/brave_wallet/common/hash_utils.h"
 #include "brave/components/brave_wallet/common/hex_utils.h"
 #include "brave/components/brave_wallet/common/value_conversion_utils.h"
-#include "brave/components/brave_wallet/rust/lib.rs.h"
 #include "brave/third_party/bitcoin-core/src/src/base58.h"
-#include "brave/third_party/bitcoin-core/src/src/bech32.h"
-#include "brave/third_party/bitcoin-core/src/src/util/strencodings.h"
 
 namespace brave_wallet {
 
@@ -34,13 +33,10 @@ constexpr size_t kPaddedHrpSize = 16;
 constexpr size_t kPubKeyHashSize = 20;
 constexpr size_t kPrefixSize = 2;
 
-std::array<uint8_t, kPaddedHrpSize> GetPaddedHRP(bool is_testnet) {
-  static_assert(kPaddedHrpSize > sizeof(kTestnetHRP) &&
-                    kPaddedHrpSize > sizeof(kMainnetHRP),
-                "Wrong kPaddedHrpSize size");
-  std::string hrp = is_testnet ? kTestnetHRP : kMainnetHRP;
+std::array<uint8_t, kPaddedHrpSize> GetPaddedHRP(std::string_view hrp) {
+  CHECK_LE(hrp.size(), kPaddedHrpSize);
   std::array<uint8_t, kPaddedHrpSize> padded_hrp = {};
-  base::ranges::copy(base::as_byte_span(hrp), padded_hrp.begin());
+  std::ranges::copy(base::as_byte_span(hrp), padded_hrp.begin());
   return padded_hrp;
 }
 
@@ -124,6 +120,54 @@ base::Value::Dict OrchardNote::ToValue() const {
   return dict;
 }
 
+base::expected<void, mojom::ZCashAddressError>
+ValidateTransparentRecipientAddress(bool testnet, const std::string& addr) {
+  if (IsUnifiedAddress(addr)) {
+    if (IsUnifiedTestnetAddress(addr) != testnet) {
+      return base::unexpected(
+          mojom::ZCashAddressError::kInvalidAddressNetworkMismatch);
+    }
+    if (!ExtractTransparentPart(addr, testnet)) {
+      return base::unexpected(mojom::ZCashAddressError::
+                                  kInvalidUnifiedAddressMissingTransparentPart);
+    }
+    return base::ok();
+  }
+
+  auto decoded = DecodeZCashTransparentAddress(addr);
+  if (!decoded) {
+    return base::unexpected(
+        mojom::ZCashAddressError::kInvalidTransparentAddress);
+  }
+
+  if (decoded->testnet != testnet) {
+    return base::unexpected(
+        mojom::ZCashAddressError::kInvalidAddressNetworkMismatch);
+  }
+
+  return base::ok();
+}
+
+base::expected<void, mojom::ZCashAddressError> ValidateOrchardRecipientAddress(
+    bool testnet,
+    const std::string& addr) {
+  if (!IsUnifiedAddress(addr)) {
+    return base::unexpected(mojom::ZCashAddressError::kInvalidUnifiedAddress);
+  }
+
+  if (IsUnifiedTestnetAddress(addr) != testnet) {
+    return base::unexpected(
+        mojom::ZCashAddressError::kInvalidAddressNetworkMismatch);
+  }
+
+  if (!ExtractOrchardPart(addr, testnet)) {
+    return base::unexpected(
+        mojom::ZCashAddressError::kInvalidUnifiedAddressMissingOrchardPart);
+  }
+
+  return base::ok();
+}
+
 // static
 std::optional<OrchardNote> OrchardNote::FromValue(
     const base::Value::Dict& value) {
@@ -203,15 +247,16 @@ OrchardSpendsBundle::~OrchardSpendsBundle() = default;
 OrchardSpendsBundle::OrchardSpendsBundle(const OrchardSpendsBundle& other) =
     default;
 
-DecodedZCashAddress::DecodedZCashAddress() = default;
-DecodedZCashAddress::~DecodedZCashAddress() = default;
-DecodedZCashAddress::DecodedZCashAddress(const DecodedZCashAddress& other) =
-    default;
-DecodedZCashAddress& DecodedZCashAddress::operator=(
-    const DecodedZCashAddress& other) = default;
-DecodedZCashAddress::DecodedZCashAddress(DecodedZCashAddress&& other) = default;
-DecodedZCashAddress& DecodedZCashAddress::operator=(
-    DecodedZCashAddress&& other) = default;
+DecodedZCashTransparentAddress::DecodedZCashTransparentAddress() = default;
+DecodedZCashTransparentAddress::~DecodedZCashTransparentAddress() = default;
+DecodedZCashTransparentAddress::DecodedZCashTransparentAddress(
+    const DecodedZCashTransparentAddress& other) = default;
+DecodedZCashTransparentAddress& DecodedZCashTransparentAddress::operator=(
+    const DecodedZCashTransparentAddress& other) = default;
+DecodedZCashTransparentAddress::DecodedZCashTransparentAddress(
+    DecodedZCashTransparentAddress&& other) = default;
+DecodedZCashTransparentAddress& DecodedZCashTransparentAddress::operator=(
+    DecodedZCashTransparentAddress&& other) = default;
 
 base::Value::Dict OrchardOutput::ToValue() const {
   base::Value::Dict dict;
@@ -249,8 +294,9 @@ std::optional<OrchardOutput> OrchardOutput::FromValue(
   return result;
 }
 
-bool OutputZCashAddressSupported(const std::string& address, bool is_testnet) {
-  auto decoded_address = DecodeZCashAddress(address);
+bool OutputZCashTransparentAddressSupported(const std::string& address,
+                                            bool is_testnet) {
+  auto decoded_address = DecodeZCashTransparentAddress(address);
   if (!decoded_address) {
     return false;
   }
@@ -264,7 +310,7 @@ bool OutputZCashAddressSupported(const std::string& address, bool is_testnet) {
 // https://zips.z.cash/zip-0317
 uint64_t CalculateZCashTxFee(const uint32_t tx_input_count,
                              const uint32_t orchard_actions_count) {
-  // Use simplified calcultion fee form since we don't support p2psh
+  // Use simplified calculation fee form since we don't support p2psh
   // and shielded addresses
   auto actions_count = std::max(tx_input_count + orchard_actions_count,
                                 kDefaultTransparentOutputsCount);
@@ -301,7 +347,7 @@ std::optional<std::string> PubkeyHashToTransparentAddress(
   return Base58EncodeWithCheck(result);
 }
 
-std::optional<DecodedZCashAddress> DecodeZCashAddress(
+std::optional<DecodedZCashTransparentAddress> DecodeZCashTransparentAddress(
     const std::string& address) {
   std::vector<uint8_t> decode_result;
   if (!DecodeBase58Check(address, decode_result,
@@ -319,7 +365,7 @@ std::optional<DecodedZCashAddress> DecodeZCashAddress(
   std::vector<uint8_t> body(decode_result.begin() + kPrefixSize,
                             decode_result.end());
 
-  DecodedZCashAddress result;
+  DecodedZCashTransparentAddress result;
   result.pubkey_hash = body;
   result.testnet = is_testnet;
 
@@ -328,7 +374,7 @@ std::optional<DecodedZCashAddress> DecodeZCashAddress(
 
 std::vector<uint8_t> ZCashAddressToScriptPubkey(const std::string& address,
                                                 bool is_testnet) {
-  auto decoded_address = DecodeZCashAddress(address);
+  auto decoded_address = DecodeZCashTransparentAddress(address);
   if (!decoded_address) {
     return {};
   }
@@ -354,34 +400,31 @@ std::vector<uint8_t> ZCashAddressToScriptPubkey(const std::string& address,
 std::optional<std::vector<ParsedAddress>> ExtractParsedAddresses(
     const std::string& unified_address,
     bool is_testnet) {
-  auto bech_result = decode_bech32(unified_address);
-  if (!bech_result->is_ok()) {
-    VLOG(0) << std::string(bech_result->error_message());
+  auto bech_result = bech32::Decode(unified_address);
+  if (!bech_result) {
     return std::nullopt;
   }
 
-  const auto& unwrapped = bech_result->unwrap();
-
-  if (unwrapped.variant() != Bech32DecodeVariant::Bech32m) {
+  if (bech_result->encoding != bech32::Encoding::kBech32m) {
     return std::nullopt;
   }
 
   std::string expected_hrp = is_testnet ? kTestnetHRP : kMainnetHRP;
-  if (unwrapped.hrp() != expected_hrp) {
+  if (bech_result->hrp != expected_hrp) {
     return std::nullopt;
   }
 
-  auto reverted = RevertF4Jumble(unwrapped.data());
+  auto reverted = RevertF4Jumble(bech_result->data);
   // HRP with 16 bytes padding which is appended to the end of message
   if (!reverted || reverted->size() < kPaddedHrpSize) {
     return std::nullopt;
   }
 
-  auto [body, hrp] =
+  auto [body, padded_hrp] =
       base::span(*reverted).split_at(reverted->size() - kPaddedHrpSize);
 
-  // Check that HRP is similar to the padded HRP
-  if (GetPaddedHRP(is_testnet) != hrp) {
+  // Check that HRP equals padded HRP
+  if (GetPaddedHRP(expected_hrp) != padded_hrp) {
     return std::nullopt;
   }
 
@@ -415,7 +458,7 @@ std::optional<OrchardAddrRawPart> GetOrchardRawBytes(
         return std::nullopt;
       }
       OrchardAddrRawPart result;
-      base::ranges::copy(part.second, result.begin());
+      std::ranges::copy(part.second, result.begin());
       return result;
     }
   }
@@ -468,21 +511,17 @@ std::optional<std::string> GetMergedUnifiedAddress(
   if (parts.empty()) {
     return std::nullopt;
   }
-  auto bytes = SerializeUnifiedAddress(parts);
+  std::string_view hrp = is_testnet ? kTestnetHRP : kMainnetHRP;
 
-  auto padded_hrp = GetPaddedHRP(is_testnet);
-  bytes.insert(bytes.end(), padded_hrp.begin(), padded_hrp.end());
+  auto bytes = SerializeUnifiedAddress(parts);
+  base::Extend(bytes, GetPaddedHRP(hrp));
 
   auto jumbled = ApplyF4Jumble(bytes);
   if (!jumbled) {
     return std::nullopt;
   }
 
-  std::vector<unsigned char> u5;
-  ConvertBits<8, 5, true>([&](unsigned char c) { u5.push_back(c); },
-                          jumbled.value().begin(), jumbled.value().end());
-  auto encoded = bech32::Encode(bech32::Encoding::BECH32M,
-                                is_testnet ? kTestnetHRP : kMainnetHRP, u5);
+  auto encoded = bech32::Encode(*jumbled, hrp, bech32::Encoding::kBech32m);
   if (encoded.empty()) {
     return std::nullopt;
   }
@@ -510,7 +549,7 @@ std::optional<OrchardMemo> ToOrchardMemo(
   }
 
   std::array<uint8_t, kOrchardMemoSize> output = {};
-  base::ranges::copy(*input, output.begin());
+  std::ranges::copy(*input, output.begin());
   return output;
 }
 

@@ -31,7 +31,6 @@ const exchangeFormatter = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 2,
   minimumSignificantDigits: 1,
   maximumSignificantDigits: 1,
-  // @ts-expect-error: "roudingPriority" not yet recognized
   roundingPriority: 'morePrecision',
   roundingMode: 'ceil'
 })
@@ -165,12 +164,18 @@ export function PaymentForm(props: Props) {
                 ])
               }
             </h4>
-            <p>{getString('contributeLoggedOutText')}</p>
+            <p>
+              {
+                formatMessage(getString('contributeLoggedOutText'), [
+                  providerName
+                ])
+              }
+            </p>
             {web3URL && <p>{getString('contributeLoggedOutWeb3Text')}</p>}
           </div>
         </div>
         <div className='actions'>
-          <Button onClick={() => { model.beginExternalWalletLogin(provider)}}>
+          <Button onClick={() => { model.beginExternalWalletLogin(provider) }}>
             {
               formatMessage(getString('contributeLoginButtonLabel'), [
                 providerName

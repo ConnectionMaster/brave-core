@@ -9,6 +9,7 @@
 #include <string_view>
 
 #include "base/base64.h"
+#include "base/containers/extend.h"
 #include "base/json/json_reader.h"
 #include "base/memory/raw_ptr.h"
 #include "base/test/bind.h"
@@ -26,6 +27,8 @@
 #include "brave/components/brave_wallet/browser/pref_names.h"
 #include "brave/components/brave_wallet/browser/simple_hash_client.h"
 #include "brave/components/brave_wallet/browser/tx_service.h"
+#include "brave/components/brave_wallet/common/brave_wallet.mojom.h"
+#include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/brave_wallet/common/features.h"
 #include "brave/components/brave_wallet/common/test_utils.h"
 #include "chrome/browser/prefs/browser_prefs.h"
@@ -86,6 +89,30 @@ constexpr char kEthErrorFetchingBalanceResult[] =
     "0000000000000000000000000000000000000000000000000000000000000000"
     "0000000000000000000000000000000000000000000000000000000000000040"
     "0000000000000000000000000000000000000000000000000000000000000000";
+
+std::vector<mojom::AccountIdPtr> MakeAccountIds(
+    const std::vector<std::string>& addresses,
+    mojom::CoinType coin = mojom::CoinType::ETH) {
+  std::vector<mojom::AccountIdPtr> result;
+  for (auto& addr : addresses) {
+    result.push_back(MakeAccountId(coin,
+                                   coin == mojom::CoinType::ETH
+                                       ? mojom::KeyringId::kDefault
+                                       : mojom::KeyringId::kSolana,
+                                   mojom::AccountKind::kDerived, addr));
+  }
+  return result;
+}
+
+std::vector<mojom::ChainIdPtr> MakeChainIds(
+    const std::vector<std::string>& chain_ids,
+    mojom::CoinType coin = mojom::CoinType::ETH) {
+  std::vector<mojom::ChainIdPtr> result;
+  for (auto& chain_id : chain_ids) {
+    result.push_back(mojom::ChainId::New(coin, chain_id));
+  }
+  return result;
+}
 
 }  // namespace
 
@@ -322,7 +349,7 @@ class AssetDiscoveryTaskUnitTest : public testing::Test {
       const std::vector<std::string>& expected_token_contract_addresses) {
     base::RunLoop run_loop;
     asset_discovery_task_->DiscoverAnkrTokens(
-        chain_ids, account_addresses,
+        MakeAccountIds(account_addresses), MakeChainIds(chain_ids),
         base::BindLambdaForTesting(
             [&](const std::vector<mojom::BlockchainTokenPtr>
                     discovered_assets) {
@@ -341,7 +368,7 @@ class AssetDiscoveryTaskUnitTest : public testing::Test {
       const std::vector<std::string>& expected_token_contract_addresses) {
     base::RunLoop run_loop;
     asset_discovery_task_->DiscoverERC20sFromRegistry(
-        chain_ids, account_addresses,
+        MakeAccountIds(account_addresses), MakeChainIds(chain_ids),
         base::BindLambdaForTesting(
             [&](const std::vector<mojom::BlockchainTokenPtr>
                     discovered_assets) {
@@ -359,7 +386,7 @@ class AssetDiscoveryTaskUnitTest : public testing::Test {
       const std::vector<std::string>& expected_token_contract_addresses) {
     base::RunLoop run_loop;
     asset_discovery_task_->DiscoverSPLTokensFromRegistry(
-        account_addresses,
+        MakeAccountIds(account_addresses),
         base::BindLambdaForTesting(
             [&](const std::vector<mojom::BlockchainTokenPtr>
                     discovered_assets) {
@@ -373,12 +400,22 @@ class AssetDiscoveryTaskUnitTest : public testing::Test {
   }
 
   void TestDiscoverNFTsOnAllSupportedChains(
-      const std::map<mojom::CoinType, std::vector<std::string>>& chain_ids,
-      const std::map<mojom::CoinType, std::vector<std::string>>& addresses,
+      std::map<mojom::CoinType, std::vector<std::string>> chain_ids_map,
+      std::map<mojom::CoinType, std::vector<std::string>> addresses,
       const std::vector<std::string>& expected_token_contract_addresses) {
+    std::vector<mojom::AccountIdPtr> accounts;
+    base::Extend(accounts, MakeAccountIds(addresses[mojom::CoinType::ETH],
+                                          mojom::CoinType::ETH));
+    base::Extend(accounts, MakeAccountIds(addresses[mojom::CoinType::SOL],
+                                          mojom::CoinType::SOL));
+    std::vector<mojom::ChainIdPtr> chain_ids;
+    base::Extend(chain_ids, MakeChainIds(chain_ids_map[mojom::CoinType::ETH],
+                                         mojom::CoinType::ETH));
+    base::Extend(chain_ids, MakeChainIds(chain_ids_map[mojom::CoinType::SOL],
+                                         mojom::CoinType::SOL));
     base::RunLoop run_loop;
     asset_discovery_task_->DiscoverNFTs(
-        chain_ids, addresses,
+        accounts, chain_ids,
         base::BindLambdaForTesting(
             [&](std::vector<mojom::BlockchainTokenPtr> discovered_assets) {
               for (size_t i = 0; i < discovered_assets.size(); i++) {
@@ -391,12 +428,11 @@ class AssetDiscoveryTaskUnitTest : public testing::Test {
   }
 
   void TestDiscoverAssets(
-      const std::map<mojom::CoinType, std::vector<std::string>>&
-          account_addresses,
+      std::vector<mojom::AccountIdPtr> accounts,
       const std::vector<std::string>& expected_token_contract_addresses) {
     base::RunLoop run_loop;
     asset_discovery_task_->DiscoverAssets(
-        {}, {}, account_addresses, base::BindLambdaForTesting([&]() {
+        std::move(accounts), {}, {}, base::BindLambdaForTesting([&]() {
           wallet_service_observer_->WaitForOnDiscoverAssetsCompleted(
               expected_token_contract_addresses);
           EXPECT_TRUE(wallet_service_observer_->OnDiscoverAssetsStartedFired());
@@ -520,17 +556,17 @@ TEST_F(AssetDiscoveryTaskUnitTest, DiscoverERC20sFromRegistry) {
   auto* blockchain_registry = BlockchainRegistry::GetInstance();
   TokenListMap token_list_map;
   std::string token_list_json = R"({
-     "0x6B175474E89094C44Da98b954EedeAC495271d0F": {
-       "name": "Dai Stablecoin",
-       "logo": "dai.svg",
-       "erc20": true,
-       "symbol": "DAI",
-       "chainId": "0x1",
-       "decimals": 18
-     }
-    })";
-  ASSERT_TRUE(
-      ParseTokenList(token_list_json, &token_list_map, mojom::CoinType::ETH));
+    "0x1": {
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F": {
+        "name": "Dai Stablecoin",
+        "logo": "dai.svg",
+        "erc20": true,
+        "symbol": "DAI",
+        "decimals": 18
+      }
+    }
+  })";
+  ASSERT_TRUE(ParseTokenList(token_list_json, &token_list_map));
   blockchain_registry->UpdateTokenList(std::move(token_list_map));
 
   // One account, no balances, yields empty token_contract_addresses
@@ -613,17 +649,17 @@ TEST_F(AssetDiscoveryTaskUnitTest, DiscoverERC20sFromRegistry) {
 
   // Reset token list with a fresh token not in user assets
   token_list_json = R"({
-    "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {
-      "name": "Wrapped Eth",
-      "logo": "weth.svg",
-      "erc20": true,
-      "symbol": "WETH",
-      "decimals": 18,
-      "chainId": "0x1"
+    "0x1": {
+      "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {
+        "name": "Wrapped Eth",
+        "logo": "weth.svg",
+        "erc20": true,
+        "symbol": "WETH",
+        "decimals": 18
+      }
     }
   })";
-  ASSERT_TRUE(
-      ParseTokenList(token_list_json, &token_list_map, mojom::CoinType::ETH));
+  ASSERT_TRUE(ParseTokenList(token_list_json, &token_list_map));
   blockchain_registry->UpdateTokenList(std::move(token_list_map));
 
   // Two accounts, each with the same balance, yields just one discovered
@@ -648,25 +684,26 @@ TEST_F(AssetDiscoveryTaskUnitTest, DiscoverERC20sFromRegistry) {
   chain_ids.push_back(mojom::kMainnetChainId);
   chain_ids.push_back(mojom::kPolygonMainnetChainId);
   token_list_json = R"({
+    "0x1": {
       "0x1111111111111111111111111111111111111111": {
         "name": "1111",
         "logo": "111.svg",
         "erc20": true,
         "symbol": "111",
-        "decimals": 18,
-        "chainId": "0x1"
-      },
+        "decimals": 18
+      }
+    },
+    "0x89": {
       "0x2222222222222222222222222222222222222222": {
         "name": "22222222222",
         "logo": "2222.svg",
         "erc20": true,
         "symbol": "2222",
-        "decimals": 18,
-        "chainId": "0x89"
+        "decimals": 18
       }
-     })";
-  ASSERT_TRUE(
-      ParseTokenList(token_list_json, &token_list_map, mojom::CoinType::ETH));
+    }
+  })";
+  ASSERT_TRUE(ParseTokenList(token_list_json, &token_list_map));
   blockchain_registry->UpdateTokenList(std::move(token_list_map));
   requests = {
       {GetNetwork(mojom::kMainnetChainId, mojom::CoinType::ETH),
@@ -689,25 +726,26 @@ TEST_F(AssetDiscoveryTaskUnitTest, DiscoverERC20sFromRegistry) {
   // Multiple accounts with different balances, yields multiple discovered
   // contract addresses Reset token list with a fresh token not in user assets
   token_list_json = R"({
+    "0x1": {
       "0x3333333333333333333333333333333333333333": {
         "name": "3333",
         "logo": "333.svg",
         "erc20": true,
         "symbol": "333",
-        "decimals": 18,
-        "chainId": "0x1"
-      },
+        "decimals": 18
+      }
+    },
+    "0x89": {
       "0x4444444444444444444444444444444444444444": {
         "name": "44444444444",
         "logo": "4444.svg",
         "erc20": true,
         "symbol": "4444",
-        "decimals": 18,
-        "chainId": "0x89"
+        "decimals": 18
       }
-     })";
-  ASSERT_TRUE(
-      ParseTokenList(token_list_json, &token_list_map, mojom::CoinType::ETH));
+    }
+  })";
+  ASSERT_TRUE(ParseTokenList(token_list_json, &token_list_map));
   blockchain_registry->UpdateTokenList(std::move(token_list_map));
   requests = {
       {GetNetwork(mojom::kMainnetChainId, mojom::CoinType::ETH),
@@ -759,27 +797,26 @@ TEST_F(AssetDiscoveryTaskUnitTest, DiscoverSPLTokensFromRegistry) {
   auto* blockchain_registry = BlockchainRegistry::GetInstance();
   TokenListMap token_list_map;
   std::string token_list_json = R"({
-    "88j24JNwWLmJCjn2tZQ5jJzyaFtnusS2qsKup9NeDnd8": {
-      "name": "Wrapped SOL",
-      "logo": "So11111111111111111111111111111111111111112.png",
-      "erc20": false,
-      "symbol": "SOL",
-      "decimals": 9,
-      "chainId": "0x65",
-      "coingeckoId": "solana"
-    },
-    "EybFzCH4nBYEr7FD4wLWBvNZbEGgjy4kh584bGQntr1b": {
-      "name": "USD Coin",
-      "logo": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.png",
-      "erc20": false,
-      "symbol": "USDC",
-      "decimals": 6,
-      "chainId": "0x65",
-      "coingeckoId": "usd-coin"
+    "0x65": {
+      "88j24JNwWLmJCjn2tZQ5jJzyaFtnusS2qsKup9NeDnd8": {
+        "name": "Wrapped SOL",
+        "logo": "So11111111111111111111111111111111111111112.png",
+        "erc20": false,
+        "symbol": "SOL",
+        "decimals": 9,
+        "coingeckoId": "solana"
+      },
+      "EybFzCH4nBYEr7FD4wLWBvNZbEGgjy4kh584bGQntr1b": {
+        "name": "USD Coin",
+        "logo": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.png",
+        "erc20": false,
+        "symbol": "USDC",
+        "decimals": 6,
+        "coingeckoId": "usd-coin"
+      }
     }
   })";
-  ASSERT_TRUE(
-      ParseTokenList(token_list_json, &token_list_map, mojom::CoinType::SOL));
+  ASSERT_TRUE(ParseTokenList(token_list_json, &token_list_map));
   blockchain_registry->UpdateTokenList(std::move(token_list_map));
 
   // Empy account address
@@ -994,41 +1031,38 @@ TEST_F(AssetDiscoveryTaskUnitTest, DiscoverSPLTokensFromRegistry) {
   // 7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs, and
   // 4zLh7YPr8NfrNP4bzTXaYaE72QQc3A8mptbtqUspRz5g to token list
   token_list_json = R"({
-    "BEARs6toGY6fRGsmz2Se8NDuR2NVPRmJuLPpeF8YxCq2": {
-      "name": "Tesla Inc.",
-      "logo": "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ.png",
-      "erc20": false,
-      "symbol": "TSLA",
-      "decimals": 8,
-      "chainId": "0x65"
-    },
-    "ADJqxHJRfFBpyxVQ2YS8nBhfW6dumdDYGU21B4AmYLZJ": {
-      "name": "Apple Inc.",
-      "logo": "8bpRdBGPt354VfABL5xugP3pmYZ2tQjzRcqjg2kmwfbF.png",
-      "erc20": false,
-      "symbol": "AAPL",
-      "decimals": 8,
-      "chainId": "0x65"
-    },
-    "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs": {
-      "name": "Microsoft Corporation",
-      "logo": "3vhcrQfEn8ashuBfE82F3MtEDFcBCEFfFw1ZgM3xj1s8.png",
-      "erc20": false,
-      "symbol": "MSFT",
-      "decimals": 8,
-      "chainId": "0x65"
-    },
-    "4zLh7YPr8NfrNP4bzTXaYaE72QQc3A8mptbtqUspRz5g": {
-      "name": "MicroStrategy Incorporated.",
-      "logo": "ASwYCbLedk85mRdPnkzrUXbbYbwe26m71af9rzrhC2Qz.png",
-      "erc20": false,
-      "symbol": "MSTR",
-      "decimals": 8,
-      "chainId": "0x65"
+    "0x65": {
+      "BEARs6toGY6fRGsmz2Se8NDuR2NVPRmJuLPpeF8YxCq2": {
+        "name": "Tesla Inc.",
+        "logo": "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ.png",
+        "erc20": false,
+        "symbol": "TSLA",
+        "decimals": 8
+      },
+      "ADJqxHJRfFBpyxVQ2YS8nBhfW6dumdDYGU21B4AmYLZJ": {
+        "name": "Apple Inc.",
+        "logo": "8bpRdBGPt354VfABL5xugP3pmYZ2tQjzRcqjg2kmwfbF.png",
+        "erc20": false,
+        "symbol": "AAPL",
+        "decimals": 8
+      },
+      "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs": {
+        "name": "Microsoft Corporation",
+        "logo": "3vhcrQfEn8ashuBfE82F3MtEDFcBCEFfFw1ZgM3xj1s8.png",
+        "erc20": false,
+        "symbol": "MSFT",
+        "decimals": 8
+      },
+      "4zLh7YPr8NfrNP4bzTXaYaE72QQc3A8mptbtqUspRz5g": {
+        "name": "MicroStrategy Incorporated.",
+        "logo": "ASwYCbLedk85mRdPnkzrUXbbYbwe26m71af9rzrhC2Qz.png",
+        "erc20": false,
+        "symbol": "MSTR",
+        "decimals": 8
+      }
     }
   })";
-  ASSERT_TRUE(
-      ParseTokenList(token_list_json, &token_list_map, mojom::CoinType::SOL));
+  ASSERT_TRUE(ParseTokenList(token_list_json, &token_list_map));
   blockchain_registry->UpdateTokenList(std::move(token_list_map));
   TestDiscoverSolAssets({"4fzcQKyGFuk55uJaBZtvTHh42RBxbrZMuXzsGQvBJbwF",
                          "8RFACUfst117ARQLezvK4cKVR8ZHvW2xUfdUoqWnTuEB"},

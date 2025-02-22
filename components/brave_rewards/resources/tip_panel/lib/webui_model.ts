@@ -10,12 +10,13 @@ import { ExternalWalletProvider, externalWalletProviderFromString } from '../../
 import { optional } from '../../shared/lib/optional'
 import { reconnectURL } from '../../shared/lib/rewards_urls'
 
-import { PublisherStatus, WalletStatus } from 'gen/brave/components/brave_rewards/common/mojom/rewards.mojom.m'
+import { PublisherStatus, WalletStatus } from 'gen/brave/components/brave_rewards/core/mojom/rewards.mojom.m'
 
 export function createModel (): Model {
   const stateManager = createStateManager<ModelState>(defaultState())
   const proxy = TipPanelProxy.getInstance()
 
+  // @ts-expect-error - Symbol.for('stateManager') doesn't exist on self
   self[Symbol.for('stateManager')] = stateManager
 
   async function loadData () {

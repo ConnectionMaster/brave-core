@@ -17,6 +17,7 @@
 #include "brave/browser/ui/views/split_view/split_view_layout_manager.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
 #include "chrome/browser/ui/layout_constants.h"
+#include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/tabs/tab_strip.h"
 #include "chrome/browser/ui/views/tabs/tab_style_views.h"
 #include "chrome/test/base/chrome_test_utils.h"
@@ -47,11 +48,15 @@ class SplitViewBrowserTest : public InProcessBrowserTest {
     return *browser_view().split_view_->secondary_contents_container_;
   }
 
+  ScrimView& secondary_contents_scrim_view() {
+    return *browser_view().split_view_->secondary_contents_scrim_view_;
+  }
+
   views::WebView& secondary_contents_view() {
-    return *browser_view().split_view_->secondary_contents_web_view();
+    return *browser_view().split_view_->secondary_contents_web_view_;
   }
   views::WebView& secondary_dev_tools() {
-    return *browser_view().split_view_->secondary_devtools_web_view();
+    return *browser_view().split_view_->secondary_devtools_web_view_;
   }
 
   SplitView& split_view() { return *browser_view().split_view_; }
@@ -70,6 +75,39 @@ IN_PROC_BROWSER_TEST_F(SplitViewBrowserTest,
           ->contents_container(),
       &split_view());
 }
+
+// MacOS does not need views window scrim. We use sheet to show window modals
+// (-[NSWindow beginSheet:]), which natively draws a scrim since macOS 11.
+#if !BUILDFLAG(IS_MAC)
+IN_PROC_BROWSER_TEST_F(SplitViewBrowserTest, ScrimForSecondaryContents) {
+  if (!base::FeatureList::IsEnabled(features::kScrimForBrowserWindowModal)) {
+    GTEST_SKIP();
+  }
+
+  brave::NewSplitViewForTab(browser());
+
+  auto child_widget_delegate = std::make_unique<views::WidgetDelegate>();
+  auto child_widget = std::make_unique<views::Widget>();
+  child_widget_delegate->SetModalType(ui::mojom::ModalType::kWindow);
+  views::Widget::InitParams params(
+      views::Widget::InitParams::CLIENT_OWNS_WIDGET,
+      views::Widget::InitParams::TYPE_WINDOW);
+  params.delegate = child_widget_delegate.get();
+  params.parent = secondary_contents_container().GetWidget()->GetNativeView();
+  child_widget->Init(std::move(params));
+
+  child_widget->Show();
+  EXPECT_TRUE(secondary_contents_scrim_view().GetVisible());
+  child_widget->Hide();
+  EXPECT_FALSE(secondary_contents_scrim_view().GetVisible());
+  child_widget->Show();
+  EXPECT_TRUE(secondary_contents_scrim_view().GetVisible());
+  // Destroy the child widget, the parent should be notified about child modal
+  // visibility change.
+  child_widget.reset();
+  EXPECT_FALSE(secondary_contents_scrim_view().GetVisible());
+}
+#endif  // !BUILDFLAG(IS_MAC)
 
 IN_PROC_BROWSER_TEST_F(SplitViewBrowserTest,
                        GetAccessiblePaneContainsSecondaryViews) {
@@ -100,8 +138,10 @@ IN_PROC_BROWSER_TEST_F(SplitViewBrowserTest,
   brave::NewSplitViewForTab(browser());
   auto* split_view_data = SplitViewBrowserData::FromBrowser(browser());
   ASSERT_TRUE(split_view_data);
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(0)));
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(1)));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(0)->GetHandle()));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(1)->GetHandle()));
 
   // Secondary web view should become visible
   EXPECT_TRUE(secondary_contents_container().GetVisible());
@@ -113,13 +153,15 @@ IN_PROC_BROWSER_TEST_F(SplitViewBrowserTest,
   brave::NewSplitViewForTab(browser());
   auto* split_view_data = SplitViewBrowserData::FromBrowser(browser());
   ASSERT_TRUE(split_view_data);
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(0)));
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(1)));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(0)->GetHandle()));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(1)->GetHandle()));
 
   // When breaking the tile
-  split_view_data->BreakTile(tab_strip_model().GetTabHandleAt(0));
-  ASSERT_FALSE(
-      split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(0)));
+  split_view_data->BreakTile(tab_strip_model().GetTabAtIndex(0)->GetHandle());
+  ASSERT_FALSE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(0)->GetHandle()));
 
   // Then, the secondary web view should become hidden
   EXPECT_FALSE(secondary_contents_container().GetVisible());
@@ -131,8 +173,10 @@ IN_PROC_BROWSER_TEST_F(SplitViewBrowserTest,
   brave::NewSplitViewForTab(browser());
   auto* split_view_data = SplitViewBrowserData::FromBrowser(browser());
   ASSERT_TRUE(split_view_data);
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(0)));
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(1)));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(0)->GetHandle()));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(1)->GetHandle()));
   chrome::AddTabAt(browser(), GURL(), -1, /*foreground*/ false);
   ASSERT_TRUE(secondary_contents_container().GetVisible());
 
@@ -151,8 +195,10 @@ IN_PROC_BROWSER_TEST_F(SplitViewBrowserTest,
   brave::NewSplitViewForTab(browser());
   auto* split_view_data = SplitViewBrowserData::FromBrowser(browser());
   ASSERT_TRUE(split_view_data);
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(0)));
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(1)));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(0)->GetHandle()));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(1)->GetHandle()));
   chrome::AddTabAt(browser(), GURL(), -1, /*foreground*/ true);
   ASSERT_FALSE(secondary_contents_container().GetVisible());
 
@@ -170,33 +216,42 @@ IN_PROC_BROWSER_TEST_F(SplitViewBrowserTest,
   brave::NewSplitViewForTab(browser());
   auto* split_view_data = SplitViewBrowserData::FromBrowser(browser());
   ASSERT_TRUE(split_view_data);
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(0)));
-  ASSERT_TRUE(split_view_data->IsTabTiled(tab_strip_model().GetTabHandleAt(1)));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(0)->GetHandle()));
+  ASSERT_TRUE(split_view_data->IsTabTiled(
+      tab_strip_model().GetTabAtIndex(1)->GetHandle()));
   ASSERT_TRUE(secondary_contents_container().GetVisible());
-  auto tile = *split_view_data->GetTile(tab_strip_model().GetTabHandleAt(0));
+  auto tile = *split_view_data->GetTile(
+      tab_strip_model().GetTabAtIndex(0)->GetHandle());
 
   // When the tile.first is active contents,
-  tab_strip_model().ActivateTabAt(tab_strip_model().GetIndexOfTab(tile.first));
+  tab_strip_model().ActivateTabAt(
+      tab_strip_model().GetIndexOfTab(tile.first.Get()));
   auto active_tab_handle =
-      tab_strip_model().GetTabHandleAt(tab_strip_model().GetIndexOfWebContents(
-          tab_strip_model().GetActiveWebContents()));
+      tab_strip_model()
+          .GetTabAtIndex(tab_strip_model().GetIndexOfWebContents(
+              tab_strip_model().GetActiveWebContents()))
+          ->GetHandle();
   ASSERT_EQ(active_tab_handle, tile.first);
 
   // Then the secondary web view should hold the tile.second
   EXPECT_EQ(tab_strip_model().GetWebContentsAt(
-                tab_strip_model().GetIndexOfTab(tile.second)),
+                tab_strip_model().GetIndexOfTab(tile.second.Get())),
             secondary_contents_view().web_contents());
 
   // On the other hand, when tile.second is active contents,
-  tab_strip_model().ActivateTabAt(tab_strip_model().GetIndexOfTab(tile.second));
+  tab_strip_model().ActivateTabAt(
+      tab_strip_model().GetIndexOfTab(tile.second.Get()));
   active_tab_handle =
-      tab_strip_model().GetTabHandleAt(tab_strip_model().GetIndexOfWebContents(
-          tab_strip_model().GetActiveWebContents()));
+      tab_strip_model()
+          .GetTabAtIndex(tab_strip_model().GetIndexOfWebContents(
+              tab_strip_model().GetActiveWebContents()))
+          ->GetHandle();
   ASSERT_EQ(active_tab_handle, tile.second);
 
   // Then the secondary web view should hold the tile.first
   EXPECT_EQ(tab_strip_model().GetWebContentsAt(
-                tab_strip_model().GetIndexOfTab(tile.first)),
+                tab_strip_model().GetIndexOfTab(tile.first.Get())),
             secondary_contents_view().web_contents());
 }
 

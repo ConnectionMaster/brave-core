@@ -7,6 +7,7 @@
 #include "base/files/file_util.h"
 #include "base/test/scoped_feature_list.h"
 #include "base/test/test_file_util.h"
+#include "base/types/cxx23_to_underlying.h"
 #include "chrome/browser/password_manager/android/password_manager_android_util.h"
 #include "components/password_manager/core/browser/features/password_features.h"
 #include "components/password_manager/core/browser/password_manager_constants.h"
@@ -37,7 +38,7 @@ class BravePasswordManagerAndroidUtilTest : public testing::Test {
         0);
     pref_service_.registry()->RegisterIntegerPref(
         password_manager::prefs::kPasswordsUseUPMLocalAndSeparateStores,
-        static_cast<int>(kOff));
+        base::to_underlying(kOff));
     pref_service_.registry()->RegisterBooleanPref(
         password_manager::prefs::kCredentialsEnableService, false);
     pref_service_.registry()->RegisterBooleanPref(
@@ -85,12 +86,9 @@ class BravePasswordManagerAndroidUtilTest : public testing::Test {
 // We don't migrate and don't delete passwords DB.
 TEST_F(BravePasswordManagerAndroidUtilTest,
        SetUsesSplitStoresAndUPMForLocal_DeletesLoginDataFilesForMigratedUsers) {
-  base::test::ScopedFeatureList feature_list(
-      password_manager::features::kClearLoginDatabaseForAllMigratedUPMUsers);
-
   // This is a state of a local user that has just been migrated.
   pref_service()->SetInteger(kPasswordsUseUPMLocalAndSeparateStores,
-                             static_cast<int>(kOn));
+                             base::to_underlying(kOn));
   pref_service()->SetBoolean(
       password_manager::prefs::kUserAcknowledgedLocalPasswordsMigrationWarning,
       true);
@@ -119,9 +117,12 @@ TEST_F(BravePasswordManagerAndroidUtilTest,
 
   SetUsesSplitStoresAndUPMForLocal(pref_service(), login_db_directory());
 
-  // SetUsesSplitStoresAndUPMForLocal must not delete DB on Brave
+  // Pref should be kOff, as we want keep using profile store instead of the
+  // account store, so the paswords will be synced from Android to Desktop
   EXPECT_EQ(pref_service()->GetInteger(kPasswordsUseUPMLocalAndSeparateStores),
-            static_cast<int>(kOn));
+            base::to_underlying(kOff));
+
+  // SetUsesSplitStoresAndUPMForLocal must not delete DB on Brave
   EXPECT_TRUE(PathExists(profile_db_path));
   EXPECT_TRUE(PathExists(account_db_path));
   EXPECT_TRUE(PathExists(profile_db_journal_path));

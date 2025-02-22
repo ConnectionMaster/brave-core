@@ -14,13 +14,12 @@
 #include "base/memory/weak_ptr.h"
 #include "base/sequence_checker.h"
 #include "brave/components/brave_ads/core/mojom/brave_ads.mojom.h"
-#include "brave/components/brave_ads/core/public/export.h"
 #include "sql/database.h"
 #include "sql/meta_table.h"
 
 namespace brave_ads {
 
-class ADS_EXPORT Database final {
+class Database final {
  public:
   explicit Database(base::FilePath path);
 
@@ -29,12 +28,12 @@ class ADS_EXPORT Database final {
 
   ~Database();
 
-  mojom::DBTransactionResultInfoPtr RunDBTransaction(
+  mojom::DBTransactionResultInfoPtr RunTransaction(
       mojom::DBTransactionInfoPtr mojom_db_transaction,
       uint64_t trace_id);
 
  private:
-  mojom::DBTransactionResultInfo::StatusCode RunDBActions(
+  mojom::DBTransactionResultInfo::StatusCode RunActions(
       const mojom::DBTransactionInfoPtr& mojom_db_transaction,
       const mojom::DBTransactionResultInfoPtr& mojom_db_transaction_result,
       uint64_t trace_id);

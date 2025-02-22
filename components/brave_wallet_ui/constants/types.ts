@@ -556,9 +556,6 @@ export enum WalletRoutes {
   Restore = '/crypto/restore-wallet',
   Unlock = '/crypto/unlock',
 
-  // Activity (Transactions)
-  Activity = '/crypto/activity',
-
   // portfolio
   Portfolio = '/crypto/portfolio',
   PortfolioAssets = '/crypto/portfolio/assets',
@@ -930,14 +927,18 @@ export interface CommonNftMetadata {
 export enum AddressMessageInfoIds {
   sameAddressError = 0,
   invalidAddressError = 1,
-  invalidUnifiedAddressError = 2,
   invalidChecksumError = 3,
   missingChecksumWarning = 4,
   contractAddressError = 5,
   FEVMTranslationWarning = 6,
   ensOffchainLookupWarning = 7,
   hasNoDomainAddress = 8,
-  invalidDomainExtension = 9
+  invalidDomainExtension = 9,
+  zcashInvalidTransparentAddressError = 10,
+  zcashInvalidUnifiedAddressError = 11,
+  zcashInvalidUnifiedAddressMissingTransparentPartError = 12,
+  zcashInvalidUnifiedAddressMissingOrchardPartError = 13,
+  zcashInvalidAddressNetworkMismatchError = 14,
 }
 
 export type AddressMessageInfo = {

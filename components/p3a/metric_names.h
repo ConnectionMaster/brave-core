@@ -47,7 +47,7 @@ inline constexpr auto kCollectedTypicalHistograms =
     {"Brave.Core.DomainsLoaded", {}},
     {"Brave.Core.FailedHTTPSUpgrades.2", MetricConfig{.ephemeral = true}},
     {"Brave.Core.FirstPageLoadTime", MetricConfig{.ephemeral = true}},
-    {"Brave.Core.IsDefault", {}},
+    {"Brave.Core.IsDefault", MetricConfig{.attributes = MetricAttributes{MetricAttribute::kAnswerIndex, MetricAttribute::kChannel, MetricAttribute::kPlatform, MetricAttribute::kDateOfInstall, MetricAttribute::kDateOfActivation, MetricAttribute::kSubregion, MetricAttribute::kVersion}}},
     {"Brave.Core.NumberOfExtensions", {}},
     {"Brave.Core.PagesReloaded", {}},
     {"Brave.Core.TabCount", {}},
@@ -60,7 +60,7 @@ inline constexpr auto kCollectedTypicalHistograms =
     {"Brave.DNS.AutoSecureRequests.Wikimedia.2", MetricConfig{.ephemeral = true}},
     {"Brave.DNS.SecureSetting", {}},
     {"Brave.Extensions.AdBlock", {}},
-    {"Brave.IOS.IsLikelyDefault", {}},
+    {"Brave.IOS.IsLikelyDefault", MetricConfig{.attributes = MetricAttributes{MetricAttribute::kAnswerIndex, MetricAttribute::kChannel, MetricAttribute::kPlatform, MetricAttribute::kDateOfInstall, MetricAttribute::kDateOfActivation, MetricAttribute::kSubregion, MetricAttribute::kVersion}}},
 
     {"Brave.Importer.ImporterSource.2", {}},
     {"Brave.NTP.CustomizeUsageStatus.2", {}},
@@ -141,10 +141,10 @@ inline constexpr auto kCollectedTypicalHistograms =
     {"Brave.Playlist.UsageDaysInWeek", MetricConfig{.ephemeral = true}},
     {"Brave.Rewards.AdTypesEnabled.2", {}},
     {"Brave.Rewards.AutoContributionsState.3", {}},
-    {"Brave.Rewards.DesktopPanelCount", MetricConfig{.ephemeral = true}},
+    {"Brave.Rewards.DesktopPanelCount.2", MetricConfig{.ephemeral = true}},
     {"Brave.Rewards.EnabledSource", MetricConfig{.ephemeral = true}},
     {"Brave.Rewards.MobileConversion", MetricConfig{.ephemeral = true}},
-    {"Brave.Rewards.MobilePanelCount", MetricConfig{.ephemeral = true}},
+    {"Brave.Rewards.MobilePanelCount.2", MetricConfig{.ephemeral = true}},
     {"Brave.Rewards.SearchResultAdsOptin", MetricConfig{.ephemeral = true}},
     {"Brave.Rewards.TipsState.2", {}},
     {"Brave.Rewards.ToolbarButtonTrigger", MetricConfig{.ephemeral = true}},
@@ -205,7 +205,7 @@ inline constexpr auto kCollectedTypicalHistograms =
     {"Brave.Wallet.SolTransactionSent", {}},
     {"Brave.Wallet.ZecTransactionSent", {}},
     {"Brave.WebTorrent.UsageWeekly", MetricConfig{.ephemeral = true}},
-    {"Brave.Welcome.InteractionStatus.2", {}},
+    {"Brave.Welcome.InteractionStatus.2", MetricConfig{.attributes = MetricAttributes{MetricAttribute::kAnswerIndex, MetricAttribute::kChannel, MetricAttribute::kPlatform, MetricAttribute::kDateOfInstall, MetricAttribute::kSubregion, MetricAttribute::kVersion}}},
 });
 
 inline constexpr auto kCollectedSlowHistograms =
@@ -234,24 +234,31 @@ inline constexpr auto kCollectedSlowHistograms =
 
 inline constexpr auto kCollectedExpressHistograms =
   base::MakeFixedFlatMap<std::string_view, std::optional<MetricConfig>>({
-    {"Brave.AIChat.UsageDaily.2", MetricConfig{.ephemeral = true}},
+    {"Brave.AIChat.UsageDaily.2", MetricConfig{
+      .ephemeral = true,
+      .attributes = MetricAttributes{MetricAttribute::kAnswerIndex, MetricAttribute::kDateOfActivation, MetricAttribute::kVersion, MetricAttribute::kYoi, MetricAttribute::kChannel, MetricAttribute::kPlatform, MetricAttribute::kCountryCode, MetricAttribute::kWoi},
+      .record_activation_date = true,
+    }},
     {"Brave.AIChat.UsageDaily.SidebarEnabledA", MetricConfig{.ephemeral = true}},
     {"Brave.Core.UsageDaily", {}},
-    {"Brave.DayZero.A.InstallTime", MetricConfig{
+    {"Brave.DayZero.Variant", MetricConfig{
       .ephemeral = true,
       .constellation_only = true,
-      .append_attributes = MetricAttributesToAppend{MetricAttribute::kRef}
-    }},
-    {"Brave.DayZero.B.InstallTime", MetricConfig{
-      .ephemeral = true,
-      .constellation_only = true,
-      .append_attributes = MetricAttributesToAppend{MetricAttribute::kRef}
+      .attributes = MetricAttributes{MetricAttribute::kAnswerIndex, MetricAttribute::kDateOfInstall, MetricAttribute::kVersion, MetricAttribute::kChannel, MetricAttribute::kPlatform, MetricAttribute::kCountryCode, MetricAttribute::kRef}
     }},
     {"Brave.Rewards.EnabledInstallationTime", MetricConfig{.ephemeral = true}},
     {"Brave.Search.BraveDaily", MetricConfig{.ephemeral = true}},
     {"Brave.Search.DefaultEngine.4", {}},
-    {"Brave.Today.IsEnabled", MetricConfig{.ephemeral = true}},
-    {"Brave.Today.UsageDaily", MetricConfig{.ephemeral = true}},
+    {"Brave.Today.IsEnabled", MetricConfig{
+      .ephemeral = true,
+      .attributes = MetricAttributes{MetricAttribute::kAnswerIndex, MetricAttribute::kDateOfActivation, MetricAttribute::kDateOfInstall, MetricAttribute::kVersion, MetricAttribute::kChannel, MetricAttribute::kPlatform, MetricAttribute::kCountryCode},
+      .activation_metric_name = "Brave.Today.UsageDaily"
+    }},
+    {"Brave.Today.UsageDaily", MetricConfig{
+      .ephemeral = true,
+      .attributes = MetricAttributes{MetricAttribute::kAnswerIndex, MetricAttribute::kDateOfActivation, MetricAttribute::kVersion, MetricAttribute::kYoi, MetricAttribute::kChannel, MetricAttribute::kPlatform, MetricAttribute::kCountryCode, MetricAttribute::kWoi},
+      .record_activation_date = true
+    }},
     {"Brave.Uptime.BrowserOpenTime.2", MetricConfig{.ephemeral = true}},
     {"Brave.Wallet.UsageDaily", MetricConfig{.ephemeral = true}},
     {"creativeInstanceId.total.count", {}},

@@ -140,11 +140,12 @@ GetHostBoundPartitionHashForHSTS(std::string_view host) {
 SSLUpgradeDecision TransportSecurityState::GetSSLUpgradeDecision(
     const NetworkAnonymizationKey& network_anonymization_key,
     const std::string& host,
+    bool is_top_level_nav,
     const NetLogWithSource& net_log) {
   auto auto_reset_partition_hash = enabled_sts_hosts_.SetScopedPartitionHash(
       GetPartitionHashForHSTS(network_anonymization_key));
-  return TransportSecurityState_ChromiumImpl::GetSSLUpgradeDecision(host,
-                                                                    net_log);
+  return TransportSecurityState_ChromiumImpl::GetSSLUpgradeDecision(
+      host, is_top_level_nav, net_log);
 }
 
 // Use NetworkAnonymizationKey to create PartitionHash for accessing/storing
@@ -163,11 +164,13 @@ bool TransportSecurityState::ShouldSSLErrorsBeFatal(
 bool TransportSecurityState::ShouldUpgradeToSSL(
     const NetworkAnonymizationKey& network_anonymization_key,
     const std::string& host,
+    bool is_top_level_nav,
     const NetLogWithSource& net_log) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   auto auto_reset_partition_hash = enabled_sts_hosts_.SetScopedPartitionHash(
       GetPartitionHashForHSTS(network_anonymization_key));
-  return TransportSecurityState_ChromiumImpl::ShouldUpgradeToSSL(host, net_log);
+  return TransportSecurityState_ChromiumImpl::ShouldUpgradeToSSL(
+      host, is_top_level_nav, net_log);
 }
 
 // Use NetworkAnonymizationKey to create PartitionHash for accessing/storing
@@ -210,11 +213,13 @@ bool TransportSecurityState::ShouldSSLErrorsBeFatal(const std::string& host) {
 // data before calling Chromium implementation
 bool TransportSecurityState::ShouldUpgradeToSSL(
     const std::string& host,
+    bool is_top_level_nav,
     const NetLogWithSource& net_log) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   auto auto_reset_partition_hash = enabled_sts_hosts_.SetScopedPartitionHash(
       GetHostBoundPartitionHashForHSTS(host));
-  return TransportSecurityState_ChromiumImpl::ShouldUpgradeToSSL(host, net_log);
+  return TransportSecurityState_ChromiumImpl::ShouldUpgradeToSSL(
+      host, is_top_level_nav, net_log);
 }
 
 // Use NetworkAnonymizationKey to create PartitionHash for accessing/storing

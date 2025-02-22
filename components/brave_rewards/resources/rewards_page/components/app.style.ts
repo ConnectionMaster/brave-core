@@ -34,7 +34,7 @@ export const style = scoped.css`
     }
   }
 
-  &.is-bubble {
+  &.is-auto-resize-bubble {
     width: 392px;
     min-height: 600px;
     max-height: calc(var(--app-screen-height, 950px) - 80px);
@@ -193,6 +193,13 @@ addStyles('app-global-styles', css`
         background: ${color.container.background};
         width: 100%;
       }
+    }
+
+    .content-card-footer {
+      background: ${color.page.background};
+      margin: 0 -4px -4px;
+      border-radius: 0 0 16px 16px;
+      padding: 8px 16px;
     }
 
     .brave-rewards-logo {

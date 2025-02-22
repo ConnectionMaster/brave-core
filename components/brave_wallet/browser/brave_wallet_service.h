@@ -80,7 +80,6 @@ class BraveWalletService : public KeyedService,
   template <class T>
   void Bind(mojo::PendingReceiver<T> receiver);
 
-  static void MigrateHiddenNetworks(PrefService* profile_prefs);
   static void MigrateDeadNetwork(PrefService* prefs,
                                  const std::string& chain_id,
                                  const std::string& fallback_chain_id,
@@ -89,10 +88,8 @@ class BraveWalletService : public KeyedService,
                                      const mojom::NetworkInfo& network,
                                      bool is_eip1559,
                                      std::string_view pref_key);
-  static void MigrateFantomMainnetAsCustomNetwork(PrefService* prefs);
   static void MigrateGoerliNetwork(PrefService* prefs);
   static void MigrateAuroraMainnetAsCustomNetwork(PrefService* prefs);
-  static void MigrateAssetsPrefToList(PrefService* prefs);
   static void MigrateEip1559ForCustomNetworks(PrefService* prefs);
   void MaybeMigrateCompressedNfts();
   void MaybeMigrateSPLTokenProgram();
@@ -219,8 +216,7 @@ class BraveWalletService : public KeyedService,
       GetBalanceScannerSupportedChainsCallback callback) override;
 
   void GetSimpleHashSpamNFTs(const std::string& wallet_address,
-                             const std::vector<std::string>& chain_ids,
-                             mojom::CoinType coin,
+                             std::vector<mojom::ChainIdPtr> chain_ids,
                              const std::optional<std::string>& cursor,
                              GetSimpleHashSpamNFTsCallback callback) override;
 

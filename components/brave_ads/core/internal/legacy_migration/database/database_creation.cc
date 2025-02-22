@@ -19,7 +19,6 @@
 #include "brave/components/brave_ads/core/internal/creatives/dayparts_database_table.h"
 #include "brave/components/brave_ads/core/internal/creatives/geo_targets_database_table.h"
 #include "brave/components/brave_ads/core/internal/creatives/inline_content_ads/creative_inline_content_ads_database_table.h"
-#include "brave/components/brave_ads/core/internal/creatives/new_tab_page_ads/creative_new_tab_page_ad_wallpapers_database_table.h"
 #include "brave/components/brave_ads/core/internal/creatives/new_tab_page_ads/creative_new_tab_page_ads_database_table.h"
 #include "brave/components/brave_ads/core/internal/creatives/notification_ads/creative_notification_ads_database_table.h"
 #include "brave/components/brave_ads/core/internal/creatives/promoted_content_ads/creative_promoted_content_ads_database_table.h"
@@ -70,11 +69,6 @@ void Create(const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
   table::CreativeNewTabPageAds creative_new_tab_page_ads_database_table;
   creative_new_tab_page_ads_database_table.Create(mojom_db_transaction);
 
-  table::CreativeNewTabPageAdWallpapers
-      creative_new_tab_page_ad_wallpapers_database_table;
-  creative_new_tab_page_ad_wallpapers_database_table.Create(
-      mojom_db_transaction);
-
   table::CreativePromotedContentAds
       creative_promoted_content_ads_database_table;
   creative_promoted_content_ads_database_table.Create(mojom_db_transaction);
@@ -96,8 +90,8 @@ void Create(ResultCallback callback) {
       mojom::DBTransactionInfo::New();
   Create(mojom_db_transaction);
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 std::move(callback));
 }
 
 }  // namespace brave_ads::database

@@ -1,8 +1,8 @@
 diff --git a/services/network/cors/cors_url_loader.cc b/services/network/cors/cors_url_loader.cc
-index 12bd8b062bd180c9c516ab312d56bbbf8d854f84..06d1829e9c0b52c3c0a9b7a07343f507d8fede40 100644
+index f29a82f6787752bc0f92394cbd09ce76acbce304..534af1d86cf7253c4610b59c5a02c708c2e90aaa 100644
 --- a/services/network/cors/cors_url_loader.cc
 +++ b/services/network/cors/cors_url_loader.cc
-@@ -901,6 +901,7 @@ void CorsURLLoader::StartRequest() {
+@@ -900,6 +900,7 @@ void CorsURLLoader::StartRequest() {
    };
  
    if (should_include_origin_header()) {

@@ -13,7 +13,6 @@
 #include "brave/browser/ui/views/brave_ads/notification_ad_control_buttons_view.h"
 #include "brave/browser/ui/views/brave_ads/notification_ad_header_view.h"
 #include "build/build_config.h"
-#include "ui/gfx/color_palette.h"
 #include "ui/gfx/font.h"
 #include "ui/gfx/font_list.h"
 #include "ui/gfx/geometry/insets.h"
@@ -87,9 +86,6 @@ void TextNotificationAdView::UpdateContents(
   NotificationAdView::UpdateContents(notification_ad);
 
   UpdateBodyLabel();
-
-  DeprecatedLayoutImmediately();
-  SchedulePaint();
 }
 
 void TextNotificationAdView::OnThemeChanged() {

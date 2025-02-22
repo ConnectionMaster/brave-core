@@ -8,12 +8,14 @@
 
 #include "base/functional/callback.h"
 #include "base/memory/raw_ptr.h"
+#include "base/memory/scoped_refptr.h"
 #include "base/memory/weak_ptr.h"
 #include "base/time/time.h"
 
 namespace base {
 template <typename T>
 class NoDestructor;
+class SingleThreadTaskRunner;
 }  // namespace base
 
 namespace network_time {
@@ -33,7 +35,11 @@ class NetworkTimeHelper {
   NetworkTimeHelper& operator=(const NetworkTimeHelper&) = delete;
   virtual ~NetworkTimeHelper();
 
-  void SetNetworkTimeTracker(network_time::NetworkTimeTracker* tracker);
+  void SetNetworkTimeTracker(
+      network_time::NetworkTimeTracker* tracker,
+      const scoped_refptr<base::SingleThreadTaskRunner>& ui_task_runner);
+
+  void Shutdown();
 
   void GetNetworkTime(GetNetworkTimeCallback cb);
 
@@ -44,6 +50,7 @@ class NetworkTimeHelper {
 
   void GetNetworkTimeOnUIThread(GetNetworkTimeCallback cb);
 
+  scoped_refptr<base::SingleThreadTaskRunner> ui_task_runner_;
   base::Time network_time_for_test_;
 
   SEQUENCE_CHECKER(sequence_checker_);
@@ -51,8 +58,6 @@ class NetworkTimeHelper {
   // Not owned
   raw_ptr<network_time::NetworkTimeTracker, DanglingUntriaged>
       network_time_tracker_ = nullptr;
-
-  base::WeakPtrFactory<NetworkTimeHelper> weak_ptr_factory_{this};
 };
 
 }  // namespace brave_sync

@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "base/check.h"
 #include "base/files/file_path.h"
@@ -214,6 +215,16 @@ void AdsServiceImplIOS::OnFailedToPrefetchNewTabPageAd(
   // TODO(https://github.com/brave/brave-browser/issues/39703): Unify iOS new
   // tab takeover ad serving
   NOTIMPLEMENTED() << "Not used on iOS.";
+}
+
+void AdsServiceImplIOS::ParseAndSaveCreativeNewTabPageAds(
+    const base::Value::Dict& data,
+    ParseAndSaveCreativeNewTabPageAdsCallback callback) {
+  if (!IsInitialized()) {
+    return std::move(callback).Run(/*success*/ false);
+  }
+
+  ads_->ParseAndSaveCreativeNewTabPageAds(data.Clone(), std::move(callback));
 }
 
 void AdsServiceImplIOS::TriggerNewTabPageAdEvent(
@@ -482,11 +493,9 @@ void AdsServiceImplIOS::ClearAdsData(ClearDataCallback callback, bool success) {
           [](const base::FilePath& storage_path) {
             sql::Database::Delete(storage_path.Append(kAdsDatabaseFilename));
 
-            base::DeleteFile(
-                storage_path.Append(brave_ads::kClientJsonFilename));
+            base::DeleteFile(storage_path.Append(kClientJsonFilename));
 
-            base::DeleteFile(
-                storage_path.Append(brave_ads::kConfirmationsJsonFilename));
+            base::DeleteFile(storage_path.Append(kConfirmationsJsonFilename));
           },
           storage_path_),
       base::BindOnce(&AdsServiceImplIOS::ClearAdsDataCallback,

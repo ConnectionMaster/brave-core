@@ -5,12 +5,12 @@
 
 #include "brave/components/brave_wallet/browser/solana_provider_impl.h"
 
+#include <algorithm>
 #include <optional>
 #include <vector>
 
 #include "base/containers/flat_map.h"
 #include "base/notreached.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/strcat.h"
 #include "base/values.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_provider_delegate.h"
@@ -275,7 +275,7 @@ void SolanaProviderImpl::ContinueSignTransaction(
 
   auto request = mojom::SignSolTransactionsRequest::New(
       MakeOriginInfo(delegate_->GetOrigin()), -1, account->account_id.Clone(),
-      account->address, std::move(tx_datas), std::move(raw_messages), chain_id);
+      std::move(tx_datas), std::move(raw_messages), chain_id);
   brave_wallet_service_->AddSignSolTransactionsRequest(
       std::move(request),
       base::BindOnce(&SolanaProviderImpl::OnSignTransactionRequestProcessed,
@@ -404,8 +404,7 @@ void SolanaProviderImpl::ContinueSignAllTransactions(
     const std::string& chain_id,
     SignAllTransactionsCallback callback,
     const std::vector<bool>& is_valids) {
-  if (base::ranges::any_of(is_valids,
-                           [](auto is_valid) { return !is_valid; })) {
+  if (std::ranges::any_of(is_valids, [](auto is_valid) { return !is_valid; })) {
     std::move(callback).Run(
         mojom::SolanaProviderError::kInternalError,
         l10n_util::GetStringUTF8(IDS_WALLET_INVALID_BLOCKHASH_ERROR),
@@ -416,7 +415,7 @@ void SolanaProviderImpl::ContinueSignAllTransactions(
 
   auto request = mojom::SignSolTransactionsRequest::New(
       MakeOriginInfo(delegate_->GetOrigin()), -1, account->account_id.Clone(),
-      account->address, std::move(tx_datas), std::move(raw_messages), chain_id);
+      std::move(tx_datas), std::move(raw_messages), chain_id);
 
   brave_wallet_service_->AddSignSolTransactionsRequest(
       std::move(request),
@@ -453,7 +452,7 @@ void SolanaProviderImpl::OnSignAllTransactionsRequestProcessed(
       account->account_id->kind == mojom::AccountKind::kHardware;
   if (is_hardware_account &&
       (hw_signatures.size() != txs.size() ||
-       base::ranges::any_of(hw_signatures, [](auto& sig) { return !sig; }))) {
+       std::ranges::any_of(hw_signatures, [](auto& sig) { return !sig; }))) {
     std::move(callback).Run(mojom::SolanaProviderError::kInternalError,
                             l10n_util::GetStringUTF8(IDS_WALLET_INTERNAL_ERROR),
                             std::vector<std::vector<uint8_t>>(),
@@ -557,6 +556,11 @@ void SolanaProviderImpl::OnTransactionStatusChanged(
     return;
   }
 
+  auto account = keyring_service_->FindAccount(tx_info->from_account_id);
+  if (!account) {
+    return;
+  }
+
   std::string tx_meta_id = tx_info->id;
   if (!sign_and_send_tx_callbacks_.contains(tx_meta_id)) {
     return;
@@ -565,8 +569,7 @@ void SolanaProviderImpl::OnTransactionStatusChanged(
   auto callback = std::move(sign_and_send_tx_callbacks_[tx_meta_id]);
   base::Value::Dict result;
   if (tx_status == mojom::TransactionStatus::Submitted) {
-    CHECK(tx_info->from_address);
-    result.Set(kPublicKey, *tx_info->from_address);
+    result.Set(kPublicKey, account->address);
     result.Set(kSignature, tx_info->tx_hash);
     std::move(callback).Run(mojom::SolanaProviderError::kSuccess, "",
                             std::move(result));
@@ -796,7 +799,7 @@ void SolanaProviderImpl::OnConnect(
       // account are different.
       const std::string& allowed_account_address = allowed_accounts->at(0);
       if (account && account->address != allowed_account_address) {
-        auto account_it = base::ranges::find_if(
+        auto account_it = std::ranges::find_if(
             requested_accounts, [&allowed_account_address](
                                     const mojom::AccountInfoPtr& account_info) {
               return account_info->address == allowed_account_address;

@@ -6,6 +6,7 @@
 #include "brave/components/brave_ads/core/internal/account/transactions/transactions_database_table.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <utility>
 #include <vector>
 
@@ -52,7 +53,7 @@ size_t BindColumns(const mojom::DBActionInfoPtr& mojom_db_action,
 
   size_t row_count = 0;
 
-  int index = 0;
+  int32_t index = 0;
   for (const auto& transaction : transactions) {
     if (!transaction.IsValid()) {
       BLOG(0, "Invalid transaction");
@@ -105,7 +106,7 @@ TransactionInfo FromMojomRow(const mojom::DBRowInfoPtr& mojom_db_row) {
 void GetCallback(
     GetTransactionsCallback callback,
     mojom::DBTransactionResultInfoPtr mojom_db_transaction_result) {
-  if (IsError(mojom_db_transaction_result)) {
+  if (!IsTransactionSuccessful(mojom_db_transaction_result)) {
     BLOG(0, "Failed to get transactions");
     return std::move(callback).Run(/*success=*/false, /*transactions=*/{});
   }
@@ -147,7 +148,7 @@ void MigrateToV40(const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
       WHERE
         COALESCE(creative_instance_id, '') = ''
         OR COALESCE(segment, '') = ''
-        OR ad_type = '';)");
+        OR ad_type = '')");
 
   // Create a temporary table:
   //   - with a new `creative_instance_id` column constraint.
@@ -163,7 +164,7 @@ void MigrateToV40(const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
         ad_type TEXT NOT NULL,
         confirmation_type TEXT NOT NULL,
         reconciled_at TIMESTAMP DEFAULT 0
-      );)");
+      ))");
 
   // Copy legacy columns to the temporary table, drop the legacy table,
   // rename the temporary table and create an index.
@@ -206,8 +207,8 @@ void Transactions::Save(const TransactionList& transactions,
 
   Insert(mojom_db_transaction, transactions);
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 std::move(callback));
 }
 
 void Transactions::GetForDateRange(base::Time from_time,
@@ -231,15 +232,15 @@ void Transactions::GetForDateRange(base::Time from_time,
           FROM
             $1
           WHERE
-            created_at BETWEEN $2 AND $3;)",
+            created_at BETWEEN $2 AND $3)",
       {GetTableName(), TimeToSqlValueAsString(from_time),
        TimeToSqlValueAsString(to_time)},
       nullptr);
   BindColumnTypes(mojom_db_action);
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   base::BindOnce(&GetCallback, std::move(callback)));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 base::BindOnce(&GetCallback, std::move(callback)));
 }
 
 void Transactions::Reconcile(const PaymentTokenList& payment_tokens,
@@ -264,14 +265,14 @@ void Transactions::Reconcile(const PaymentTokenList& payment_tokens,
             AND (
               id IN $3
               OR creative_instance_id IN $4
-            );)",
+            ))",
       {GetTableName(), TimeToSqlValueAsString(base::Time::Now()),
        BuildBindColumnPlaceholder(
            /*column_count=*/transaction_ids.size()),
        BuildBindColumnPlaceholder(/*column_count=*/1)},
       nullptr);
 
-  int index = 0;
+  int32_t index = 0;
   for (const auto& transaction_id : transaction_ids) {
     BindColumnString(mojom_db_action, index, transaction_id);
     ++index;
@@ -279,8 +280,8 @@ void Transactions::Reconcile(const PaymentTokenList& payment_tokens,
 
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 std::move(callback));
 }
 
 void Transactions::PurgeExpired(ResultCallback callback) const {
@@ -291,12 +292,12 @@ void Transactions::PurgeExpired(ResultCallback callback) const {
               $1
             WHERE
               reconciled_at != 0
-            AND created_at <= $2;)",
+            AND created_at <= $2)",
           {GetTableName(),
            TimeToSqlValueAsString(base::Time::Now() - base::Days(90))});
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 std::move(callback));
 }
 
 std::string Transactions::GetTableName() const {
@@ -317,7 +318,7 @@ void Transactions::Create(
         ad_type TEXT NOT NULL,
         confirmation_type TEXT NOT NULL,
         reconciled_at TIMESTAMP DEFAULT 0
-      );)");
+      ))");
 
   // Optimize database query for `GetForDateRange` from schema 35 and 40.
   CreateTableIndex(mojom_db_transaction, GetTableName(),
@@ -349,6 +350,11 @@ void Transactions::Migrate(
 
     case 43: {
       MigrateToV43(mojom_db_transaction);
+      break;
+    }
+
+    default: {
+      // No migration needed.
       break;
     }
   }
@@ -390,7 +396,7 @@ std::string Transactions::BuildInsertSql(
             ad_type,
             confirmation_type,
             reconciled_at
-          ) VALUES $2;)",
+          ) VALUES $2)",
       {GetTableName(),
        BuildBindColumnPlaceholders(/*column_count=*/8, row_count)},
       nullptr);

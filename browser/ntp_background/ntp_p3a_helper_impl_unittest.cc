@@ -14,11 +14,12 @@
 #include "base/test/metrics/histogram_tester.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/browser/brave_browser_process.h"
+#include "brave/components/brave_ads/core/mojom/brave_ads.mojom.h"
 #include "brave/components/brave_ads/core/public/prefs/pref_registry.h"
 #include "brave/components/brave_ads/core/public/user_engagement/site_visit/site_visit_feature.h"
 #include "brave/components/brave_referrals/browser/brave_referrals_service.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
-#include "brave/components/brave_rewards/common/pref_registry.h"
+#include "brave/components/brave_rewards/core/pref_names.h"
+#include "brave/components/brave_rewards/core/pref_registry.h"
 #include "brave/components/ntp_background_images/browser/ntp_sponsored_images_data.h"
 #include "brave/components/p3a/metric_log_type.h"
 #include "brave/components/p3a/p3a_config.h"
@@ -32,6 +33,7 @@
 namespace ntp_background_images {
 
 namespace {
+
 constexpr char kTestCreativeMetricId[] = "2ba3659a-4737-4c4e-892a-a6a2e0e2a871";
 constexpr char kTestCampaign1[] = "40a357fd-a6e3-485c-92a0-7ff057dd7686";
 constexpr char kTestCampaign2[] = "a5d13b23-a59d-4a3f-a92b-499edd5dfce4";
@@ -48,6 +50,7 @@ constexpr char kViewedEventType[] = "viewed";
 constexpr char kTestP3AJsonHost[] = "https://p3a-json.brave.com";
 constexpr char kTestP2AJsonHost[] = "https://p2a-json.brave.com";
 constexpr char kTestP3ACreativeHost[] = "https://p3a-creative.brave.com";
+
 }  // namespace
 
 class NTPP3AHelperImplTest : public testing::Test {
@@ -71,8 +74,10 @@ class NTPP3AHelperImplTest : public testing::Test {
     config.p3a_json_upload_url = GURL(kTestP3AJsonHost);
     config.p2a_json_upload_url = GURL(kTestP2AJsonHost);
     config.p3a_creative_upload_url = GURL(kTestP3ACreativeHost);
+    base::Time install_time;
+    ASSERT_TRUE(base::Time::FromString("2049-01-01", &install_time));
     p3a_service_ = scoped_refptr(new p3a::P3AService(
-        local_state_, "release", "2049-01-01", std::move(config)));
+        local_state_, "release", install_time, std::move(config)));
 
     ntp_p3a_helper_ = std::make_unique<NTPP3AHelperImpl>(
         &local_state_, p3a_service_.get(),
@@ -157,8 +162,10 @@ TEST_F(NTPP3AHelperImplTest, OneEventTypeCountReported) {
 }
 
 TEST_F(NTPP3AHelperImplTest, OneEventTypeCountReportedWhileInflight) {
-  ntp_p3a_helper_->RecordClickAndMaybeLand(kTestCreativeMetricId);
-  ntp_p3a_helper_->RecordClickAndMaybeLand(kTestCreativeMetricId);
+  ntp_p3a_helper_->RecordNewTabPageAdEvent(
+      brave_ads::mojom::NewTabPageAdEventType::kClicked, kTestCreativeMetricId);
+  ntp_p3a_helper_->RecordNewTabPageAdEvent(
+      brave_ads::mojom::NewTabPageAdEventType::kClicked, kTestCreativeMetricId);
 
   const std::string histogram_name =
       GetExpectedCreativeHistogramName(kClicksEventType);
@@ -175,7 +182,8 @@ TEST_F(NTPP3AHelperImplTest, OneEventTypeCountReportedWhileInflight) {
   histogram_tester_->ExpectUniqueSample(kCreativeTotalHistogramName, 1, 1);
 
   // Recorded a click while recorded count is "in-flight"
-  ntp_p3a_helper_->RecordClickAndMaybeLand(kTestCreativeMetricId);
+  ntp_p3a_helper_->RecordNewTabPageAdEvent(
+      brave_ads::mojom::NewTabPageAdEventType::kClicked, kTestCreativeMetricId);
   NotifyMetricCycle(histogram_name);
 
   EXPECT_TRUE(
@@ -200,7 +208,8 @@ TEST_F(NTPP3AHelperImplTest, LandCountReported) {
   scoped_feature_list.InitAndEnableFeatureWithParameters(
       brave_ads::kSiteVisitFeature, {{"page_land_after", "10s"}});
 
-  ntp_p3a_helper_->RecordClickAndMaybeLand(kTestCreativeMetricId);
+  ntp_p3a_helper_->RecordNewTabPageAdEvent(
+      brave_ads::mojom::NewTabPageAdEventType::kClicked, kTestCreativeMetricId);
 
   const std::string clicks_histogram_name =
       GetExpectedCreativeHistogramName(kClicksEventType);
@@ -233,7 +242,8 @@ TEST_F(NTPP3AHelperImplTest, LandCountReported) {
   histogram_tester_->ExpectUniqueSample(lands_histogram_name, 1, 1);
   histogram_tester_->ExpectUniqueSample(kCreativeTotalHistogramName, 1, 1);
 
-  ntp_p3a_helper_->RecordClickAndMaybeLand(kTestCreativeMetricId);
+  ntp_p3a_helper_->RecordNewTabPageAdEvent(
+      brave_ads::mojom::NewTabPageAdEventType::kClicked, kTestCreativeMetricId);
 
   ntp_p3a_helper_->SetLastTabURL(GURL("https://adexample.com/page1"));
 

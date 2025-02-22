@@ -11,8 +11,8 @@
 #include <string_view>
 #include <vector>
 
+#include "base/containers/to_vector.h"
 #include "base/functional/callback_helpers.h"
-#include "base/json/json_reader.h"
 #include "base/memory/raw_ptr.h"
 #include "base/scoped_observation.h"
 #include "base/test/bind.h"
@@ -74,91 +74,80 @@ namespace {
 
 const char token_list_json[] = R"(
   {
-   "0x6B175474E89094C44Da98b954EedeAC495271d0F": {
-    "name": "USD Coin",
-    "logo": "usdc.png",
-    "erc20": true,
-    "erc721": false,
-    "symbol": "USDC",
-    "decimals": 6,
-    "chainId": "0x1"
-   },
-   "0x06012c8cf97BEaD5deAe237070F9587f8E7A266d": {
-     "name": "Crypto Kitties",
-     "logo": "CryptoKitties-Kitty-13733.svg",
-     "erc20": false,
-     "erc721": true,
-     "symbol": "CK",
-     "decimals": 0,
-     "chainId": "0x1"
-   },
-   "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984": {
-     "name": "Uniswap",
-     "logo": "uni.svg",
-     "erc20": true,
-     "symbol": "UNI",
-     "decimals": 18,
-     "chainId": "0x1"
-   }
-  })";
-
-const char sepolia_list_json[] = R"(
-  {
-   "0x6B175474E89094C44Da98b954EedeAC495271d0F": {
-    "name": "USD Coin",
-    "logo": "usdc.png",
-    "erc20": true,
-    "erc721": false,
-    "symbol": "USDC",
-    "decimals": 6,
-    "chainId": "0xaa36a7"
-   },
-   "0x06012c8cf97BEaD5deAe237070F9587f8E7A266d": {
-     "name": "Crypto Kitties",
-     "logo": "CryptoKitties-Kitty-13733.svg",
-     "erc20": false,
-     "erc721": true,
-     "symbol": "CK",
-     "decimals": 0,
-     "chainId": "0xaa36a7"
-   },
-   "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984": {
-     "name": "Uniswap",
-     "logo": "uni.svg",
-     "erc20": true,
-     "symbol": "UNI",
-     "decimals": 18,
-     "chainId": "0xaa36a7"
-   }
-  })";
-
-const char solana_token_list_json[] = R"(
-  {
-    "So11111111111111111111111111111111111111112": {
-      "name": "Wrapped SOL",
-      "logo": "So11111111111111111111111111111111111111112.png",
-      "erc20": false,
-      "symbol": "SOL",
-      "decimals": 9,
-      "chainId": "0x65",
-      "coingeckoId": "solana"
+    "0x1": {
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F": {
+        "name": "USD Coin",
+        "logo": "usdc.png",
+        "erc20": true,
+        "erc721": false,
+        "symbol": "USDC",
+        "decimals": 6
+      },
+      "0x06012c8cf97BEaD5deAe237070F9587f8E7A266d": {
+        "name": "Crypto Kitties",
+        "logo": "CryptoKitties-Kitty-13733.svg",
+        "erc20": false,
+        "erc721": true,
+        "symbol": "CK",
+        "decimals": 0
+      },
+      "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984": {
+        "name": "Uniswap",
+        "logo": "uni.svg",
+        "erc20": true,
+        "symbol": "UNI",
+        "decimals": 18
+      }
     },
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v": {
-      "name": "USD Coin",
-      "logo": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.png",
-      "erc20": false,
-      "symbol": "USDC",
-      "decimals": 6,
-      "chainId": "0x65",
-      "coingeckoId": "usd-coin"
+    "0xaa36a7": {
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F": {
+        "name": "USD Coin",
+        "logo": "usdc.png",
+        "erc20": true,
+        "erc721": false,
+        "symbol": "USDC",
+        "decimals": 6
+      },
+      "0x06012c8cf97BEaD5deAe237070F9587f8E7A266d": {
+        "name": "Crypto Kitties",
+        "logo": "CryptoKitties-Kitty-13733.svg",
+        "erc20": false,
+        "erc721": true,
+        "symbol": "CK",
+        "decimals": 0
+      },
+      "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984": {
+        "name": "Uniswap",
+        "logo": "uni.svg",
+        "erc20": true,
+        "symbol": "UNI",
+        "decimals": 18
+      }
     },
-    "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ": {
-      "name": "Tesla Inc.",
-      "logo": "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ.png",
-      "erc20": false,
-      "symbol": "TSLA",
-      "decimals": 8,
-      "chainId": "0x65"
+    "0x65": {
+      "So11111111111111111111111111111111111111112": {
+        "name": "Wrapped SOL",
+        "logo": "So11111111111111111111111111111111111111112.png",
+        "erc20": false,
+        "symbol": "SOL",
+        "decimals": 9,
+        "coingeckoId": "solana"
+      },
+      "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v": {
+        "name": "USD Coin",
+        "logo": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.png",
+        "erc20": false,
+        "symbol": "USDC",
+        "decimals": 6,
+        "coingeckoId": "usd-coin"
+      },
+      "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ": {
+        "name": "Tesla Inc.",
+        "logo": "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ.png",
+        "erc20": false,
+        "symbol": "TSLA",
+        "decimals": 8
+      }
     }
   })";
 
@@ -305,6 +294,8 @@ class BraveWalletServiceUnitTest : public testing::Test {
 
  protected:
   void SetUp() override {
+    TestingBrowserProcess::GetGlobal()->CreateGlobalFeaturesForTesting();
+
     scoped_feature_list_.InitAndEnableFeature(
         features::kBraveWalletBitcoinFeature);
 
@@ -364,12 +355,7 @@ class BraveWalletServiceUnitTest : public testing::Test {
 
     auto* registry = BlockchainRegistry::GetInstance();
     TokenListMap token_list_map;
-    ASSERT_TRUE(
-        ParseTokenList(token_list_json, &token_list_map, mojom::CoinType::ETH));
-    ASSERT_TRUE(ParseTokenList(sepolia_list_json, &token_list_map,
-                               mojom::CoinType::ETH));
-    ASSERT_TRUE(ParseTokenList(solana_token_list_json, &token_list_map,
-                               mojom::CoinType::SOL));
+    ASSERT_TRUE(ParseTokenList(token_list_json, &token_list_map));
     registry->UpdateTokenList(std::move(token_list_map));
 
     token1_ = GetRegistry()->GetTokenByAddress(
@@ -839,9 +825,11 @@ class BraveWalletServiceUnitTest : public testing::Test {
       std::optional<std::string> cursor,
       const std::vector<mojom::BlockchainTokenPtr>& expected_nfts,
       std::optional<std::string> expected_cursor) {
+    auto mojom_chain_ids = base::ToVector(
+        chain_ids, [&](auto& item) { return mojom::ChainId::New(coin, item); });
     base::RunLoop run_loop;
     service_->GetSimpleHashSpamNFTs(
-        account_address, chain_ids, coin, cursor,
+        account_address, std::move(mojom_chain_ids), cursor,
         base::BindLambdaForTesting(
             [&](std::vector<mojom::BlockchainTokenPtr> nfts,
                 const std::optional<std::string>& returned_cursor) {
@@ -1405,17 +1393,17 @@ TEST_F(BraveWalletServiceUnitTest, SetAssetSpamStatus) {
   EXPECT_TRUE(tokens[2]->visible);  // Should be visible since it's not spam
 
   // Try to set spam status for non-existing asset
-  mojom::BlockchainTokenPtr fakeToken = mojom::BlockchainToken::New();
-  fakeToken->contract_address = "0xFakeAddress";
-  fakeToken->chain_id = token1->chain_id;
+  mojom::BlockchainTokenPtr fake_token = mojom::BlockchainToken::New();
+  fake_token->contract_address = "0xFakeAddress";
+  fake_token->chain_id = token1->chain_id;
   // Should fail because asset does not exist
-  EXPECT_FALSE(SetAssetSpamStatus(fakeToken.Clone(), true));
+  EXPECT_FALSE(SetAssetSpamStatus(fake_token.Clone(), true));
 
   // Try to set spam status with invalid chain_id
-  mojom::BlockchainTokenPtr tokenWithInvalidChain = token1.Clone();
-  tokenWithInvalidChain->chain_id = "invalid_chain_id";
+  mojom::BlockchainTokenPtr token_with_invalid_chain = token1.Clone();
+  token_with_invalid_chain->chain_id = "invalid_chain_id";
   // Should fail because of invalid chain_id
-  EXPECT_FALSE(SetAssetSpamStatus(tokenWithInvalidChain.Clone(), true));
+  EXPECT_FALSE(SetAssetSpamStatus(token_with_invalid_chain.Clone(), true));
 
   // Set the spam_status of a token not in user assets list
   mojom::BlockchainTokenPtr token2 = GetToken1();
@@ -1685,7 +1673,7 @@ TEST_F(BraveWalletServiceUnitTest, AddCustomNetwork) {
               *network_manager_->GetAllCustomChains(mojom::CoinType::ZEC)[0]);
   }
 
-  EXPECT_TRUE(AllCoinsTested());
+  static_assert(AllCoinsTested<5>());
 }
 
 TEST_F(BraveWalletServiceUnitTest, AddCustomNetworkTwice) {
@@ -1734,8 +1722,6 @@ TEST_F(BraveWalletServiceUnitTest, ERC721TokenAddRemoveSetUserAssetVisible) {
   erc721_token_1->token_id = "0x1";
   auto erc721_token_2 = erc721_token_with_empty_token_id.Clone();
   erc721_token_2->token_id = "0x2";
-  auto erc721_token_1_ = erc721_token_with_empty_token_id.Clone();
-  erc721_token_1->token_id = "0x1";
 
   // Add ERC721 token without tokenId will fail.
   auto network = GetNetwork(mojom::kSepoliaChainId, mojom::CoinType::ETH);
@@ -1946,177 +1932,6 @@ TEST_F(BraveWalletServiceUnitTest, MigrateEip1559ForCustomNetworks) {
       GetPrefs()->GetBoolean(kBraveWalletEip1559ForCustomNetworksMigrated));
 }
 
-TEST_F(BraveWalletServiceUnitTest, MigrateDefaultHiddenNetworks) {
-  // Note: The testing profile has already performed the prefs migration by the
-  // time this test runs, so undo its effects here for testing purposes
-  ASSERT_EQ(GetPrefs()->GetInteger(kBraveWalletDefaultHiddenNetworksVersion),
-            1);
-  GetPrefs()->SetInteger(kBraveWalletDefaultHiddenNetworksVersion, 0);
-
-  BraveWalletService::MigrateHiddenNetworks(GetPrefs());
-  {
-    auto* list =
-        GetPrefs()->GetDict(kBraveWalletHiddenNetworks).FindList("ethereum");
-    ASSERT_NE(std::find_if(list->begin(), list->end(),
-                           [](const auto& v) { return v == "0x4cb2f"; }),
-              list->end());
-  }
-  ASSERT_EQ(GetPrefs()->GetInteger(kBraveWalletDefaultHiddenNetworksVersion),
-            1);
-  network_manager_->RemoveHiddenNetwork(mojom::CoinType::ETH, "0x4cb2f");
-  BraveWalletService::MigrateHiddenNetworks(GetPrefs());
-  {
-    auto* list =
-        GetPrefs()->GetDict(kBraveWalletHiddenNetworks).FindList("ethereum");
-    ASSERT_EQ(std::find_if(list->begin(), list->end(),
-                           [](const auto& v) { return v == "0x4cb2f"; }),
-              list->end());
-  }
-}
-
-TEST_F(BraveWalletServiceUnitTest, MigrateDefaultHiddenNetworks_NoList) {
-  // Note: The testing profile has already performed the prefs migration by the
-  // time this test runs, so undo its effects here for testing purposes
-  ASSERT_EQ(GetPrefs()->GetInteger(kBraveWalletDefaultHiddenNetworksVersion),
-            1);
-  GetPrefs()->SetInteger(kBraveWalletDefaultHiddenNetworksVersion, 0);
-
-  {
-    ScopedDictPrefUpdate update(GetPrefs(), kBraveWalletHiddenNetworks);
-    update.Get().Remove("ethereum");
-  }
-  BraveWalletService::MigrateHiddenNetworks(GetPrefs());
-  {
-    auto* list =
-        GetPrefs()->GetDict(kBraveWalletHiddenNetworks).FindList("ethereum");
-    EXPECT_NE(std::find_if(list->begin(), list->end(),
-                           [](const auto& v) { return v == "0x4cb2f"; }),
-              list->end());
-  }
-}
-
-TEST_F(BraveWalletServiceUnitTest, MigrateFantomMainnetAsCustomNetwork) {
-  // Note: The testing profile has already performed the prefs migration by the
-  // time this test runs, so undo its effects here for testing purposes
-  ASSERT_TRUE(
-      GetPrefs()->GetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated));
-  GetPrefs()->SetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated,
-                         false);
-  GetPrefs()->ClearPref(kBraveWalletCustomNetworks);
-  GetPrefs()->ClearPref(kBraveWalletSelectedNetworksPerOrigin);
-
-  // CASE 1: Fantom is the selected network of some origin
-  ASSERT_FALSE(
-      GetPrefs()->GetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated));
-
-  auto selected_networks = base::JSONReader::Read(R"({
-    "ethereum": {
-      "https://app.uniswap.org": "0xfa"
-    }
-  })");
-  GetPrefs()->Set(kBraveWalletSelectedNetworksPerOrigin, *selected_networks);
-
-  EXPECT_FALSE(
-      network_manager_->CustomChainExists("0xfa", mojom::CoinType::ETH));
-
-  BraveWalletService::MigrateFantomMainnetAsCustomNetwork(GetPrefs());
-
-  // OK: Fantom should be added to custom networks
-  EXPECT_TRUE(
-      network_manager_->CustomChainExists("0xfa", mojom::CoinType::ETH));
-
-  EXPECT_TRUE(
-      GetPrefs()->GetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated));
-
-  // CASE 2: Fantom is the default ETH network
-  GetPrefs()->SetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated,
-                         false);
-  GetPrefs()->ClearPref(kBraveWalletCustomNetworks);
-  GetPrefs()->ClearPref(kBraveWalletSelectedNetworksPerOrigin);
-
-  auto default_networks = base::JSONReader::Read(R"({
-    "ethereum": "0xfa"
-  })");
-  GetPrefs()->Set(kBraveWalletSelectedNetworks, *default_networks);
-
-  EXPECT_FALSE(
-      network_manager_->CustomChainExists("0xfa", mojom::CoinType::ETH));
-
-  BraveWalletService::MigrateFantomMainnetAsCustomNetwork(GetPrefs());
-
-  // OK: Fantom should be added to custom networks
-  EXPECT_TRUE(
-      network_manager_->CustomChainExists("0xfa", mojom::CoinType::ETH));
-
-  // OK: default ETH network should be retained as Fantom
-  EXPECT_EQ(
-      *GetPrefs()->GetDict(kBraveWalletSelectedNetworks).FindString("ethereum"),
-      "0xfa");
-
-  EXPECT_TRUE(
-      GetPrefs()->GetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated));
-
-  // CASE 3: Fantom neither default ETH network nor selected for any origin
-  GetPrefs()->SetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated,
-                         false);
-  GetPrefs()->ClearPref(kBraveWalletCustomNetworks);
-  GetPrefs()->ClearPref(kBraveWalletSelectedNetworksPerOrigin);
-
-  default_networks = base::JSONReader::Read(R"({
-    "ethereum": "0xa"
-  })");
-  GetPrefs()->Set(kBraveWalletSelectedNetworks, *default_networks);
-
-  selected_networks = base::JSONReader::Read(R"({
-    "ethereum": {
-      "https://app.uniswap.org": "0x1"
-    }
-  })");
-  GetPrefs()->Set(kBraveWalletSelectedNetworksPerOrigin, *selected_networks);
-
-  EXPECT_FALSE(
-      network_manager_->CustomChainExists("0xfa", mojom::CoinType::ETH));
-
-  BraveWalletService::MigrateFantomMainnetAsCustomNetwork(GetPrefs());
-
-  // KO: Fantom should NOT be added to custom networks
-  EXPECT_FALSE(
-      network_manager_->CustomChainExists("0xfa", mojom::CoinType::ETH));
-
-  // KO: Default ETH network does not change
-  EXPECT_EQ(
-      *GetPrefs()->GetDict(kBraveWalletSelectedNetworks).FindString("ethereum"),
-      "0xa");
-
-  EXPECT_TRUE(
-      GetPrefs()->GetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated));
-
-  // CASE 4: Fantom is already added to custom networks
-  GetPrefs()->SetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated,
-                         false);
-  GetPrefs()->ClearPref(kBraveWalletCustomNetworks);
-  GetPrefs()->ClearPref(kBraveWalletSelectedNetworksPerOrigin);
-
-  // Add Fantom to custom networks
-  mojom::NetworkInfo fantom = GetTestNetworkInfo1("0xfa");
-  network_manager_->AddCustomNetwork(fantom);
-  EXPECT_TRUE(
-      network_manager_->CustomChainExists("0xfa", mojom::CoinType::ETH));
-
-  BraveWalletService::MigrateFantomMainnetAsCustomNetwork(GetPrefs());
-
-  // KO: Fantom should NOT be added to custom networks again
-  ASSERT_TRUE(GetPrefs()->HasPrefPath(kBraveWalletCustomNetworks));
-  auto* custom_networks =
-      GetPrefs()->GetDict(kBraveWalletCustomNetworks).FindList("ethereum");
-  ASSERT_TRUE(custom_networks);
-  ASSERT_EQ(custom_networks->size(), 1u);
-  EXPECT_EQ(*(*custom_networks)[0].GetDict().FindString("chainId"), "0xfa");
-
-  EXPECT_TRUE(
-      GetPrefs()->GetBoolean(kBraveWalletCustomNetworksFantomMainnetMigrated));
-}
-
 TEST_F(BraveWalletServiceUnitTest, MigrateGoerliNetwork) {
   // Note: The testing profile has already performed the prefs migration by the
   // time this test runs, so undo its effects here for testing purposes
@@ -2124,17 +1939,19 @@ TEST_F(BraveWalletServiceUnitTest, MigrateGoerliNetwork) {
   GetPrefs()->SetBoolean(kBraveWalletGoerliNetworkMigrated, false);
   GetPrefs()->ClearPref(kBraveWalletSelectedNetworksPerOrigin);
 
-  auto selected_networks = base::JSONReader::Read(R"({
+  auto selected_networks = base::test::ParseJsonDict(R"({
     "ethereum": {
       "https://app.uniswap.org": "0xaa36a7"
     }
   })");
-  GetPrefs()->Set(kBraveWalletSelectedNetworksPerOrigin, *selected_networks);
+  GetPrefs()->SetDict(kBraveWalletSelectedNetworksPerOrigin,
+                      std::move(selected_networks));
 
-  auto default_networks = base::JSONReader::Read(R"({
+  auto default_networks = base::test::ParseJsonDict(R"({
     "ethereum": "0xaa36a7"
   })");
-  GetPrefs()->Set(kBraveWalletSelectedNetworks, *default_networks);
+  GetPrefs()->SetDict(kBraveWalletSelectedNetworks,
+                      std::move(default_networks));
 
   // CASE 1: Goerli is the selected network of some origin
   ASSERT_FALSE(GetPrefs()->GetBoolean(kBraveWalletGoerliNetworkMigrated));
@@ -2152,55 +1969,6 @@ TEST_F(BraveWalletServiceUnitTest, MigrateGoerliNetwork) {
       *GetPrefs()->GetDict(kBraveWalletSelectedNetworks).FindString("ethereum"),
       mojom::kSepoliaChainId);
   EXPECT_TRUE(GetPrefs()->GetBoolean(kBraveWalletGoerliNetworkMigrated));
-}
-
-TEST_F(BraveWalletServiceUnitTest, MigrateAssetsPrefToList) {
-  ASSERT_FALSE(GetPrefs()->HasPrefPath(kBraveWalletUserAssetsDeprecated));
-
-  network_manager_->AddCustomNetwork(GetTestNetworkInfo1("0x123"));
-
-  auto strip_coin_and_chain = [&](base::Value::Dict dict) -> base::Value::Dict {
-    dict.Remove("chain_id");
-    dict.Remove("coin");
-    return dict;
-  };
-
-  auto eth_token = GetEthToken();
-  auto bat_token = GetBatToken();
-  auto custom_eth_token = GetEthToken();
-  custom_eth_token->chain_id = "0x123";
-  auto sol_token = GetSolToken();
-
-  base::Value::Dict legacy_dict;
-  base::Value::List legacy_eth_array;
-  legacy_eth_array.Append(
-      strip_coin_and_chain(BlockchainTokenToValue(eth_token)));
-  legacy_eth_array.Append(
-      strip_coin_and_chain(BlockchainTokenToValue(bat_token)));
-  legacy_dict.SetByDottedPath("ethereum.mainnet", std::move(legacy_eth_array));
-
-  base::Value::List legacy_custom_eth_array;
-  legacy_custom_eth_array.Append(
-      strip_coin_and_chain(BlockchainTokenToValue(custom_eth_token)));
-  legacy_dict.SetByDottedPath("ethereum.0x123",
-                              std::move(legacy_custom_eth_array));
-
-  base::Value::List legacy_sol_array;
-  legacy_sol_array.Append(
-      strip_coin_and_chain(BlockchainTokenToValue(sol_token)));
-  legacy_dict.SetByDottedPath("solana.mainnet", std::move(legacy_sol_array));
-
-  GetPrefs()->SetDict(kBraveWalletUserAssetsDeprecated, std::move(legacy_dict));
-
-  BraveWalletService::MigrateAssetsPrefToList(GetPrefs());
-
-  ASSERT_FALSE(GetPrefs()->HasPrefPath(kBraveWalletUserAssetsDeprecated));
-  ASSERT_TRUE(GetPrefs()->HasPrefPath(kBraveWalletUserAssetsList));
-
-  EXPECT_THAT(
-      GetAllUserAssets(GetPrefs()),
-      ElementsAre(Eq(std::ref(custom_eth_token)), Eq(std::ref(eth_token)),
-                  Eq(std::ref(bat_token)), Eq(std::ref(sol_token))));
 }
 
 TEST_F(BraveWalletServiceUnitTest, OnGetImportInfo) {
@@ -2774,13 +2542,15 @@ TEST_F(BraveWalletServiceUnitTest, RecordGeneralUsageMetrics) {
 TEST_F(BraveWalletServiceUnitTest, GetBalanceScannerSupportedChains) {
   service_->GetBalanceScannerSupportedChains(
       base::BindLambdaForTesting([](const std::vector<std::string>& chains) {
-        std::vector<std::string> expected_chains = {
-            mojom::kMainnetChainId,         mojom::kBnbSmartChainMainnetChainId,
-            mojom::kPolygonMainnetChainId,  mojom::kOptimismMainnetChainId,
+        base::flat_set<std::string> expected_chains_set = {
             mojom::kArbitrumMainnetChainId, mojom::kAvalancheMainnetChainId,
+            mojom::kBaseMainnetChainId,     mojom::kBnbSmartChainMainnetChainId,
+            mojom::kMainnetChainId,         mojom::kOptimismMainnetChainId,
+            mojom::kPolygonMainnetChainId,
         };
-        ASSERT_EQ(chains.size(), expected_chains.size());
-        EXPECT_EQ(chains, expected_chains);
+        ASSERT_EQ(chains.size(), expected_chains_set.size());
+        base::flat_set<std::string> chains_set(chains.begin(), chains.end());
+        EXPECT_EQ(chains_set, expected_chains_set);
       }));
 }
 

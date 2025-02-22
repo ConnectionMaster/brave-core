@@ -7,6 +7,7 @@
 #define BRAVE_COMPONENTS_P3A_P3A_MESSAGE_H_
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -31,11 +32,14 @@ class MessageMetainfo {
 
   void Init(PrefService* local_state,
             std::string brave_channel,
-            std::string week_of_install);
+            base::Time first_run_time);
 
   void Update();
 
   const std::string& GetCountryCodeForNormalMetrics(bool raw) const;
+
+  std::optional<base::Time> GetActivationDate(
+      std::string_view histogram_name) const;
 
   const std::string& platform() const { return platform_; }
   const std::string& general_platform() const { return general_platform_; }

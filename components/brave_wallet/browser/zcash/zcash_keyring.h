@@ -23,7 +23,7 @@ namespace brave_wallet {
 
 class ZCashKeyring : public Secp256k1HDKeyring {
  public:
-  ZCashKeyring(base::span<const uint8_t> seed, bool testnet);
+  ZCashKeyring(base::span<const uint8_t> seed, mojom::KeyringId keyring_id);
   ~ZCashKeyring() override;
 
   ZCashKeyring(const ZCashKeyring&) = delete;
@@ -54,7 +54,8 @@ class ZCashKeyring : public Secp256k1HDKeyring {
       const mojom::ZCashKeyId& key_id,
       base::span<const uint8_t, 32> message);
 
-  std::string EncodePrivateKeyForExport(const std::string& address) override;
+  mojom::KeyringId keyring_id() const { return keyring_id_; }
+  bool IsTestnet() const;
 
  private:
   std::string GetAddressInternal(const HDKey& hd_key) const override;
@@ -65,7 +66,7 @@ class ZCashKeyring : public Secp256k1HDKeyring {
   std::unique_ptr<HDKeyZip32> orchard_accounts_root_;
 #endif
 
-  bool testnet_ = false;
+  mojom::KeyringId keyring_id_;
 };
 
 }  // namespace brave_wallet

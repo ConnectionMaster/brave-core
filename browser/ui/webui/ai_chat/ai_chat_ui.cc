@@ -5,15 +5,20 @@
 
 #include "brave/browser/ui/webui/ai_chat/ai_chat_ui.h"
 
+#include <algorithm>
+#include <memory>
 #include <utility>
 
 #include "brave/browser/ai_chat/ai_chat_service_factory.h"
+#include "brave/browser/ai_chat/tab_tracker_service_factory.h"
 #include "brave/browser/ui/side_panel/ai_chat/ai_chat_side_panel_utils.h"
 #include "brave/browser/ui/webui/ai_chat/ai_chat_ui_page_handler.h"
 #include "brave/browser/ui/webui/brave_webui_source.h"
 #include "brave/components/ai_chat/core/browser/ai_chat_service.h"
 #include "brave/components/ai_chat/core/browser/constants.h"
+#include "brave/components/ai_chat/core/browser/tab_tracker_service.h"
 #include "brave/components/ai_chat/core/browser/utils.h"
+#include "brave/components/ai_chat/core/common/constants.h"
 #include "brave/components/ai_chat/core/common/features.h"
 #include "brave/components/ai_chat/core/common/mojom/ai_chat.mojom.h"
 #include "brave/components/ai_chat/core/common/pref_names.h"
@@ -23,7 +28,6 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/tabs/tab_model.h"
 #include "chrome/browser/ui/webui/favicon_source.h"
-#include "chrome/browser/ui/webui/webui_util.h"
 #include "components/favicon_base/favicon_url_parser.h"
 #include "components/grit/brave_components_resources.h"
 #include "components/prefs/pref_service.h"
@@ -33,6 +37,7 @@
 #include "content/public/browser/web_ui_data_source.h"
 #include "content/public/common/url_constants.h"
 #include "ui/webui/mojo_web_ui_controller.h"
+#include "ui/webui/webui_util.h"
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "chrome/browser/ui/browser.h"
@@ -45,7 +50,7 @@
 namespace {
 content::WebContents* GetActiveWebContents(content::BrowserContext* context) {
   auto tab_models = TabModelList::models();
-  auto iter = base::ranges::find_if(
+  auto iter = std::ranges::find_if(
       tab_models, [](const auto& model) { return model->IsActiveModel(); });
   if (iter == tab_models.end()) {
     return nullptr;
@@ -160,6 +165,15 @@ void AIChatUI::BindInterface(
   CHECK(page_handler_);
   page_handler_->BindParentUIFrameFromChildFrame(
       std::move(parent_ui_frame_receiver));
+}
+
+void AIChatUI::BindInterface(
+    mojo::PendingReceiver<ai_chat::mojom::TabTrackerService> pending_receiver) {
+  auto* service =
+      ai_chat::TabTrackerServiceFactory::GetForBrowserContext(profile_);
+  CHECK(service);
+
+  service->Bind(std::move(pending_receiver));
 }
 
 bool AIChatUIConfig::IsWebUIEnabled(content::BrowserContext* browser_context) {

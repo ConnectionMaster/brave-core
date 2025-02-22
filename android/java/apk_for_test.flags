@@ -136,7 +136,7 @@
     *** mFullscreenManager;
     *** mActivityTabProvider;
     *** mAppThemeColorProvider;
-    *** mScrimCoordinator;
+    *** mScrimManager;
     *** mMenuButtonCoordinator;
     *** mToolbarTabController;
     *** mLocationBar;
@@ -156,6 +156,7 @@
     *** mTabObscuringHandler;
     *** mReadAloudControllerSupplier;
     *** mTopUiThemeColorProvider;
+    *** mCurrentOrientation;
     *** onOrientationChange(...);
     *** updateBookmarkButtonStatus(...);
     *** updateReloadState(...);
@@ -516,7 +517,6 @@
 }
 
 -keep class org.chromium.chrome.browser.notifications.permissions.NotificationPermissionRationaleDialogController {
-    *** wrapDialogDismissalCallback(...);
     public <init>(...);
 }
 
@@ -915,3 +915,5 @@
 -keep class org.chromium.chrome.browser.media.ui.MediaSessionTabHelper {
    *** mTab;
 }
+
+-keep class org.chromium.chrome.browser.multiwindow.InstanceInfo

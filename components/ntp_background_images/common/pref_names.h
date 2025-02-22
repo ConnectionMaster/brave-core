@@ -6,8 +6,7 @@
 #ifndef BRAVE_COMPONENTS_NTP_BACKGROUND_IMAGES_COMMON_PREF_NAMES_H_
 #define BRAVE_COMPONENTS_NTP_BACKGROUND_IMAGES_COMMON_PREF_NAMES_H_
 
-namespace ntp_background_images {
-namespace prefs {
+namespace ntp_background_images::prefs {
 
 // There are two categories in Branded wallpaper.
 // The one is sponsored images wallpaper and the other is super referral
@@ -26,12 +25,11 @@ inline constexpr char kNewTabPageCachedSuperReferralComponentInfo[] =
     "brave.new_tab_page.cached_super_referral_component_info";
 inline constexpr char kNewTabPageCachedSuperReferralComponentData[] =
     "brave.new_tab_page.cached_super_referral_component_data";
-inline constexpr char kNewTabPageGetInitialSRComponentInProgress[] =
+inline constexpr char kNewTabPageGetInitialSuperReferralComponentInProgress[] =
     "brave.new_tab_page.get_initial_sr_component_in_progress";
 inline constexpr char kNewTabPageCachedSuperReferralCode[] =
     "brave.new_tab_page.cached_referral_code";
 
-}  // namespace prefs
-}  // namespace ntp_background_images
+}  // namespace ntp_background_images::prefs
 
 #endif  // BRAVE_COMPONENTS_NTP_BACKGROUND_IMAGES_COMMON_PREF_NAMES_H_

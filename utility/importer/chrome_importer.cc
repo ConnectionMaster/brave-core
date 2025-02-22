@@ -85,15 +85,14 @@ bool SetEncryptionKeyForPasswordImporting(
     const base::FilePath& local_state_path) {
   std::string local_state_content;
   base::ReadFileToString(local_state_path, &local_state_content);
-  std::optional<base::Value> local_state =
-      base::JSONReader::Read(local_state_content);
-  if (!local_state || !local_state->is_dict()) {
+  std::optional<base::Value::Dict> local_state =
+      base::JSONReader::ReadDict(local_state_content);
+  if (!local_state) {
     return false;
   }
 
   if (auto* base64_encrypted_key =
-          local_state->GetDict().FindStringByDottedPath(
-              kOsCryptEncryptedKeyPrefName)) {
+          local_state->FindStringByDottedPath(kOsCryptEncryptedKeyPrefName)) {
     std::string encrypted_key_with_header;
 
     base::Base64Decode(*base64_encrypted_key, &encrypted_key_with_header);
@@ -234,7 +233,7 @@ void ChromeImporter::ImportHistory() {
   if (!copy_history_file.copy_success())
     return;
 
-  sql::Database db;
+  sql::Database db(sql::Database::Tag("History"));
   if (!db.Open(copy_history_file.copied_file_path())) {
     return;
   }
@@ -283,11 +282,8 @@ void ChromeImporter::ImportBookmarks() {
 
   base::ReadFileToString(copy_bookmark_file.copied_file_path(),
                          &bookmarks_content);
-  std::optional<base::Value> bookmarks_json =
-      base::JSONReader::Read(bookmarks_content);
-  if (!bookmarks_json)
-    return;
-  const base::Value::Dict* bookmark_dict = bookmarks_json->GetIfDict();
+  std::optional<base::Value::Dict> bookmark_dict =
+      base::JSONReader::ReadDict(bookmarks_content);
   if (!bookmark_dict)
     return;
 
@@ -330,7 +326,7 @@ void ChromeImporter::ImportBookmarks() {
   if (!copy_favicon_file.copy_success())
     return;
 
-  sql::Database db;
+  sql::Database db(sql::Database::Tag("Favicons"));
   if (!db.Open(copy_favicon_file.copied_file_path()))
     return;
 
@@ -504,7 +500,7 @@ void ChromeImporter::ImportPayments() {
   if (!copy_payments_file.copy_success())
     return;
 
-  sql::Database db;
+  sql::Database db(sql::Database::Tag("Payments"));
   if (!db.Open(copy_payments_file.copied_file_path())) {
     return;
   }

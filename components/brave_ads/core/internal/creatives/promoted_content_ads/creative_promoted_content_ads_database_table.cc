@@ -6,13 +6,14 @@
 #include "brave/components/brave_ads/core/internal/creatives/promoted_content_ads/creative_promoted_content_ads_database_table.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <utility>
+#include <vector>
 
-#include "base/containers/contains.h"
+#include "base/check.h"
 #include "base/functional/bind.h"
 #include "base/location.h"
-#include "base/strings/strcat.h"
 #include "base/strings/string_util.h"
 #include "base/time/time.h"
 #include "brave/components/brave_ads/core/internal/common/containers/container_util.h"
@@ -23,14 +24,12 @@
 #include "brave/components/brave_ads/core/internal/common/logging_util.h"
 #include "brave/components/brave_ads/core/internal/common/time/time_util.h"
 #include "brave/components/brave_ads/core/internal/creatives/creative_ad_info.h"
+#include "brave/components/brave_ads/core/internal/creatives/creative_ad_util.h"
 #include "brave/components/brave_ads/core/internal/segments/segment_util.h"
 #include "brave/components/brave_ads/core/mojom/brave_ads.mojom.h"
 #include "url/gurl.h"
 
 namespace brave_ads::database::table {
-
-using CreativePromotedContentAdMap =
-    std::map</*creative_ad_uuid*/ std::string, CreativePromotedContentAdInfo>;
 
 namespace {
 
@@ -75,7 +74,7 @@ size_t BindColumns(const mojom::DBActionInfoPtr& mojom_db_action,
 
   size_t row_count = 0;
 
-  int index = 0;
+  int32_t index = 0;
   for (const auto& creative_ad : creative_ads) {
     BindColumnString(mojom_db_action, index++,
                      creative_ad.creative_instance_id);
@@ -121,7 +120,7 @@ CreativePromotedContentAdInfo FromMojomRow(
   daypart.days_of_week = ColumnString(mojom_db_row, 20);
   daypart.start_minute = ColumnInt(mojom_db_row, 21);
   daypart.end_minute = ColumnInt(mojom_db_row, 22);
-  creative_ad.dayparts.push_back(daypart);
+  creative_ad.dayparts.insert(daypart);
 
   return creative_ad;
 }
@@ -131,37 +130,30 @@ CreativePromotedContentAdList GetCreativeAdsFromResponse(
   CHECK(mojom_db_transaction_result);
   CHECK(mojom_db_transaction_result->rows_union);
 
-  CreativePromotedContentAdMap creative_ads;
+  std::map<std::string, CreativePromotedContentAdInfo> creative_ads;
 
   for (const auto& mojom_db_row :
        mojom_db_transaction_result->rows_union->get_rows()) {
     const CreativePromotedContentAdInfo creative_ad =
         FromMojomRow(mojom_db_row);
 
-    const std::string uuid =
-        base::StrCat({creative_ad.creative_instance_id, creative_ad.segment});
-    const auto iter = creative_ads.find(uuid);
-    if (iter == creative_ads.cend()) {
-      creative_ads.insert({uuid, creative_ad});
-      continue;
-    }
-
-    for (const auto& geo_target : creative_ad.geo_targets) {
-      if (!iter->second.geo_targets.contains(geo_target)) {
-        iter->second.geo_targets.insert(geo_target);
-      }
-    }
-
-    for (const auto& daypart : creative_ad.dayparts) {
-      if (!base::Contains(iter->second.dayparts, daypart)) {
-        iter->second.dayparts.push_back(daypart);
-      }
+    std::string uuid = creative_ad.creative_instance_id + creative_ad.segment;
+    const auto [iter, inserted] =
+        creative_ads.emplace(std::move(uuid), creative_ad);
+    if (!inserted) {
+      iter->second.geo_targets.insert(creative_ad.geo_targets.cbegin(),
+                                      creative_ad.geo_targets.cend());
+      iter->second.geo_targets.insert(creative_ad.geo_targets.cbegin(),
+                                      creative_ad.geo_targets.cend());
+      iter->second.dayparts.insert(creative_ad.dayparts.cbegin(),
+                                   creative_ad.dayparts.cend());
     }
   }
 
   CreativePromotedContentAdList normalized_creative_ads;
-  for (const auto& [_, creative_ad] : creative_ads) {
-    normalized_creative_ads.push_back(creative_ad);
+  normalized_creative_ads.reserve(creative_ads.size());
+  for (auto& [_, creative_ad] : creative_ads) {
+    normalized_creative_ads.push_back(std::move(creative_ad));
   }
 
   return normalized_creative_ads;
@@ -171,10 +163,10 @@ void GetForCreativeInstanceIdCallback(
     const std::string& creative_instance_id,
     GetCreativePromotedContentAdCallback callback,
     mojom::DBTransactionResultInfoPtr mojom_db_transaction_result) {
-  if (IsError(mojom_db_transaction_result)) {
+  if (!IsTransactionSuccessful(mojom_db_transaction_result)) {
     BLOG(0, "Failed to get creative promoted content ad");
     return std::move(callback).Run(/*success=*/false, creative_instance_id,
-                                   /*creative_ads=*/{});
+                                   /*creative_ad=*/{});
   }
 
   const CreativePromotedContentAdList creative_ads =
@@ -183,7 +175,7 @@ void GetForCreativeInstanceIdCallback(
   if (creative_ads.size() != 1) {
     BLOG(0, "Failed to get creative promoted content ad");
     return std::move(callback).Run(/*success=*/false, creative_instance_id,
-                                   /*creative_ads=*/{});
+                                   /*creative_ad=*/{});
   }
 
   const CreativePromotedContentAdInfo& creative_ad = creative_ads.front();
@@ -195,7 +187,7 @@ void GetForSegmentsCallback(
     const SegmentList& segments,
     GetCreativePromotedContentAdsCallback callback,
     mojom::DBTransactionResultInfoPtr mojom_db_transaction_result) {
-  if (IsError(mojom_db_transaction_result)) {
+  if (!IsTransactionSuccessful(mojom_db_transaction_result)) {
     BLOG(0, "Failed to get creative promoted content ads");
     return std::move(callback).Run(/*success=*/false, segments,
                                    /*creative_ads=*/{});
@@ -210,7 +202,7 @@ void GetForSegmentsCallback(
 void GetAllCallback(
     GetCreativePromotedContentAdsCallback callback,
     mojom::DBTransactionResultInfoPtr mojom_db_transaction_result) {
-  if (IsError(mojom_db_transaction_result)) {
+  if (!IsTransactionSuccessful(mojom_db_transaction_result)) {
     BLOG(0, "Failed to get all creative new tab page ads");
     return std::move(callback).Run(/*success=*/false, /*segments=*/{},
                                    /*creative_ads=*/{});
@@ -241,35 +233,18 @@ void CreativePromotedContentAds::Save(
   mojom::DBTransactionInfoPtr mojom_db_transaction =
       mojom::DBTransactionInfo::New();
 
-  const std::vector<CreativePromotedContentAdList> batches =
-      SplitVector(creative_ads, batch_size_);
+  campaigns_database_table_.Insert(
+      mojom_db_transaction,
+      CreativeAdList(creative_ads.cbegin(), creative_ads.cend()));
 
+  const std::vector<CreativePromotedContentAdList> batches =
+      SplitVector(DeduplicateCreativeAds(creative_ads), batch_size_);
   for (const auto& batch : batches) {
     Insert(mojom_db_transaction, batch);
-
-    const CreativeAdList creative_ads_batch(batch.cbegin(), batch.cend());
-    campaigns_database_table_.Insert(mojom_db_transaction, creative_ads_batch);
-    creative_ads_database_table_.Insert(mojom_db_transaction,
-                                        creative_ads_batch);
-    dayparts_database_table_.Insert(mojom_db_transaction, creative_ads_batch);
-    deposits_database_table_.Insert(mojom_db_transaction, creative_ads_batch);
-    geo_targets_database_table_.Insert(mojom_db_transaction,
-                                       creative_ads_batch);
-    segments_database_table_.Insert(mojom_db_transaction, creative_ads_batch);
   }
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
-}
-
-void CreativePromotedContentAds::Delete(ResultCallback callback) const {
-  mojom::DBTransactionInfoPtr mojom_db_transaction =
-      mojom::DBTransactionInfo::New();
-
-  DeleteTable(mojom_db_transaction, GetTableName());
-
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 std::move(callback));
 }
 
 void CreativePromotedContentAds::GetForCreativeInstanceId(
@@ -277,7 +252,7 @@ void CreativePromotedContentAds::GetForCreativeInstanceId(
     GetCreativePromotedContentAdCallback callback) const {
   if (creative_instance_id.empty()) {
     return std::move(callback).Run(/*success=*/false, creative_instance_id,
-                                   /*creative_ads=*/{});
+                                   /*creative_ad=*/{});
   }
 
   mojom::DBTransactionInfoPtr mojom_db_transaction =
@@ -318,14 +293,14 @@ void CreativePromotedContentAds::GetForCreativeInstanceId(
             INNER JOIN geo_targets ON geo_targets.campaign_id = creative_promoted_content_ad.campaign_id
             INNER JOIN segments ON segments.creative_set_id = creative_promoted_content_ad.creative_set_id
           WHERE
-            creative_promoted_content_ad.creative_instance_id = '$2';)",
+            creative_promoted_content_ad.creative_instance_id = '$2')",
       {GetTableName(), creative_instance_id}, nullptr);
   BindColumnTypes(mojom_db_action);
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   base::BindOnce(&GetForCreativeInstanceIdCallback,
-                                  creative_instance_id, std::move(callback)));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 base::BindOnce(&GetForCreativeInstanceIdCallback,
+                                creative_instance_id, std::move(callback)));
 }
 
 void CreativePromotedContentAds::GetForSegments(
@@ -375,14 +350,14 @@ void CreativePromotedContentAds::GetForSegments(
             INNER JOIN segments ON segments.creative_set_id = creative_promoted_content_ad.creative_set_id
           WHERE
             segments.segment IN $2
-            AND $3 BETWEEN campaigns.start_at AND campaigns.end_at;)",
+            AND $3 BETWEEN campaigns.start_at AND campaigns.end_at)",
       {GetTableName(),
        BuildBindColumnPlaceholder(/*column_count=*/segments.size()),
        TimeToSqlValueAsString(base::Time::Now())},
       nullptr);
   BindColumnTypes(mojom_db_action);
 
-  int index = 0;
+  int32_t index = 0;
   for (const auto& segment : segments) {
     BindColumnString(mojom_db_action, index, segment);
     ++index;
@@ -390,7 +365,7 @@ void CreativePromotedContentAds::GetForSegments(
 
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
 
-  RunDBTransaction(
+  RunTransaction(
       FROM_HERE, std::move(mojom_db_transaction),
       base::BindOnce(&GetForSegmentsCallback, segments, std::move(callback)));
 }
@@ -435,13 +410,13 @@ void CreativePromotedContentAds::GetForActiveCampaigns(
             INNER JOIN geo_targets ON geo_targets.campaign_id = creative_promoted_content_ad.campaign_id
             INNER JOIN segments ON segments.creative_set_id = creative_promoted_content_ad.creative_set_id
           WHERE
-            $2 BETWEEN campaigns.start_at AND campaigns.end_at;)",
+            $2 BETWEEN campaigns.start_at AND campaigns.end_at)",
       {GetTableName(), TimeToSqlValueAsString(base::Time::Now())}, nullptr);
   BindColumnTypes(mojom_db_action);
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   base::BindOnce(&GetAllCallback, std::move(callback)));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 base::BindOnce(&GetAllCallback, std::move(callback)));
 }
 
 std::string CreativePromotedContentAds::GetTableName() const {
@@ -459,7 +434,7 @@ void CreativePromotedContentAds::Create(
         campaign_id TEXT NOT NULL,
         title TEXT NOT NULL,
         description TEXT NOT NULL
-      );)");
+      ))");
 }
 
 void CreativePromotedContentAds::Migrate(
@@ -468,8 +443,13 @@ void CreativePromotedContentAds::Migrate(
   CHECK(mojom_db_transaction);
 
   switch (to_version) {
-    case 45: {
-      MigrateToV45(mojom_db_transaction);
+    case 48: {
+      MigrateToV48(mojom_db_transaction);
+      break;
+    }
+
+    default: {
+      // No migration needed.
       break;
     }
   }
@@ -477,12 +457,14 @@ void CreativePromotedContentAds::Migrate(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void CreativePromotedContentAds::MigrateToV45(
+void CreativePromotedContentAds::MigrateToV48(
     const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
   CHECK(mojom_db_transaction);
 
-  // We can safely recreate the table because it will be repopulated after
-  // downloading the catalog.
+  // It is safe to recreate the table because it will be repopulated after
+  // downloading the catalog post-migration. However, after this migration, we
+  // should not drop the table as it will store catalog and non-catalog ad units
+  // and maintain relationships with other tables.
   DropTable(mojom_db_transaction, GetTableName());
   Create(mojom_db_transaction);
 }
@@ -495,6 +477,10 @@ void CreativePromotedContentAds::Insert(
   if (creative_ads.empty()) {
     return;
   }
+
+  creative_ads_database_table_.Insert(
+      mojom_db_transaction,
+      CreativeAdList(creative_ads.cbegin(), creative_ads.cend()));
 
   mojom::DBActionInfoPtr mojom_db_action = mojom::DBActionInfo::New();
   mojom_db_action->type = mojom::DBActionInfo::Type::kExecuteWithBindings;
@@ -518,7 +504,7 @@ std::string CreativePromotedContentAds::BuildInsertSql(
             campaign_id,
             title,
             description
-          ) VALUES $2;)",
+          ) VALUES $2)",
       {GetTableName(),
        BuildBindColumnPlaceholders(/*column_count=*/5, row_count)},
       nullptr);

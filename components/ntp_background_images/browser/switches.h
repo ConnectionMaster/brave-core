@@ -6,20 +6,16 @@
 #ifndef BRAVE_COMPONENTS_NTP_BACKGROUND_IMAGES_BROWSER_SWITCHES_H_
 #define BRAVE_COMPONENTS_NTP_BACKGROUND_IMAGES_BROWSER_SWITCHES_H_
 
-namespace ntp_background_images {
+namespace ntp_background_images::switches {
 
-namespace switches {
-
-// Allows forcing background images to use a local directory to find the json
-// (photo.json for sponsored images or data.json for super referral) rule file
-// and associated images.
+// Allows forcing sponsored images to use a local directory to find the json
+// (campaigns.json for sponsored images or data.json for super referral) rule
+// file and associated images.
 inline constexpr char kNTPSponsoredImagesDataPathForTesting[] =
     "ntp-sponsored-images-data-path";
 inline constexpr char kNTPSuperReferralDataPathForTesting[] =
     "ntp-super-referral-data-path";
 
-}  // namespace switches
-
-}  // namespace ntp_background_images
+}  // namespace ntp_background_images::switches
 
 #endif  // BRAVE_COMPONENTS_NTP_BACKGROUND_IMAGES_BROWSER_SWITCHES_H_

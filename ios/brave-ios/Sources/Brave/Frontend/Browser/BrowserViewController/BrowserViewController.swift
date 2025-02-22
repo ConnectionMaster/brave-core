@@ -315,6 +315,12 @@ public class BrowserViewController: UIViewController {
       privateBrowsingManager: privateBrowsingManager
     )
 
+    // Add default favorites
+    if !Preferences.NewTabPage.preloadedFavoritiesInitialized.value {
+      FavoritesHelper.addDefaultFavorites()
+      Preferences.NewTabPage.preloadedFavoritiesInitialized.value = true
+    }
+
     // Initialize TabManager
     self.tabManager = TabManager(
       windowId: windowId,
@@ -404,6 +410,23 @@ public class BrowserViewController: UIViewController {
       // Accessing `STWebpageController` on Vision OS results in a crash
       screenTimeViewController = STWebpageController()
     }
+
+    braveCore.adblockService.registerFilterListChanges { [weak self] _ in
+      // Filter lists updated, reset selectors cache(s).
+      self?.tabManager.allTabs.forEach {
+        $0.contentBlocker.resetSelectorsCache()
+      }
+    }
+
+    FilterListStorage.shared.$filterLists
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        // Filter lists selections changed, reset selectors cache(s).
+        self?.tabManager.allTabs.forEach {
+          $0.contentBlocker.resetSelectorsCache()
+        }
+      }
+      .store(in: &cancellables)
   }
 
   deinit {
@@ -523,27 +546,8 @@ public class BrowserViewController: UIViewController {
 
     Preferences.NewTabPage.attemptToShowClaimRewardsNotification.value = true
 
-    backgroundDataSource.initializeFavorites = { sites in
-      DispatchQueue.main.async {
-        defer { Preferences.NewTabPage.preloadedFavoritiesInitialized.value = true }
-
-        if Preferences.NewTabPage.preloadedFavoritiesInitialized.value
-          || Favorite.hasFavorites
-        {
-          return
-        }
-
-        guard let sites = sites, !sites.isEmpty else {
-          FavoritesHelper.addDefaultFavorites()
-          return
-        }
-
-        let customFavorites = sites.compactMap { $0.asFavoriteSite }
-        Favorite.add(from: customFavorites)
-      }
-    }
-
     setupAdsNotificationHandler()
+
     backgroundDataSource.replaceFavoritesIfNeeded = { sites in
       if Preferences.NewTabPage.initialFavoritesHaveBeenReplaced.value { return }
 
@@ -1230,10 +1234,6 @@ public class BrowserViewController: UIViewController {
   override public func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
     updateToolbarUsingTabManager(tabManager)
-
-    if let tabId = tabManager.selectedTab?.rewardsId, rewards.rewardsAPI?.selectedTabId == 0 {
-      rewards.rewardsAPI?.selectedTabId = tabId
-    }
   }
 
   public override func viewIsAppearing(_ animated: Bool) {
@@ -1338,9 +1338,13 @@ public class BrowserViewController: UIViewController {
   var shouldShowTranslationOnboardingThisSession = true
 
   public func showQueuedAlertIfAvailable() {
-    if let queuedAlertInfo = tabManager.selectedTab?.dequeueJavascriptAlertPrompt() {
+    if let selectedTab = tabManager.selectedTab,
+      let queuedAlertInfo = selectedTab.dequeueJavascriptAlertPrompt()
+    {
       let alertController = queuedAlertInfo.alertController()
       alertController.delegate = self
+      selectedTab.shownPromptAlert = alertController
+
       present(alertController, animated: true, completion: nil)
     }
   }
@@ -1349,7 +1353,6 @@ public class BrowserViewController: UIViewController {
     screenshotHelper.viewIsVisible = false
     super.viewWillDisappear(animated)
 
-    rewards.rewardsAPI?.selectedTabId = 0
     view.window?.windowScene?.userActivity = nil
   }
 
@@ -1884,6 +1887,7 @@ public class BrowserViewController: UIViewController {
         if tab === tabManager.selectedTab && !tab.restoring {
           updateUIForReaderHomeStateForTab(tab)
         }
+
         // Catch history pushState navigation, but ONLY for same origin navigation,
         // for reasons above about URL spoofing risk.
         navigateInTab(tab: tab)
@@ -1923,7 +1927,6 @@ public class BrowserViewController: UIViewController {
           let rewardsURL = tab.rewardsXHRLoadURL,
           url.host == rewardsURL.host
         {
-          tab.reportPageNavigation(to: rewards)
           if let url = webView.url {
             tab.reportPageLoad(to: rewards, redirectChain: [url])
           }
@@ -2640,7 +2643,6 @@ extension BrowserViewController: TabDelegate {
       DownloadContentScriptHandler(browserController: self),
       PlaylistScriptHandler(tab: tab),
       PlaylistFolderSharingScriptHandler(),
-      RewardsReportingScriptHandler(rewards: rewards),
       AdsMediaReportingScriptHandler(rewards: rewards),
       ReadyStateScriptHandler(),
       DeAmpScriptHandler(),
@@ -3263,6 +3265,10 @@ extension BrowserViewController: PreferencesObserver {
     case ShieldPreferences.blockAdsAndTrackingLevelRaw.key:
       tabManager.reloadSelectedTab()
       recordGlobalAdBlockShieldsP3A()
+      // Global shield setting changed, reset selectors cache.
+      tabManager.allTabs.forEach({
+        $0.contentBlocker.resetSelectorsCache()
+      })
     case Preferences.Shields.fingerprintingProtection.key:
       tabManager.reloadSelectedTab()
       recordGlobalFingerprintingShieldsP3A()

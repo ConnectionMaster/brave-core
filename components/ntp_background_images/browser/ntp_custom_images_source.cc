@@ -6,17 +6,14 @@
 #include "brave/components/ntp_background_images/browser/ntp_custom_images_source.h"
 
 #include <utility>
-#include <vector>
 
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
 #include "base/memory/ref_counted_memory.h"
-#include "base/strings/stringprintf.h"
 #include "base/task/thread_pool.h"
 #include "brave/components/ntp_background_images/browser/brave_ntp_custom_background_service.h"
 #include "brave/components/ntp_background_images/browser/url_constants.h"
-#include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 
 namespace ntp_background_images {
@@ -45,13 +42,13 @@ std::string NTPCustomImagesSource::GetSource() {
 
 void NTPCustomImagesSource::StartDataRequest(
     const GURL& url,
-    const content::WebContents::Getter& wc_getter,
+    const content::WebContents::Getter& /*wc_getter*/,
     GotDataCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   GetImageFile(service_->GetImageFilePath(url), std::move(callback));
 }
 
-std::string NTPCustomImagesSource::GetMimeType(const GURL& url) {
+std::string NTPCustomImagesSource::GetMimeType(const GURL& /*url*/) {
   return "image/jpeg";
 }
 
@@ -71,7 +68,6 @@ void NTPCustomImagesSource::GetImageFile(const base::FilePath& image_file_path,
 void NTPCustomImagesSource::OnGotImageFile(GotDataCallback callback,
                                            const std::string& input) {
   std::move(callback).Run(new base::RefCountedBytes(base::as_byte_span(input)));
-  return;
 }
 
 }  // namespace ntp_background_images

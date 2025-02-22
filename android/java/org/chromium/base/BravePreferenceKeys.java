@@ -6,6 +6,7 @@
 package org.chromium.base;
 
 public final class BravePreferenceKeys {
+    public static final String BRAVE_TOOLBAR_TOP_ANCHORED = "Chrome.Toolbar.TopAnchored";
     public static final String BRAVE_BOTTOM_TOOLBAR_ENABLED_KEY =
             "brave_bottom_toolbar_enabled_key";
     public static final String BRAVE_BOTTOM_TOOLBAR_SET_KEY = "brave_bottom_toolbar_enabled";
@@ -88,6 +89,9 @@ public final class BravePreferenceKeys {
     public static final String BRAVE_QUICK_SEARCH_ENGINES_FEATURE = "quick_search_engines_feature";
     public static final String BRAVE_QUICK_SEARCH_ENGINES_PREVIOUS_DSE =
             "quick_search_engines_previous_dse";
+
+    public static final String BRAVE_SAFE_BROWSING_ERRORS =
+            "org.chromium.brave.browser.Brave_SAFE_BROWSING_ERRORS";
 
     /*
      * Checks if preference key is used in Brave.

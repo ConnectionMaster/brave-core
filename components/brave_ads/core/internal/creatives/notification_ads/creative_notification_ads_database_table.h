@@ -6,27 +6,23 @@
 #ifndef BRAVE_COMPONENTS_BRAVE_ADS_CORE_INTERNAL_CREATIVES_NOTIFICATION_ADS_CREATIVE_NOTIFICATION_ADS_DATABASE_TABLE_H_
 #define BRAVE_COMPONENTS_BRAVE_ADS_CORE_INTERNAL_CREATIVES_NOTIFICATION_ADS_CREATIVE_NOTIFICATION_ADS_DATABASE_TABLE_H_
 
+#include <cstddef>
 #include <string>
-#include <vector>
 
 #include "base/check_op.h"
-#include "brave/components/brave_ads/core/internal/account/deposits/deposits_database_table.h"
 #include "brave/components/brave_ads/core/internal/creatives/campaigns_database_table.h"
 #include "brave/components/brave_ads/core/internal/creatives/creative_ads_database_table.h"
-#include "brave/components/brave_ads/core/internal/creatives/dayparts_database_table.h"
-#include "brave/components/brave_ads/core/internal/creatives/geo_targets_database_table.h"
 #include "brave/components/brave_ads/core/internal/creatives/notification_ads/creative_notification_ad_info.h"
-#include "brave/components/brave_ads/core/internal/creatives/segments_database_table.h"
 #include "brave/components/brave_ads/core/internal/database/database_table_interface.h"
 #include "brave/components/brave_ads/core/internal/segments/segment_alias.h"
 #include "brave/components/brave_ads/core/mojom/brave_ads.mojom-forward.h"
-#include "brave/components/brave_ads/core/public/ads_client/ads_client_callback.h"
+#include "brave/components/brave_ads/core/public/ads_callback.h"
 
 namespace brave_ads::database::table {
 
 using GetCreativeNotificationAdsCallback =
     base::OnceCallback<void(bool success,
-                            const std::vector<std::string>& segments,
+                            const SegmentList& segments,
                             const CreativeNotificationAdList& creative_ads)>;
 
 class CreativeNotificationAds final : public TableInterface {
@@ -40,8 +36,6 @@ class CreativeNotificationAds final : public TableInterface {
 
   void Save(const CreativeNotificationAdList& creative_ads,
             ResultCallback callback);
-
-  void Delete(ResultCallback callback) const;
 
   void GetForSegments(const SegmentList& segments,
                       GetCreativeNotificationAdsCallback callback) const;
@@ -61,9 +55,7 @@ class CreativeNotificationAds final : public TableInterface {
                int to_version) override;
 
  private:
-  static void MigrateToV37(
-      const mojom::DBTransactionInfoPtr& mojom_db_transaction);
-  void MigrateToV45(const mojom::DBTransactionInfoPtr& mojom_db_transaction);
+  void MigrateToV48(const mojom::DBTransactionInfoPtr& mojom_db_transaction);
 
   void Insert(const mojom::DBTransactionInfoPtr& mojom_db_transaction,
               const CreativeNotificationAdList& creative_ads);
@@ -76,10 +68,6 @@ class CreativeNotificationAds final : public TableInterface {
 
   Campaigns campaigns_database_table_;
   CreativeAds creative_ads_database_table_;
-  Dayparts dayparts_database_table_;
-  Deposits deposits_database_table_;
-  GeoTargets geo_targets_database_table_;
-  Segments segments_database_table_;
 };
 
 }  // namespace brave_ads::database::table

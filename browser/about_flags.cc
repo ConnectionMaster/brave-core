@@ -20,11 +20,13 @@
 #include "brave/components/brave_ads/core/public/ad_units/notification_ad/notification_ad_feature.h"
 #include "brave/components/brave_ads/core/public/ads_feature.h"
 #include "brave/components/brave_component_updater/browser/features.h"
+#include "brave/components/brave_education/buildflags.h"
 #include "brave/components/brave_news/common/features.h"
-#include "brave/components/brave_rewards/common/buildflags/buildflags.h"
-#include "brave/components/brave_rewards/common/features.h"
+#include "brave/components/brave_rewards/core/buildflags/buildflags.h"
+#include "brave/components/brave_rewards/core/features.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/brave_vpn/common/buildflags/buildflags.h"
+#include "brave/components/brave_wallet/common/buildflags.h"
 #include "brave/components/brave_wallet/common/features.h"
 #include "brave/components/de_amp/common/features.h"
 #include "brave/components/debounce/core/common/features.h"
@@ -84,7 +86,29 @@
 #include "brave/browser/ui/webui/settings/brave_extensions_manifest_v2_handler.h"
 #endif
 
+#if BUILDFLAG(ENABLE_BRAVE_EDUCATION)
+#include "brave/components/brave_education/features.h"
+#endif
+
 #define EXPAND_FEATURE_ENTRIES(...) __VA_ARGS__,
+
+const flags_ui::FeatureEntry::FeatureParam
+    kZCashShieldedTransactionsDisabled[] = {
+        {"zcash_shielded_transactions_enabled", "false"}};
+
+#if BUILDFLAG(ENABLE_ORCHARD)
+const flags_ui::FeatureEntry::FeatureParam kZCashShieldedTransactionsEnabled[] =
+    {{"zcash_shielded_transactions_enabled", "true"}};
+#endif  // BUILDFLAG(ENABLE_ORCHARD)
+
+const flags_ui::FeatureEntry::FeatureVariation kZCashFeatureVariations[] = {
+    {"- Shielded support disabled", kZCashShieldedTransactionsDisabled,
+     std::size(kZCashShieldedTransactionsDisabled), nullptr},
+#if BUILDFLAG(ENABLE_ORCHARD)
+    {"- Shielded support enabled", kZCashShieldedTransactionsEnabled,
+     std::size(kZCashShieldedTransactionsEnabled), nullptr}
+#endif  // BUILDFLAG(ENABLE_ORCHARD)
+};
 
 #define SPEEDREADER_FEATURE_ENTRIES                                        \
   IF_BUILDFLAG(                                                            \
@@ -156,14 +180,11 @@
           FEATURE_VALUE_TYPE(                                                 \
               brave_wallet::features::kNativeBraveWalletFeature),             \
       },                                                                      \
-      {                                                                       \
-          "brave-wallet-zcash",                                               \
-          "Enable BraveWallet ZCash support",                                 \
-          "Zcash support for native Brave Wallet",                            \
-          kOsDesktop | kOsAndroid,                                            \
-          FEATURE_VALUE_TYPE(                                                 \
-              brave_wallet::features::kBraveWalletZCashFeature),              \
-      },                                                                      \
+      {"brave-wallet-zcash", "Enable BraveWallet ZCash support",              \
+       "Zcash support for native Brave Wallet", kOsDesktop | kOsAndroid,      \
+       FEATURE_WITH_PARAMS_VALUE_TYPE(                                        \
+           brave_wallet::features::kBraveWalletZCashFeature,                  \
+           kZCashFeatureVariations, "BraveWalletZCash")},                     \
       {                                                                       \
           "brave-wallet-bitcoin",                                             \
           "Enable Brave Wallet Bitcoin support",                              \
@@ -376,7 +397,7 @@
           "brave-ai-host-specific-distillation",                               \
           "Brave AI Host-Specific Distillation",                               \
           "Enables support for host-specific distillation scripts",            \
-          kOsWin | kOsMac | kOsLinux,                                          \
+          kOsWin | kOsMac | kOsLinux | kOsAndroid,                             \
           FEATURE_VALUE_TYPE(ai_chat::features::kCustomSiteDistillerScripts),  \
       },                                                                       \
       {                                                                        \
@@ -470,6 +491,19 @@
       FEATURE_VALUE_TYPE(                                               \
           brave_shields::features::kCosmeticFilteringCustomScriptlets), \
   })
+
+#if BUILDFLAG(ENABLE_BRAVE_EDUCATION)
+#define BRAVE_EDUCATION_FEATURE_ENTRIES                                       \
+  EXPAND_FEATURE_ENTRIES({                                                    \
+      "brave-show-getting-started-page",                                      \
+      "Show getting started pages",                                           \
+      "Show a getting started page after completing the Welcome UX.",         \
+      kOsDesktop,                                                             \
+      FEATURE_VALUE_TYPE(brave_education::features::kShowGettingStartedPage), \
+  })
+#else
+#define BRAVE_EDUCATION_FEATURE_ENTRIES
+#endif
 
 // Keep the last item empty.
 #define LAST_BRAVE_FEATURE_ENTRIES_ITEM
@@ -1024,6 +1058,7 @@
   BRAVE_EXTENSIONS_MANIFEST_V2                                                 \
   BRAVE_WORKAROUND_NEW_WINDOW_FLASH                                            \
   BRAVE_ADBLOCK_CUSTOM_SCRIPTLETS                                              \
+  BRAVE_EDUCATION_FEATURE_ENTRIES                                              \
   LAST_BRAVE_FEATURE_ENTRIES_ITEM  // Keep it as the last item.
 namespace flags_ui {
 namespace {

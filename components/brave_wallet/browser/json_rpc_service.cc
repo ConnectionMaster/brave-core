@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_wallet/browser/json_rpc_service.h"
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -14,10 +15,11 @@
 #include "base/base64.h"
 #include "base/check.h"
 #include "base/check_is_test.h"
+#include "base/containers/extend.h"
+#include "base/containers/flat_set.h"
 #include "base/functional/bind.h"
 #include "base/no_destructor.h"
 #include "base/notreached.h"
-#include "base/strings/strcat.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "brave/components/brave_wallet/browser/blockchain_registry.h"
@@ -298,42 +300,38 @@ std::optional<std::string> GetAnkrBlockchainFromChainId(
   return std::nullopt;
 }
 
-bool ValidateNftIdentifiers(
-    mojom::CoinType coin,
-    std::vector<mojom::NftIdentifierPtr>& nft_identifiers,
-    std::string& error_message) {
-  if (nft_identifiers.empty() ||
-      nft_identifiers.size() > kSimpleHashMaxBatchSize) {
-    error_message = l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS);
-    return false;
+bool HasDuplicateNftIds(
+    const std::vector<mojom::NftIdentifierPtr>& nft_identifiers) {
+  return base::flat_set<mojom::NftIdentifierPtr>(CloneVector(nft_identifiers))
+             .size() != nft_identifiers.size();
+}
+
+std::optional<std::string> GetEthBalanceScannerContractAddressForChain(
+    const std::string& chain_id) {
+  if (auto it = GetEthBalanceScannerContractAddresses().find(chain_id);
+      it != GetEthBalanceScannerContractAddresses().end()) {
+    return it->second;
+  }
+  return std::nullopt;
+}
+
+std::vector<std::string> ShrinkToBalanceScannerBatchSize(
+    std::vector<std::string>& addresses) {
+  // `addresses` fit batch size, don't need `remaining_batch`.
+  if (addresses.size() <= kBalanceScannerBatchSize) {
+    return {};
   }
 
-  // Check for duplicates using a set to track unique identifiers
-  base::flat_set<std::string> seen_identifiers;
-  for (const auto& nft : nft_identifiers) {
-    // Create a unique string identifier combining contract, token id, and chain
-    std::string unique_id =
-        base::StrCat({nft->contract_address, nft->token_id, nft->chain_id});
-    if (!seen_identifiers.insert(unique_id).second) {
-      error_message = l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS);
-      return false;
-    }
-  }
+  // Move excess to `remaining_batch` and return it.
+  auto remaining_span = base::span(addresses).subspan(kBalanceScannerBatchSize);
 
-  if (coin == mojom::CoinType::ETH) {
-    for (auto& nft_identifier : nft_identifiers) {
-      auto checksum_address =
-          brave_wallet::EthAddress::ToEip1191ChecksumAddress(
-              nft_identifier->contract_address, nft_identifier->chain_id);
-      if (checksum_address) {
-        nft_identifier->contract_address = checksum_address.value();
-      } else {
-        error_message = l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS);
-        return false;
-      }
-    }
+  std::vector<std::string> remaining_batch;
+  remaining_batch.reserve(remaining_span.size());
+  for (auto& address : remaining_span) {
+    remaining_batch.push_back(std::move(address));
   }
-  return true;
+  addresses.resize(kBalanceScannerBatchSize);
+  return remaining_batch;
 }
 
 }  // namespace
@@ -437,14 +435,14 @@ void JsonRpcService::FirePendingRequestCompleted(const std::string& chain_id,
 
 bool JsonRpcService::HasAddChainRequestFromOrigin(
     const url::Origin& origin) const {
-  return base::ranges::any_of(add_chain_pending_requests_, [origin](auto& req) {
+  return std::ranges::any_of(add_chain_pending_requests_, [origin](auto& req) {
     return req.second.origin == origin;
   });
 }
 
 bool JsonRpcService::HasSwitchChainRequestFromOrigin(
     const url::Origin& origin) const {
-  return base::ranges::any_of(
+  return std::ranges::any_of(
       pending_switch_chain_requests_,
       [origin](auto& req) { return req.second.origin == origin; });
 }
@@ -460,11 +458,10 @@ void JsonRpcService::GetPendingAddChainRequests(
 
 void JsonRpcService::AddChain(mojom::NetworkInfoPtr chain,
                               AddChainCallback callback) {
-  if (!base::ranges::all_of(chain->rpc_endpoints,
-                            &net::IsHTTPSOrLocalhostURL) ||
-      !base::ranges::all_of(chain->block_explorer_urls,
-                            &IsHTTPSOrLocalhostURL) ||
-      !base::ranges::all_of(chain->icon_urls, &IsHTTPSOrLocalhostURL)) {
+  if (!std::ranges::all_of(chain->rpc_endpoints, &net::IsHTTPSOrLocalhostURL) ||
+      !std::ranges::all_of(chain->block_explorer_urls,
+                           &IsHTTPSOrLocalhostURL) ||
+      !std::ranges::all_of(chain->icon_urls, &IsHTTPSOrLocalhostURL)) {
     std::move(callback).Run(
         chain->chain_id, mojom::ProviderError::kInvalidParams,
         l10n_util::GetStringUTF8(IDS_BRAVE_WALLET_ADD_CHAIN_INVALID_URL));
@@ -957,6 +954,7 @@ void JsonRpcService::OnFilGetBalance(GetBalanceCallback callback,
 
   std::move(callback).Run(*balance, mojom::ProviderError::kSuccess, "");
 }
+
 void JsonRpcService::GetFilStateSearchMsgLimited(
     const std::string& chain_id,
     const std::string& cid,
@@ -1300,31 +1298,21 @@ void JsonRpcService::OnGetERC20TokenAllowance(
 }
 
 void JsonRpcService::GetERC20TokenBalances(
-    const std::vector<std::string>& token_contract_addresses,
+    const std::vector<std::string>& token_addresses,
     const std::string& user_address,
     const std::string& chain_id,
     GetERC20TokenBalancesCallback callback) {
-  const auto& balance_scanner_contract_addresses =
-      GetEthBalanceScannerContractAddresses();
-  if (!base::Contains(balance_scanner_contract_addresses, chain_id)) {
-    std::move(callback).Run(
-        {}, mojom::ProviderError::kInvalidParams,
-        l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
-    return;
-  }
-  const auto& balance_scanner_contract_address =
-      balance_scanner_contract_addresses.at(chain_id);
-
-  if (token_contract_addresses.empty() || user_address.empty()) {
+  // Validate inputs
+  auto balance_scanner_contract_address =
+      GetEthBalanceScannerContractAddressForChain(chain_id);
+  if (!balance_scanner_contract_address) {
     std::move(callback).Run(
         {}, mojom::ProviderError::kInvalidParams,
         l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
     return;
   }
 
-  std::optional<std::string> calldata =
-      balance_scanner::TokensBalance(user_address, token_contract_addresses);
-  if (!calldata) {
+  if (token_addresses.empty() || user_address.empty()) {
     std::move(callback).Run(
         {}, mojom::ProviderError::kInvalidParams,
         l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
@@ -1339,17 +1327,80 @@ void JsonRpcService::GetERC20TokenBalances(
     return;
   }
 
-  // Makes the eth_call request to the balance scanner contract.
+  ProcessNextERC20Batch(token_addresses, user_address,
+                        *balance_scanner_contract_address, network_url,
+                        std::vector<mojom::ERC20BalanceResultPtr>(),
+                        std::move(callback));
+}
+
+void JsonRpcService::ProcessNextERC20Batch(
+    std::vector<std::string> token_addresses,
+    const std::string& user_address,
+    const std::string& scanner_address,
+    const GURL& network_url,
+    std::vector<mojom::ERC20BalanceResultPtr> accumulated_results,
+    GetERC20TokenBalancesCallback callback) {
+  DCHECK(!token_addresses.empty());
+
+  auto remaining = ShrinkToBalanceScannerBatchSize(token_addresses);
+
+  // Process current batch
+  std::optional<std::string> calldata =
+      balance_scanner::TokensBalance(user_address, token_addresses);
+  if (!calldata) {
+    std::move(callback).Run(
+        {}, mojom::ProviderError::kInvalidParams,
+        l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
+    return;
+  }
+
+  auto batch_callback = base::BindOnce(
+      &JsonRpcService::OnBatchERC20TokenBalances,
+      weak_ptr_factory_.GetWeakPtr(), user_address, scanner_address,
+      network_url, std::move(accumulated_results), std::move(remaining),
+      std::move(callback));
+
   auto internal_callback = base::BindOnce(
       &JsonRpcService::OnGetERC20TokenBalances, weak_ptr_factory_.GetWeakPtr(),
-      token_contract_addresses, std::move(callback));
-  RequestInternal(
-      eth::eth_call(balance_scanner_contract_address, calldata.value()), true,
-      network_url, std::move(internal_callback));
+      std::move(token_addresses), std::move(batch_callback));
+
+  RequestInternal(eth::eth_call(scanner_address, calldata.value()), true,
+                  network_url, std::move(internal_callback));
+}
+
+void JsonRpcService::OnBatchERC20TokenBalances(
+    const std::string& user_address,
+    const std::string& scanner_address,
+    const GURL& network_url,
+    std::vector<mojom::ERC20BalanceResultPtr> accumulated_results,
+    std::vector<std::string> token_addresses,
+    GetERC20TokenBalancesCallback callback,
+    std::vector<mojom::ERC20BalanceResultPtr> batch_results,
+    mojom::ProviderError error,
+    const std::string& error_message) {
+  if (error != mojom::ProviderError::kSuccess) {
+    std::move(callback).Run({}, error, error_message);
+    return;
+  }
+
+  // Add batch results to accumulated results
+  base::Extend(accumulated_results, std::move(batch_results));
+
+  // All batches processed. Nothing to do.
+  if (token_addresses.empty()) {
+    std::move(callback).Run(std::move(accumulated_results),
+                            mojom::ProviderError::kSuccess, "");
+    return;
+  }
+
+  // Process next batch
+  ProcessNextERC20Batch(std::move(token_addresses), user_address,
+                        scanner_address, network_url,
+                        std::move(accumulated_results), std::move(callback));
 }
 
 void JsonRpcService::OnGetERC20TokenBalances(
-    const std::vector<std::string>& token_contract_addresses,
+    const std::vector<std::string>& token_addresses,
     GetERC20TokenBalancesCallback callback,
     APIRequestResult api_request_result) {
   if (!api_request_result.Is2XXResponseCode()) {
@@ -1376,20 +1427,20 @@ void JsonRpcService::OnGetERC20TokenBalances(
     return;
   }
 
-  // The number of contract addresses supplied to the BalanceScanner
+  // The number of addresses supplied to the BalanceScanner
   // should match the number of balances it returns
-  if (token_contract_addresses.size() != results->size()) {
+  if (token_addresses.size() != results->size()) {
     std::move(callback).Run(
         {}, mojom::ProviderError::kInternalError,
         l10n_util::GetStringUTF8(IDS_WALLET_INTERNAL_ERROR));
     return;
   }
 
-  // Match up the balances with the contract addresses
+  // Match up the balances with the addresses
   std::vector<mojom::ERC20BalanceResultPtr> erc20_balance_results;
-  for (size_t i = 0; i < token_contract_addresses.size(); i++) {
+  for (size_t i = 0; i < token_addresses.size(); i++) {
     auto erc20_balance_result = mojom::ERC20BalanceResult::New();
-    erc20_balance_result->contract_address = token_contract_addresses[i];
+    erc20_balance_result->contract_address = token_addresses[i];
     erc20_balance_result->balance = results->at(i);
     erc20_balance_results.push_back(std::move(erc20_balance_result));
   }
@@ -2908,43 +2959,41 @@ void JsonRpcService::GetSolTokenMetadata(const std::string& chain_id,
 }
 
 void JsonRpcService::GetNftMetadatas(
-    mojom::CoinType coin,
     std::vector<mojom::NftIdentifierPtr> nft_identifiers,
     GetNftMetadatasCallback callback) {
-  std::string error_message;
-  if (!ValidateNftIdentifiers(coin, nft_identifiers, error_message)) {
-    std::move(callback).Run({}, error_message);
+  if (HasDuplicateNftIds(nft_identifiers)) {
+    std::move(callback).Run(
+        {}, l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
     return;
   }
 
   auto internal_callback =
       base::BindOnce(&JsonRpcService::OnGetNftMetadatas,
                      weak_ptr_factory_.GetWeakPtr(), std::move(callback));
-  simple_hash_client_->GetNftMetadatas(coin, std::move(nft_identifiers),
+  simple_hash_client_->GetNftMetadatas(std::move(nft_identifiers),
                                        std::move(internal_callback));
 }
 
 void JsonRpcService::OnGetNftMetadatas(
     GetNftMetadatasCallback callback,
-    std::vector<mojom::NftMetadataPtr> metadatas) {
+    base::expected<std::vector<mojom::NftMetadataPtr>, std::string> metadatas) {
   // If there are no metadatas, then there was an error
-  if (metadatas.empty()) {
-    std::move(callback).Run(
-        {}, l10n_util::GetStringUTF8(IDS_WALLET_INTERNAL_ERROR));
+  if (!metadatas.has_value() || metadatas.value().empty()) {
+    std::move(callback).Run({}, metadatas.error_or(l10n_util::GetStringUTF8(
+                                    IDS_WALLET_INTERNAL_ERROR)));
     return;
   }
 
-  std::move(callback).Run(std::move(metadatas), "");
+  std::move(callback).Run(std::move(metadatas.value()), "");
 }
 
 void JsonRpcService::GetNftBalances(
     const std::string& wallet_address,
     std::vector<mojom::NftIdentifierPtr> nft_identifiers,
-    mojom::CoinType coin,
     GetNftBalancesCallback callback) {
-  std::string error_message;
-  if (!ValidateNftIdentifiers(coin, nft_identifiers, error_message)) {
-    std::move(callback).Run({}, error_message);
+  if (HasDuplicateNftIds(nft_identifiers)) {
+    std::move(callback).Run(
+        {}, l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
     return;
   }
 
@@ -2952,14 +3001,18 @@ void JsonRpcService::GetNftBalances(
       base::BindOnce(&JsonRpcService::OnGetNftBalances,
                      weak_ptr_factory_.GetWeakPtr(), std::move(callback));
 
-  simple_hash_client_->GetNftBalances(wallet_address,
-                                      std::move(nft_identifiers), coin,
-                                      std::move(internal_callback));
+  simple_hash_client_->GetNftBalances(
+      wallet_address, std::move(nft_identifiers), std::move(internal_callback));
 }
 
-void JsonRpcService::OnGetNftBalances(GetNftBalancesCallback callback,
-                                      const std::vector<uint64_t>& balances) {
-  std::move(callback).Run(balances, "");
+void JsonRpcService::OnGetNftBalances(
+    GetNftBalancesCallback callback,
+    base::expected<std::vector<uint64_t>, std::string> balances) {
+  if (balances.has_value()) {
+    std::move(callback).Run(balances.value(), "");
+  } else {
+    std::move(callback).Run({}, balances.error());
+  }
 }
 
 void JsonRpcService::IsSolanaBlockhashValid(
@@ -3414,7 +3467,7 @@ void JsonRpcService::OnGetSPLTokenBalances(
 
 void JsonRpcService::AnkrGetAccountBalances(
     const std::string& account_address,
-    const std::vector<std::string>& chain_ids,
+    std::vector<mojom::ChainIdPtr> chain_ids,
     AnkrGetAccountBalancesCallback callback) {
   if (!IsAnkrBalancesEnabled()) {
     std::move(callback).Run(
@@ -3434,7 +3487,7 @@ void JsonRpcService::AnkrGetAccountBalances(
   // ignored.
   std::vector<std::string> blockchains;
   for (const auto& chain_id : chain_ids) {
-    if (auto blockchain = GetAnkrBlockchainFromChainId(chain_id); blockchain) {
+    if (auto blockchain = GetAnkrBlockchainFromChainId(chain_id->chain_id)) {
       blockchains.push_back(*blockchain);
     }
   }
@@ -3461,7 +3514,6 @@ void JsonRpcService::OnAnkrGetAccountBalances(
         l10n_util::GetStringUTF8(IDS_WALLET_INTERNAL_ERROR));
     return;
   }
-
   auto result =
       ankr::ParseGetAccountBalanceResponse(api_request_result.value_body());
   if (!result) {

@@ -22,7 +22,7 @@ source_set("ntp_background") {
     "//brave/browser/brave_ads",
     "//brave/components/brave_ads/browser",
     "//brave/components/brave_ads/core/public:headers",
-    "//brave/components/brave_rewards/common",
+    "//brave/components/brave_rewards/core",
     "//brave/components/constants",
     "//brave/components/ntp_background_images/browser",
     "//brave/components/ntp_background_images/buildflags",
@@ -67,7 +67,7 @@ source_set("unit_tests") {
     "//brave/browser:browser_process",
     "//brave/components/brave_ads/core/public:headers",
     "//brave/components/brave_referrals/browser",
-    "//brave/components/brave_rewards/common",
+    "//brave/components/brave_rewards/core",
     "//brave/components/ntp_background_images/browser",
     "//brave/components/p3a",
     "//components/prefs:test_support",
@@ -95,15 +95,22 @@ if (enable_custom_background) {
 
     defines = [ "HAS_OUT_OF_PROC_TEST_RUNNER" ]
 
-    sources = [ "custom_background_file_manager_browsertest.cc" ]
+    sources = [
+      "custom_background_file_manager_browsertest.cc",
+      "ntp_sponsored_rich_media_browsertest.cc",
+      "ntp_sponsored_rich_media_with_csp_violation_browsertest.cc",
+    ]
 
     deps = [
       ":ntp_background",
       "//base",
       "//base/test:test_support",
       "//brave/components/constants",
+      "//brave/components/ntp_background_images/browser",
+      "//brave/components/ntp_background_images/browser:test_support",
       "//chrome/browser/profiles:profile",
       "//chrome/browser/ui",
+      "//chrome/test:test_support",
       "//chrome/test:test_support_ui",
       "//content/test:test_support",
     ]

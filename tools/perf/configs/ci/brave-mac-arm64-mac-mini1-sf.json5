@@ -5,6 +5,10 @@
     "profile": "brave-typical-mac",
     "extra-browser-args": [
       "--disable-component-update",
+      "--disable-backgrounding-occluded-windows",
+
+      // For https://github.com/brave/brave-browser/issues/43711 debugging:
+      "--vmodule=\"*/brave_ads/*\"=6,\"*/bat_ads/*\"=6,\"*/variations/*\"=6"
     ],
     "extra-benchmark-args": [],
   }],
@@ -29,7 +33,6 @@
       "name": "system_health.memory_desktop",
       "pageset-repeat": 20,
       "stories": [
-        "load:chrome:blank",
         "load:site:example:2023",
         "load:media:youtube:2018",
       ]
@@ -38,17 +41,12 @@
       "name": "system_health.common_desktop",
       "pageset-repeat": 20,
       "stories": [
-        "load:chrome:blank",
         "load:site:example:2023",
       ]
     },
     {
       "name": "speedometer3",
       "pageset-repeat": 20
-    },
-    {
-      "name": "speedometer2",
-      "pageset-repeat": 1
     },
   ]
 }

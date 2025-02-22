@@ -1545,5 +1545,11 @@ provideStrings({
     'Sync complete. You may now close this window.',
   braveWalletSyncStartedMessage:
     'Please don’t close this window until sync finishes.',
-  braveWalletContinueUsingWallet: 'Continue using wallet in a new tab'
+  braveWalletContinueUsingWallet: 'Continue using wallet in a new tab',
+  braveWalletShieldedAccountBirthdayBlock: 'Shielded account birthday block',
+  braveWalletAccountBirthdayTooLow: 'Account birthday must be greater than $1',
+  braveWalletAccountBirthdayTooHigh: 'Account birthday must be less than $1',
+  braveWalletBlocksBehind: '$1 blocks behind',
+  braveWalletAccountIsSyncing: 'Account is syncing',
+  braveWalletSyncing: 'Syncing'
 })

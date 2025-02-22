@@ -60,6 +60,7 @@ import {
   defaultQuerySubscriptionOptions,
   querySubscriptionOptions60s
 } from '../slices/constants'
+import { useIsAccountSyncing } from './use_is_account_syncing'
 
 // Constants
 import { BraveWallet, emptyProviderErrorCodeUnion } from '../../constants/types'
@@ -178,6 +179,8 @@ export const usePendingTransactions = () => {
   )
 
   const { account: txAccount } = useAccountQuery(transactionInfo?.fromAccountId)
+
+  const isAccountSyncing = useIsAccountSyncing(txAccount?.accountId)
 
   const {
     data: gasEstimates,
@@ -302,14 +305,15 @@ export const usePendingTransactions = () => {
   )
 
   const insufficientFundsError = React.useMemo(() => {
-    return transactionInfo
+    return transactionInfo && txAccount
       ? accountHasInsufficientFundsForTransaction({
           accountNativeBalance: nativeBalance || '',
           accountTokenBalance: transferTokenBalance || '',
           gasFee,
           sellAmountWei,
           sellTokenBalance: sellTokenBalance || '',
-          tx: transactionInfo
+          tx: transactionInfo,
+          txAccount
         })
       : false
   }, [
@@ -318,6 +322,7 @@ export const usePendingTransactions = () => {
     sellTokenBalance,
     sellAmountWei,
     transactionInfo,
+    txAccount,
     transferTokenBalance
   ])
 
@@ -553,6 +558,10 @@ export const usePendingTransactions = () => {
       : hasEvmFeeEstimatesError
 
   const isConfirmButtonDisabled = React.useMemo(() => {
+    if (isAccountSyncing) {
+      return true
+    }
+
     if (hasFeeEstimatesError || isLoadingGasFee) {
       return true
     }
@@ -573,7 +582,8 @@ export const usePendingTransactions = () => {
     hasFeeEstimatesError,
     isLoadingGasFee,
     insufficientFundsError,
-    insufficientFundsForGasError
+    insufficientFundsForGasError,
+    isAccountSyncing
   ])
 
   const { currentTokenAllowance, isCurrentAllowanceUnlimited } =
@@ -650,6 +660,7 @@ export const usePendingTransactions = () => {
     insufficientFundsError,
     insufficientFundsForGasError,
     isZCashTransaction: isZCashTransaction(transactionInfo),
-    isBitcoinTransaction: isBitcoinTransaction(transactionInfo)
+    isBitcoinTransaction: isBitcoinTransaction(transactionInfo),
+    isAccountSyncing
   }
 }

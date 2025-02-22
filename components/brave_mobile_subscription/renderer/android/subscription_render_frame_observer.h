@@ -12,6 +12,7 @@
 
 #include "base/gtest_prod_util.h"
 #include "base/memory/weak_ptr.h"
+#include "base/values.h"
 #include "brave/components/ai_chat/core/common/mojom/ai_chat.mojom.h"
 #include "brave/components/brave_vpn/common/buildflags/buildflags.h"
 #include "content/public/renderer/render_frame.h"
@@ -53,6 +54,7 @@ class SubscriptionRenderFrameObserver : public content::RenderFrameObserver {
   FRIEND_TEST_ALL_PREFIXES(SubscriptionRenderFrameObserverTest, ExtractParam);
   FRIEND_TEST_ALL_PREFIXES(SubscriptionRenderFrameObserverTest, IsValueAllowed);
   enum class Product { kVPN = 0, kLeo = 1 };
+  enum class Page { kInitialLandingPage = 0, kResultLandingPage = 1 };
 
   bool EnsureConnected();
   void OnGetPurchaseToken(const std::string& purchase_token);
@@ -68,8 +70,19 @@ class SubscriptionRenderFrameObserver : public content::RenderFrameObserver {
 
   std::string GetPurchaseTokenJSString(const std::string& purchase_token);
 
+  void AddJavaScriptObjectToFrame(v8::Local<v8::Context> context);
+  void CreateLinkResultObject(v8::Isolate* isolate,
+                              v8::Local<v8::Context> context);
+  template <typename Sig>
+  void BindFunctionToObject(v8::Isolate* isolate,
+                            v8::Local<v8::Object> javascript_object,
+                            const std::string& name,
+                            const base::RepeatingCallback<Sig>& callback);
+  void SetLinkStatus(base::Value::Dict status);
+
   const int32_t world_id_;
   std::optional<Product> product_ = std::nullopt;
+  std::optional<Page> page_ = std::nullopt;
 #if BUILDFLAG(ENABLE_BRAVE_VPN)
   mojo::Remote<brave_vpn::mojom::ServiceHandler> vpn_service_;
 #endif

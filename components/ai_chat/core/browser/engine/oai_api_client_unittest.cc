@@ -19,6 +19,7 @@
 #include "base/memory/scoped_refptr.h"
 #include "base/run_loop.h"
 #include "base/test/task_environment.h"
+#include "base/test/values_test_util.h"
 #include "base/types/expected.h"
 #include "brave/components/ai_chat/core/common/mojom/ai_chat.mojom-forward.h"
 #include "brave/components/ai_chat/core/common/mojom/ai_chat.mojom.h"
@@ -43,6 +44,18 @@ using Ticket = api_request_helper::APIRequestHelper::Ticket;
 using GenerationResult = ai_chat::OAIAPIClient::GenerationResult;
 
 namespace ai_chat {
+
+namespace {
+// A helper method which parses a string_view and returns the JSON or a
+// base::Value object if the JSON is invalid.
+base::Value ParseOrStringValue(const std::string& json) {
+  auto maybe_json = base::JSONReader::Read(json);
+  if (!maybe_json.has_value()) {
+    return base::Value(json);
+  }
+  return std::move(maybe_json.value());
+}
+}  // namespace
 
 class MockCallbacks {
  public:
@@ -90,9 +103,8 @@ class OAIAPIUnitTest : public testing::Test {
   void TearDown() override {}
 
   std::string GetMessagesJson(std::string_view body_json) {
-    auto dict = base::JSONReader::ReadDict(body_json);
-    EXPECT_TRUE(dict.has_value());
-    base::Value::List* events = dict->FindList("messages");
+    auto dict = base::test::ParseJsonDict(body_json);
+    base::Value::List* events = dict.FindList("messages");
     EXPECT_TRUE(events);
     std::string events_json;
     base::JSONWriter::WriteWithOptions(
@@ -101,12 +113,10 @@ class OAIAPIUnitTest : public testing::Test {
   }
 
   std::string FormatComparableEventsJson(std::string_view formatted_json) {
-    auto messages = base::JSONReader::Read(formatted_json);
-    EXPECT_TRUE(messages.has_value())
-        << "Verify that the string is valid JSON!";
+    auto messages = base::test::ParseJson(formatted_json);
     std::string json;
     base::JSONWriter::WriteWithOptions(
-        messages.value(), base::JSONWriter::OPTIONS_PRETTY_PRINT, &json);
+        messages, base::JSONWriter::OPTIONS_PRETTY_PRINT, &json);
     return json;
   }
 
@@ -152,15 +162,13 @@ TEST_F(OAIAPIUnitTest, PerformRequest) {
             GetMessagesJson(body).c_str(),
             FormatComparableEventsJson(expected_conversation_body).c_str());
 
-        auto chunk = base::JSONReader::Read(server_chunk);
-        EXPECT_TRUE(chunk.has_value());
-        data_received_callback.Run(base::ok(std::move(chunk.value())));
+        auto chunk = base::test::ParseJson(server_chunk);
+        data_received_callback.Run(base::ok(std::move(chunk)));
 
-        auto completed = base::JSONReader::Read(server_completion);
-        EXPECT_TRUE(completed.has_value());
+        auto completed = base::test::ParseJson(server_completion);
         std::move(result_callback)
-            .Run(api_request_helper::APIRequestResult(
-                200, std::move(completed.value()), {}, net::OK, GURL()));
+            .Run(api_request_helper::APIRequestResult(200, std::move(completed),
+                                                      {}, net::OK, GURL()));
 
         run_loop.Quit();
         return Ticket();
@@ -180,11 +188,10 @@ TEST_F(OAIAPIUnitTest, PerformRequest) {
       });
 
   // Begin request
-  auto messages = base::JSONReader::Read(expected_conversation_body);
-  EXPECT_TRUE(messages.has_value());
+  auto messages = base::test::ParseJsonList(expected_conversation_body);
 
   client_->PerformRequest(
-      *model_options, std::move(messages.value().GetList()),
+      *model_options, std::move(messages),
       base::BindRepeating(&MockCallbacks::OnDataReceived,
                           base::Unretained(&mock_callbacks)),
       base::BindOnce(&MockCallbacks::OnCompleted,
@@ -194,5 +201,85 @@ TEST_F(OAIAPIUnitTest, PerformRequest) {
   testing::Mock::VerifyAndClearExpectations(client_.get());
   testing::Mock::VerifyAndClearExpectations(mock_request_helper);
 }
+
+class OAIAPIInvalidResponseTest
+    : public OAIAPIUnitTest,
+      public ::testing::WithParamInterface<std::string> {};
+
+TEST_P(OAIAPIInvalidResponseTest,
+       InvalidResponse_NoCallbacksTriggeredOrEmptyCompletion) {
+  mojom::CustomModelOptionsPtr model_options = mojom::CustomModelOptions::New(
+      "test_api_key", 0, 0, 0, "test_system_prompt", GURL("https://test.com"),
+      "test_model");
+
+  const std::string invalid_server_response = GetParam();
+
+  base::RunLoop run_loop;
+  testing::StrictMock<MockCallbacks> mock_callbacks;
+  MockAPIRequestHelper* mock_request_helper =
+      client_->GetMockAPIRequestHelper();
+
+  EXPECT_CALL(*mock_request_helper, RequestSSE(_, _, _, _, _, _, _, _))
+      .WillOnce([&](auto, auto, auto, auto,
+                    DataReceivedCallback data_received_callback,
+                    ResultCallback result_callback, auto, auto) {
+        // Simulate data chunk received
+        base::Value maybe_val = ParseOrStringValue(invalid_server_response);
+        std::move(data_received_callback).Run(base::ok(std::move(maybe_val)));
+
+        // Simulate final callback
+        base::Value maybe_val_final =
+            ParseOrStringValue(invalid_server_response);
+        std::move(result_callback)
+            .Run(api_request_helper::APIRequestResult(
+                200, std::move(maybe_val_final), {}, net::OK, GURL()));
+
+        run_loop.Quit();
+        return Ticket();
+      });
+
+  // For invalid payloads, we expect no callbacks from OnDataReceived
+  EXPECT_CALL(mock_callbacks, OnDataReceived(_)).Times(0);
+
+  // For invalid 200 OK payloads, we expect an empty completion from OnCompleted
+  EXPECT_CALL(mock_callbacks, OnCompleted(_))
+      .WillOnce([&](GenerationResult result) {
+        EXPECT_EQ(result.value(), std::string());
+      });
+
+  // Begin request
+  client_->PerformRequest(
+      *model_options, base::Value::List(),
+      base::BindRepeating(&MockCallbacks::OnDataReceived,
+                          base::Unretained(&mock_callbacks)),
+      base::BindOnce(&MockCallbacks::OnCompleted,
+                     base::Unretained(&mock_callbacks)));
+
+  run_loop.Run();
+}
+
+// A set of invalid responses that should not trigger any callbacks
+INSTANTIATE_TEST_SUITE_P(
+    OAIAPIInvalidResponseScenarios,
+    OAIAPIInvalidResponseTest,
+    ::testing::Values(
+        // aaaaaaaaaaaaaaa
+        "aaaaaaaaaaaaaaaaa",
+        // {"invalid": "json"}
+        R"({"invalid": "json"})",
+        // {choices: []}
+        R"({"choices": []})",
+        // {"choices": [{"message": {"content": []}]}
+        R"({"choices": [{"message": {"content": []}}]})",
+        // Empty JSON object
+        R"({})",
+        // Malformed JSON
+        R"({"choices": [)",
+        // Unexpected data types
+        R"({"choices": "unexpected_string"})",
+        // Nested invalid JSON
+        R"({"choices": [{"message": {"content": {"nested": "invalid"}}}]})",
+        // Valid JSON with missing fields
+        R"({"choices": [{"index": 0}]})"));
 
 }  // namespace ai_chat

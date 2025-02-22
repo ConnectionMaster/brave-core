@@ -15,22 +15,17 @@
 #include "base/observer_list_types.h"
 #include "base/scoped_observation.h"
 #include "brave/browser/brave_rewards/creator_detection_script_injector.h"
-#include "brave/components/brave_rewards/browser/rewards_service_observer.h"
+#include "brave/components/brave_rewards/content/rewards_service_observer.h"
 #include "build/build_config.h"
 #include "components/sessions/core/session_id.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 
-class Browser;
-class BrowserListObserver;
-
 namespace brave_rewards {
 class RewardsService;
-class BraveBrowserListObserver;
 
-// A tab helper responsible for sending user-activity events to the Rewards
-// engine in order to support the Auto Contribute feature, and for storing
-// the publisher ID corresponding to a given tab.
+// A tab helper responsible for detecting and storing the Rewards Creator ID
+// corresponding to a given tab.
 class RewardsTabHelper : public content::WebContentsUserData<RewardsTabHelper>,
                          public content::WebContentsObserver,
                          public RewardsServiceObserver {
@@ -60,27 +55,12 @@ class RewardsTabHelper : public content::WebContentsUserData<RewardsTabHelper>,
 
  private:
   friend class content::WebContentsUserData<RewardsTabHelper>;
-  friend class brave_rewards::BraveBrowserListObserver;
 
   explicit RewardsTabHelper(content::WebContents* web_contents);
 
   // content::WebContentsObserver:
-  void DidFinishLoad(content::RenderFrameHost* render_frame_host,
-                     const GURL& validated_url) override;
   void DidFinishNavigation(
       content::NavigationHandle* navigation_handle) override;
-  void ResourceLoadComplete(
-      content::RenderFrameHost* render_frame_host,
-      const content::GlobalRequestID& request_id,
-      const blink::mojom::ResourceLoadInfo& resource_load_info) override;
-  void OnVisibilityChanged(content::Visibility visibility) override;
-  void WebContentsDestroyed() override;
-
-#if !BUILDFLAG(IS_ANDROID)
-  void OnBrowserSetLastActive(Browser* browser);
-  void OnBrowserNoLongerActive(Browser* browser);
-  bool BrowserHasWebContents(Browser* browser);
-#endif
 
   // RewardsServiceObserver:
   void OnRewardsInitialized(RewardsService* rewards_service) override;
@@ -90,9 +70,6 @@ class RewardsTabHelper : public content::WebContentsUserData<RewardsTabHelper>,
   void OnCreatorDetected(
       std::optional<CreatorDetectionScriptInjector::Result> result);
 
-#if !BUILDFLAG(IS_ANDROID)
-  std::unique_ptr<BrowserListObserver> browser_list_observer_;
-#endif
   SessionID tab_id_;
   base::ScopedObservation<brave_rewards::RewardsService,
                           brave_rewards::RewardsServiceObserver>

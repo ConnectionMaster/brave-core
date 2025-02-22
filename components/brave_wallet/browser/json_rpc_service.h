@@ -177,7 +177,7 @@ class JsonRpcService : public mojom::JsonRpcService {
                           const std::string& signed_tx,
                           SendRawTxCallback callback);
 
-  void GetERC20TokenBalance(const std::string& conract_address,
+  void GetERC20TokenBalance(const std::string& contract_address,
                             const std::string& address,
                             const std::string& chain_id,
                             GetERC20TokenBalanceCallback callback) override;
@@ -187,11 +187,10 @@ class JsonRpcService : public mojom::JsonRpcService {
                               const std::string& chain_id,
                               GetERC20TokenAllowanceCallback callback) override;
 
-  void GetERC20TokenBalances(
-      const std::vector<std::string>& token_contract_addresses,
-      const std::string& user_address,
-      const std::string& chain_id,
-      GetERC20TokenBalancesCallback callback) override;
+  void GetERC20TokenBalances(const std::vector<std::string>& token_addresses,
+                             const std::string& user_address,
+                             const std::string& chain_id,
+                             GetERC20TokenBalancesCallback callback) override;
 
   void UnstoppableDomainsResolveDns(
       const std::string& domain,
@@ -543,7 +542,7 @@ class JsonRpcService : public mojom::JsonRpcService {
                            GetSPLTokenBalancesCallback callback) override;
 
   void AnkrGetAccountBalances(const std::string& account,
-                              const std::vector<std::string>& chain_ids,
+                              std::vector<mojom::ChainIdPtr> chain_ids,
                               AnkrGetAccountBalancesCallback callback) override;
 
   using SimulateSolanaTransactionCallback =
@@ -563,12 +562,10 @@ class JsonRpcService : public mojom::JsonRpcService {
       GetRecentSolanaPrioritizationFeesCallback callback);
 
   // SimpleHash APIs
-  void GetNftMetadatas(mojom::CoinType coin,
-                       std::vector<mojom::NftIdentifierPtr> nft_identifiers,
+  void GetNftMetadatas(std::vector<mojom::NftIdentifierPtr> nft_identifiers,
                        GetNftMetadatasCallback callback) override;
   void GetNftBalances(const std::string& wallet_address,
                       std::vector<mojom::NftIdentifierPtr> nft_identifiers,
-                      mojom::CoinType coin,
                       GetNftBalancesCallback callback) override;
   void FetchSolCompressedNftProofData(
       const std::string& token_address,
@@ -614,10 +611,26 @@ class JsonRpcService : public mojom::JsonRpcService {
                               APIRequestResult api_request_result);
   void OnGetERC20TokenAllowance(GetERC20TokenAllowanceCallback callback,
                                 APIRequestResult api_request_result);
-  void OnGetERC20TokenBalances(
-      const std::vector<std::string>& token_contract_addresses,
+  void ProcessNextERC20Batch(
+      std::vector<std::string> token_addresses,
+      const std::string& user_address,
+      const std::string& scanner_address,
+      const GURL& network_url,
+      std::vector<mojom::ERC20BalanceResultPtr> accumulated_results,
+      GetERC20TokenBalancesCallback callback);
+  void OnBatchERC20TokenBalances(
+      const std::string& user_address,
+      const std::string& scanner_address,
+      const GURL& network_url,
+      std::vector<mojom::ERC20BalanceResultPtr> accumulated_results,
+      std::vector<std::string> token_addresses,
       GetERC20TokenBalancesCallback callback,
-      APIRequestResult api_request_result);
+      std::vector<mojom::ERC20BalanceResultPtr> batch_results,
+      mojom::ProviderError error,
+      const std::string& error_message);
+  void OnGetERC20TokenBalances(const std::vector<std::string>& token_addresses,
+                               GetERC20TokenBalancesCallback callback,
+                               APIRequestResult api_request_result);
   void OnUnstoppableDomainsResolveDns(const std::string& domain,
                                       const std::string& chain_id,
                                       APIRequestResult api_request_result);
@@ -732,10 +745,12 @@ class JsonRpcService : public mojom::JsonRpcService {
                                     const std::string& error_message);
 
   void OnGetNftMetadatas(GetNftMetadatasCallback callback,
-                         std::vector<mojom::NftMetadataPtr> metadatas);
+                         base::expected<std::vector<mojom::NftMetadataPtr>,
+                                        std::string> metadatas);
 
-  void OnGetNftBalances(GetNftBalancesCallback callback,
-                        const std::vector<uint64_t>& balances);
+  void OnGetNftBalances(
+      GetNftBalancesCallback callback,
+      base::expected<std::vector<uint64_t>, std::string> balances);
   // Solana
   void OnGetSolanaBalance(GetSolanaBalanceCallback callback,
                           APIRequestResult api_request_result);

@@ -160,14 +160,8 @@ void NewTabPageAdHandler::OnDidServeNewTabPageAd(const NewTabPageAdInfo& ad) {
               << "  advertiserId: " << ad.advertiser_id << "\n"
               << "  segment: " << ad.segment << "\n"
               << "  companyName: " << ad.company_name << "\n"
-              << "  imageUrl: " << ad.image_url << "\n"
               << "  alt: " << ad.alt << "\n"
-              << "  targetUrl: " << ad.target_url << "\n"
-              << "  wallpaper:\n"
-              << "    imageUrl: " << ad.wallpapers[0].image_url << "\n"
-              << "    focalPoint:\n"
-              << "      x: " << ad.wallpapers[0].focal_point.x << "\n"
-              << "      y: " << ad.wallpapers[0].focal_point.y);
+              << "  targetUrl: " << ad.target_url);
 }
 
 void NewTabPageAdHandler::OnDidFireNewTabPageAdServedEvent(
@@ -202,6 +196,16 @@ void NewTabPageAdHandler::OnDidFireNewTabPageAdClickedEvent(
 
   GetAccount().Deposit(ad.creative_instance_id, ad.segment, ad.type,
                        mojom::ConfirmationType::kClicked);
+}
+
+void NewTabPageAdHandler::OnDidFireNewTabPageAdInteractionEvent(
+    const NewTabPageAdInfo& ad) {
+  BLOG(3, "Interacted with new tab page ad with placement id "
+              << ad.placement_id << " and creative instance id "
+              << ad.creative_instance_id);
+
+  GetAccount().Deposit(ad.creative_instance_id, ad.segment, ad.type,
+                       mojom::ConfirmationType::kInteraction);
 }
 
 void NewTabPageAdHandler::OnDidFireNewTabPageAdMediaPlayEvent(

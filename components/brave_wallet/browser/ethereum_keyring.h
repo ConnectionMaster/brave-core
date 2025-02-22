@@ -34,10 +34,11 @@ class EthereumKeyring : public Secp256k1HDKeyring {
       base::span<const uint8_t> message,
       base::span<const uint8_t> signature);
 
-  std::vector<uint8_t> SignMessage(const std::string& address,
-                                   base::span<const uint8_t> message,
-                                   uint256_t chain_id,
-                                   bool is_eip712);
+  std::optional<std::vector<uint8_t>> SignMessage(
+      const std::string& address,
+      base::span<const uint8_t> message,
+      uint256_t chain_id,
+      bool is_eip712);
 
   void SignTransaction(const std::string& address,
                        EthTransaction* tx,
@@ -52,7 +53,10 @@ class EthereumKeyring : public Secp256k1HDKeyring {
       base::span<const uint8_t> ciphertext,
       const std::string& address);
 
-  std::string EncodePrivateKeyForExport(const std::string& address) override;
+  std::optional<std::string> GetDiscoveryAddress(size_t index) const;
+  std::optional<std::string> EncodePrivateKeyForExport(
+      const std::string& address);
+  std::vector<std::string> GetImportedAccountsForTesting() const;
 
  private:
   FRIEND_TEST_ALL_PREFIXES(EthereumKeyringUnitTest, ConstructRootHDKey);

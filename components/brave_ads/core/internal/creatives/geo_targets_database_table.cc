@@ -6,10 +6,10 @@
 #include "brave/components/brave_ads/core/internal/creatives/geo_targets_database_table.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <utility>
 
 #include "base/check.h"
-#include "base/location.h"
 #include "base/strings/string_util.h"
 #include "brave/components/brave_ads/core/internal/common/database/database_column_util.h"
 #include "brave/components/brave_ads/core/internal/common/database/database_table_util.h"
@@ -23,16 +23,17 @@ namespace {
 constexpr char kTableName[] = "geo_targets";
 
 size_t BindColumns(const mojom::DBActionInfoPtr& mojom_db_action,
-                   const CreativeAdList& creative_ads) {
+                   const std::map</*campaign_id*/ std::string,
+                                  base::flat_set<std::string>>& geo_targets) {
   CHECK(mojom_db_action);
-  CHECK(!creative_ads.empty());
+  CHECK(!geo_targets.empty());
 
   size_t row_count = 0;
 
-  int index = 0;
-  for (const auto& creative_ad : creative_ads) {
-    for (const auto& geo_target : creative_ad.geo_targets) {
-      BindColumnString(mojom_db_action, index++, creative_ad.campaign_id);
+  int32_t index = 0;
+  for (const auto& [campaign_id, geo_targets_set] : geo_targets) {
+    for (const auto& geo_target : geo_targets_set) {
+      BindColumnString(mojom_db_action, index++, campaign_id);
       BindColumnString(mojom_db_action, index++, geo_target);
 
       ++row_count;
@@ -44,28 +45,20 @@ size_t BindColumns(const mojom::DBActionInfoPtr& mojom_db_action,
 
 }  // namespace
 
-void GeoTargets::Insert(const mojom::DBTransactionInfoPtr& mojom_db_transaction,
-                        const CreativeAdList& creative_ads) {
+void GeoTargets::Insert(
+    const mojom::DBTransactionInfoPtr& mojom_db_transaction,
+    const std::map</*campaign_id*/ std::string, base::flat_set<std::string>>&
+        geo_targets) {
   CHECK(mojom_db_transaction);
 
-  if (creative_ads.empty()) {
+  if (geo_targets.empty()) {
     return;
   }
 
   mojom::DBActionInfoPtr mojom_db_action = mojom::DBActionInfo::New();
   mojom_db_action->type = mojom::DBActionInfo::Type::kExecuteWithBindings;
-  mojom_db_action->sql = BuildInsertSql(mojom_db_action, creative_ads);
+  mojom_db_action->sql = BuildInsertSql(mojom_db_action, geo_targets);
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
-}
-
-void GeoTargets::Delete(ResultCallback callback) const {
-  mojom::DBTransactionInfoPtr mojom_db_transaction =
-      mojom::DBTransactionInfo::New();
-
-  DeleteTable(mojom_db_transaction, GetTableName());
-
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
 }
 
 std::string GeoTargets::GetTableName() const {
@@ -84,7 +77,7 @@ void GeoTargets::Create(
           campaign_id,
           geo_target
         ) ON CONFLICT REPLACE
-      );)");
+      ))");
 }
 
 void GeoTargets::Migrate(
@@ -93,8 +86,13 @@ void GeoTargets::Migrate(
   CHECK(mojom_db_transaction);
 
   switch (to_version) {
-    case 45: {
-      MigrateToV45(mojom_db_transaction);
+    case 48: {
+      MigrateToV48(mojom_db_transaction);
+      break;
+    }
+
+    default: {
+      // No migration needed.
       break;
     }
   }
@@ -102,30 +100,33 @@ void GeoTargets::Migrate(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GeoTargets::MigrateToV45(
+void GeoTargets::MigrateToV48(
     const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
   CHECK(mojom_db_transaction);
 
-  // We can safely recreate the table because it will be repopulated after
-  // downloading the catalog.
+  // It is safe to recreate the table because it will be repopulated after
+  // downloading the catalog post-migration. However, after this migration, we
+  // should not drop the table as it will store catalog and non-catalog ad units
+  // and maintain relationships with other tables.
   DropTable(mojom_db_transaction, GetTableName());
   Create(mojom_db_transaction);
 }
 
 std::string GeoTargets::BuildInsertSql(
     const mojom::DBActionInfoPtr& mojom_db_action,
-    const CreativeAdList& creative_ads) const {
+    const std::map</*campaign_id*/ std::string, base::flat_set<std::string>>&
+        geo_targets) const {
   CHECK(mojom_db_action);
-  CHECK(!creative_ads.empty());
+  CHECK(!geo_targets.empty());
 
-  const size_t row_count = BindColumns(mojom_db_action, creative_ads);
+  const size_t row_count = BindColumns(mojom_db_action, geo_targets);
 
   return base::ReplaceStringPlaceholders(
       R"(
           INSERT INTO $1 (
             campaign_id,
             geo_target
-          ) VALUES $2;)",
+          ) VALUES $2)",
       {GetTableName(),
        BuildBindColumnPlaceholders(/*column_count=*/2, row_count)},
       nullptr);

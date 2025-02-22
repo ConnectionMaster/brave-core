@@ -223,7 +223,7 @@ declare namespace chrome.windows {
 
 declare namespace cf_worker {
   const addSiteCosmeticFilter: (selector: string) => void
-  const manageCustomFilters: () => void
+  const resetSiteCosmeticFilter: () => void
   const getElementPickerThemeInfo: () =>
     Promise<{isDarkModeEnabled: boolean; bgcolor: number}>
   const getPlatform: () => string
@@ -231,4 +231,9 @@ declare namespace cf_worker {
 
 declare namespace chrome.test {
   const sendMessage: (message: string) => {}
+}
+
+declare namespace chrome.webDiscovery {
+  type WebDiscoveryNativeEnabledCallback = (enabled: boolean) => void
+  const isWebDiscoveryNativeEnabled: (callback: WebDiscoveryNativeEnabledCallback) => void
 }

@@ -31,40 +31,6 @@ constexpr base::FilePath::CharType kWalletStorageName[] =
 // key used in transaction storage
 constexpr char kStorageTransactionsKey[] = "transactions";
 
-// Converts from tree of dicts `coin.network_id.txid: tx` to `txid: tx` dict
-// Each tx gets coin field.
-base::Value::Dict MigrateToOneLevelDict(const base::Value::Dict& txs) {
-  base::Value::Dict result;
-  for (const auto [coin_key, networks_dict] : txs) {
-    if (!networks_dict.is_dict()) {
-      continue;
-    }
-    auto coin = GetCoinTypeFromPrefKey_DEPRECATED(coin_key);
-    if (!coin) {
-      continue;
-    }
-    for (const auto [network_id, tx_dict] : networks_dict.GetDict()) {
-      if (!tx_dict.is_dict()) {
-        continue;
-      }
-
-      for (const auto [meta_id, tx] : tx_dict.GetDict()) {
-        if (!tx.is_dict()) {
-          continue;
-        }
-        // tx already has chain_id.
-        DCHECK(tx.GetDict().FindString("chain_id"));
-
-        auto new_dict = tx.GetDict().Clone();
-        new_dict.Set("coin", static_cast<int>(*coin));
-        result.Set(meta_id, std::move(new_dict));
-      }
-    }
-  }
-
-  return result;
-}
-
 }  // namespace
 
 TxStorageDelegateImpl::TxStorageDelegateImpl(
@@ -73,8 +39,6 @@ TxStorageDelegateImpl::TxStorageDelegateImpl(
     scoped_refptr<base::SequencedTaskRunner> ui_task_runner)
     : prefs_(prefs) {
   store_ = MakeValueStoreFrontend(store_factory, ui_task_runner);
-
-  MigrateTransactionsFromPrefsToDB();
 
   Initialize();
 }
@@ -122,13 +86,8 @@ void TxStorageDelegateImpl::OnTxsInitialRead(std::optional<base::Value> txs) {
 
 void TxStorageDelegateImpl::RunDBMigrations() {
   bool schedule_write = false;
-  // Added 01/2024
-  if (!prefs_->GetBoolean(kBraveWalletTransactionsDBFormatMigrated)) {
-    prefs_->SetBoolean(kBraveWalletTransactionsDBFormatMigrated, true);
 
-    txs_ = MigrateToOneLevelDict(txs_);
-    schedule_write = !txs_.empty();
-  }
+  // Placeholder for future DB migrations.
 
   if (schedule_write) {
     ScheduleWrite();
@@ -161,25 +120,6 @@ void TxStorageDelegateImpl::AddObserver(
 void TxStorageDelegateImpl::RemoveObserver(
     TxStorageDelegateImpl::Observer* observer) {
   observers_.RemoveObserver(observer);
-}
-
-bool TxStorageDelegateImpl::MigrateTransactionsFromPrefsToDB() {
-  if (prefs_->GetBoolean(kBraveWalletTransactionsFromPrefsToDBMigrated)) {
-    return false;
-  }
-
-  if (!prefs_->HasPrefPath(kBraveWalletTransactions)) {
-    prefs_->SetBoolean(kBraveWalletTransactionsFromPrefsToDBMigrated, true);
-    return false;
-  }
-
-  auto& txs = prefs_->GetDict(kBraveWalletTransactions);
-  store_->Set(kStorageTransactionsKey, base::Value(txs.Clone()));
-
-  // Keep kBraveWalletTransactions in case we need to revert the migration and
-  // remove it when we delete the pref
-  prefs_->SetBoolean(kBraveWalletTransactionsFromPrefsToDBMigrated, true);
-  return true;
 }
 
 }  // namespace brave_wallet

@@ -16,6 +16,7 @@
 #include "brave/browser/brave_referrals/referrals_service_delegate.h"
 #include "brave/browser/brave_shields/ad_block_subscription_download_manager_getter.h"
 #include "brave/browser/brave_stats/brave_stats_updater.h"
+#include "brave/browser/brave_stats/first_run_util.h"
 #include "brave/browser/brave_wallet/wallet_data_files_installer_delegate_impl.h"
 #include "brave/browser/component_updater/brave_component_updater_configurator.h"
 #include "brave/browser/misc_metrics/process_misc_metrics.h"
@@ -175,6 +176,16 @@ void BraveBrowserProcessImpl::Init() {
 #endif
 }
 
+void BraveBrowserProcessImpl::PreMainMessageLoopRun() {
+  BrowserProcessImpl::PreMainMessageLoopRun();
+
+  // Upstream initializes network_time_tracker() at PreMainMessageLoopRun()
+  // right above. We are ready to init NetworkTimeHelper now.
+  brave_sync::NetworkTimeHelper::GetInstance()->SetNetworkTimeTracker(
+      g_browser_process->network_time_tracker(),
+      base::SingleThreadTaskRunner::GetCurrentDefault());
+}
+
 #if !BUILDFLAG(IS_ANDROID)
 void BraveBrowserProcessImpl::StartTearDown() {
   brave_stats_helper_.reset();
@@ -185,6 +196,7 @@ void BraveBrowserProcessImpl::StartTearDown() {
     p3a_service_->StartTeardown();
   }
 #endif
+  brave_sync::NetworkTimeHelper::GetInstance()->Shutdown();
   BrowserProcessImpl::StartTearDown();
 }
 
@@ -243,9 +255,6 @@ void BraveBrowserProcessImpl::StartBraveServices() {
   URLSanitizerComponentInstaller();
   // Now start the local data files service, which calls all observers.
   local_data_files_service()->Start();
-
-  brave_sync::NetworkTimeHelper::GetInstance()->SetNetworkTimeTracker(
-      g_browser_process->network_time_tracker());
 
   brave_wallet::WalletDataFilesInstaller::GetInstance().SetDelegate(
       std::make_unique<brave_wallet::WalletDataFilesInstallerDelegateImpl>());
@@ -406,7 +415,7 @@ p3a::P3AService* BraveBrowserProcessImpl::p3a_service() {
   }
   p3a_service_ = base::MakeRefCounted<p3a::P3AService>(
       *local_state(), brave::GetChannelName(),
-      local_state()->GetString(kWeekOfInstallation),
+      brave_stats::GetFirstRunTime(local_state()),
       p3a::P3AConfig::LoadFromCommandLine());
   p3a_service()->InitCallbacks();
   return p3a_service_.get();

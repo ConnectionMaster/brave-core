@@ -12,6 +12,7 @@
 #include "base/callback_list.h"
 #include "base/scoped_observation.h"
 #include "base/timer/timer.h"
+#include "brave/components/brave_ads/core/mojom/brave_ads.mojom-forward.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/ntp_background_images/browser/ntp_p3a_helper.h"
 
@@ -30,8 +31,7 @@ class NTPP3AHelperImpl : public NTPP3AHelper,
  public:
   NTPP3AHelperImpl(PrefService* local_state,
                    p3a::P3AService* p3a_service,
-                   ntp_background_images::NTPBackgroundImagesService*
-                       ntp_background_images_service,
+                   NTPBackgroundImagesService* ntp_background_images_service,
                    PrefService* prefs,
                    bool use_uma_for_testing = false);
   ~NTPP3AHelperImpl() override;
@@ -41,7 +41,8 @@ class NTPP3AHelperImpl : public NTPP3AHelper,
   void RecordView(const std::string& creative_instance_id,
                   const std::string& campaign_id) override;
 
-  void RecordClickAndMaybeLand(
+  void RecordNewTabPageAdEvent(
+      brave_ads::mojom::NewTabPageAdEventType mojom_ad_event_type,
       const std::string& creative_instance_id) override;
 
   void SetLastTabURL(const GURL& url) override;
@@ -77,9 +78,7 @@ class NTPP3AHelperImpl : public NTPP3AHelper,
                          const std::string& expected_hostname);
 
   // NTPBackgroundImagesService::Observer:
-  void OnUpdated(NTPBackgroundImagesData* data) override;
-  void OnUpdated(NTPSponsoredImagesData* data) override;
-  void OnSuperReferralEnded() override;
+  void OnSponsoredImagesDataDidUpdate(NTPSponsoredImagesData* data) override;
 
   raw_ptr<PrefService> local_state_;
   raw_ptr<p3a::P3AService> p3a_service_;

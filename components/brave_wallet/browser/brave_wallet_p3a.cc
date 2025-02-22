@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_wallet/browser/brave_wallet_p3a.h"
 
+#include <algorithm>
 #include <optional>
 #include <string>
 #include <utility>
@@ -13,7 +14,6 @@
 #include "base/metrics/histogram_functions.h"
 #include "base/metrics/histogram_macros.h"
 #include "base/notreached.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/time/time.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_service.h"
@@ -30,16 +30,9 @@ namespace brave_wallet {
 
 namespace {
 
-constexpr int kRefreshP3AFrequencyHours = 24;
-constexpr int kActiveAccountBuckets[] = {0, 1, 2, 3, 7};
-auto constexpr kTimePrefsToMigrateToLocalState =
-    std::to_array<std::string_view>({kBraveWalletLastUnlockTime,
-                                     kBraveWalletP3AFirstUnlockTime,
-                                     kBraveWalletP3ALastUnlockTime});
-auto constexpr kTimePrefsToRemove =
-    std::to_array<std::string_view>({kBraveWalletP3AFirstReportTimeDeprecated,
-                                     kBraveWalletP3ALastReportTimeDeprecated});
-constexpr int kNFTCountBuckets[] = {0, 4, 20};
+const int kRefreshP3AFrequencyHours = 24;
+const int kActiveAccountBuckets[] = {0, 1, 2, 3, 7};
+const int kNFTCountBuckets[] = {0, 4, 20};
 constexpr base::TimeDelta kOnboardingRecordDelay = base::Seconds(120);
 
 // Has the Wallet keyring been created?
@@ -63,8 +56,6 @@ BraveWalletP3A::BraveWalletP3A(BraveWalletService* wallet_service,
       local_state_(local_state) {
   DCHECK(profile_prefs);
   DCHECK(local_state);
-
-  MigrateUsageProfilePrefsToLocalState();
 
   RecordInitialBraveWalletP3AState();
   AddObservers();
@@ -153,7 +144,7 @@ void BraveWalletP3A::ReportJSProvider(mojom::JSProviderType provider_type,
   }
 
   JSProviderAnswer answer = JSProviderAnswer::kNoWallet;
-  bool is_wallet_setup = base::ranges::any_of(
+  bool is_wallet_setup = std::ranges::any_of(
       keyring_service_->GetAllAccountInfos(), [coin_type](auto& account) {
         return account->account_id->coin == coin_type;
       });
@@ -361,36 +352,9 @@ void BraveWalletP3A::ReportNftDiscoverySetting() {
   }
 }
 
-// TODO(djandries): remove pref migration around April 2024
-void BraveWalletP3A::MigrateUsageProfilePrefsToLocalState() {
-  for (auto pref_name : kTimePrefsToMigrateToLocalState) {
-    if (local_state_->GetTime(pref_name).is_null()) {
-      base::Time profile_time = profile_prefs_->GetTime(pref_name);
-      if (!profile_time.is_null()) {
-        local_state_->SetTime(pref_name, profile_time);
-        profile_prefs_->ClearPref(pref_name);
-      }
-    }
-  }
-  for (auto pref_name : kTimePrefsToRemove) {
-    local_state_->ClearPref(pref_name);
-    profile_prefs_->ClearPref(pref_name);
-  }
-  if (!local_state_->GetBoolean(kBraveWalletP3AUsedSecondDay)) {
-    bool profile_used_second_day =
-        profile_prefs_->GetBoolean(kBraveWalletP3AUsedSecondDay);
-    if (profile_used_second_day) {
-      local_state_->SetBoolean(kBraveWalletP3AUsedSecondDay, true);
-      profile_prefs_->ClearPref(kBraveWalletP3AUsedSecondDay);
-    }
-  }
-  local_state_->ClearPref(kBraveWalletP3AWeeklyStorageDeprecated);
-  profile_prefs_->ClearPref(kBraveWalletP3AWeeklyStorageDeprecated);
-}
-
 void BraveWalletP3A::OnUpdateTimerFired() {
   ReportUsage(false);
-  for (const auto& coin : kAllCoins) {
+  for (const auto& coin : GetSupportedCoins()) {
     ReportTransactionSent(coin, false);
   }
 }

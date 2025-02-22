@@ -5,6 +5,8 @@
 
 #include "brave/browser/ui/tabs/split_view_browser_data.h"
 
+#include <algorithm>
+
 #include "base/check_is_test.h"
 #include "base/containers/contains.h"
 #include "base/functional/callback_helpers.h"
@@ -32,7 +34,8 @@ void SplitViewBrowserData::TileTabs(const TabTile& tile) {
   CHECK(!IsTabTiled(tile.second));
 
   auto& model = tab_strip_model_adapter_.tab_strip_model();
-  CHECK_LT(model.GetIndexOfTab(tile.first), model.GetIndexOfTab(tile.second));
+  CHECK_LT(model.GetIndexOfTab(tile.first.Get()),
+           model.GetIndexOfTab(tile.second.Get()));
 
   tiles_.push_back(tile);
 
@@ -43,7 +46,7 @@ void SplitViewBrowserData::TileTabs(const TabTile& tile) {
       tab_strip_model_adapter_.SynchronizePinnedState(tile, tile.first);
   tabs_are_adjacent |= tab_strip_model_adapter_.SynchronizeGroupedState(
       tile, /*source=*/tile.first,
-      model.GetTabGroupForTab(model.GetIndexOfTab(tile.first)));
+      model.GetTabGroupForTab(model.GetIndexOfTab(tile.first.Get())));
 
   if (!tabs_are_adjacent) {
     tab_strip_model_adapter_.MakeTiledTabsAdjacent(tile);
@@ -228,14 +231,10 @@ void SplitViewBrowserData::TabsWillBeAttachedToNewBrowser(
   }
 
   if (tiles_to_be_attached_to_new_window_.size() > 1) {
-    base::ranges::sort(tiles_to_be_attached_to_new_window_);
-    tiles_to_be_attached_to_new_window_.erase(
-        base::ranges::unique(tiles_to_be_attached_to_new_window_,
-                             [](auto& a, auto& b) {
-                               return a.first == b.first &&
-                                      a.second == b.second;
-                             }),
-        tiles_to_be_attached_to_new_window_.end());
+    std::ranges::sort(tiles_to_be_attached_to_new_window_);
+    auto to_remove = std::ranges::unique(tiles_to_be_attached_to_new_window_);
+    tiles_to_be_attached_to_new_window_.erase(to_remove.begin(),
+                                              to_remove.end());
   }
 }
 

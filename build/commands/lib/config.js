@@ -238,7 +238,6 @@ const Config = function () {
   this.extraGnGenOpts = getEnvConfig(['brave_extra_gn_gen_opts']) || ''
   this.extraNinjaOpts = []
   this.braveAndroidSafeBrowsingApiKey = getEnvConfig(['brave_safebrowsing_api_key']) || ''
-  this.braveSafetyNetApiKey = getEnvConfig(['brave_safetynet_api_key']) || ''
   this.braveAndroidDeveloperOptionsCode = getEnvConfig(['brave_android_developer_options_code']) || ''
   this.braveAndroidKeystorePath = getEnvConfig(['brave_android_keystore_path'])
   this.braveAndroidKeystoreName = getEnvConfig(['brave_android_keystore_name'])
@@ -609,7 +608,6 @@ Config.prototype.buildArgs = function () {
     args.android_override_version_name = this.androidOverrideVersionName
 
     args.brave_android_developer_options_code = this.braveAndroidDeveloperOptionsCode
-    args.brave_safetynet_api_key = this.braveSafetyNetApiKey
     args.brave_safebrowsing_api_key = this.braveAndroidSafeBrowsingApiKey
     args.safe_browsing_mode = 2
 
@@ -686,7 +684,6 @@ Config.prototype.buildArgs = function () {
     // in the future to see if this is no longer needed
     // https://github.com/brave/brave-browser/issues/29934
     args.ios_partition_alloc_enabled = false
-    args.use_partition_alloc = false
 
     args.ios_provider_target = "//brave/ios/browser/providers:brave_providers"
 
@@ -1172,7 +1169,7 @@ Object.defineProperty(Config.prototype, 'outputDir', {
     if (this.targetOS && this.targetOS !== this.hostOS) {
       buildConfigDir = this.targetOS + '_' + buildConfigDir
     }
-    if (this.targetEnvironment) {
+    if (this.targetEnvironment && this.targetEnvironment != 'device') {
       buildConfigDir = buildConfigDir + "_" + this.targetEnvironment
     }
     if (this.isChromium) {

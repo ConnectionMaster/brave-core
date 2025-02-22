@@ -14,6 +14,7 @@
 #include "base/notimplemented.h"
 #include "brave/components/brave_wallet/browser/internal/hd_key_common.h"
 #include "brave/components/brave_wallet/common/bitcoin_utils.h"
+#include "brave/components/brave_wallet/common/common_utils.h"
 
 namespace brave_wallet {
 
@@ -39,9 +40,11 @@ std::unique_ptr<HDKey> ConstructAccountsRootKey(base::span<const uint8_t> seed,
 
 }  // namespace
 
-BitcoinHDKeyring::BitcoinHDKeyring(base::span<const uint8_t> seed, bool testnet)
-    : testnet_(testnet) {
-  accounts_root_ = ConstructAccountsRootKey(seed, testnet);
+BitcoinHDKeyring::BitcoinHDKeyring(base::span<const uint8_t> seed,
+                                   mojom::KeyringId keyring_id)
+    : BitcoinBaseKeyring(keyring_id) {
+  CHECK(IsBitcoinHDKeyring(keyring_id));
+  accounts_root_ = ConstructAccountsRootKey(seed, IsTestnet());
 }
 
 mojom::BitcoinAddressPtr BitcoinHDKeyring::GetAddress(
@@ -53,7 +56,7 @@ mojom::BitcoinAddressPtr BitcoinHDKeyring::GetAddress(
   }
 
   return mojom::BitcoinAddress::New(
-      PubkeyToSegwitAddress(hd_key->GetPublicKeyBytes(), testnet_),
+      PubkeyToSegwitAddress(hd_key->GetPublicKeyBytes(), IsTestnet()),
       key_id.Clone());
 }
 
@@ -80,36 +83,8 @@ std::optional<std::vector<uint8_t>> BitcoinHDKeyring::SignMessage(
   return hd_key->SignDer(message);
 }
 
-std::string BitcoinHDKeyring::ImportAccount(
-    base::span<const uint8_t> private_key) {
-  NOTIMPLEMENTED();
-  return "";
-}
-
-bool BitcoinHDKeyring::RemoveImportedAccount(const std::string& address) {
-  NOTIMPLEMENTED();
-  return false;
-}
-
-std::string BitcoinHDKeyring::GetDiscoveryAddress(size_t index) const {
-  NOTIMPLEMENTED();
-  return "";
-}
-
-std::vector<std::string> BitcoinHDKeyring::GetImportedAccountsForTesting()
-    const {
-  NOTIMPLEMENTED();
-  return {};
-}
-
-std::string BitcoinHDKeyring::EncodePrivateKeyForExport(
-    const std::string& address) {
-  NOTIMPLEMENTED();
-  return "";
-}
-
 std::string BitcoinHDKeyring::GetAddressInternal(const HDKey& hd_key) const {
-  return PubkeyToSegwitAddress(hd_key.GetPublicKeyBytes(), testnet_);
+  return PubkeyToSegwitAddress(hd_key.GetPublicKeyBytes(), IsTestnet());
 }
 
 std::unique_ptr<HDKey> BitcoinHDKeyring::DeriveAccount(uint32_t index) const {

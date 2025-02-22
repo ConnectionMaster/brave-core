@@ -5,10 +5,10 @@
 
 #include "brave/components/brave_ads/core/internal/catalog/campaign/creative_set/catalog_creative_set_info.h"
 
+#include <algorithm>
 #include <limits>
 
 #include "base/numerics/ranges.h"
-#include "base/ranges/algorithm.h"
 #include "brave/components/brave_ads/core/internal/common/platform/platform_helper.h"
 
 namespace brave_ads {
@@ -37,11 +37,11 @@ bool CatalogCreativeSetInfo::operator==(
          base::IsApproximatelyEqual(value, other.value,
                                     std::numeric_limits<double>::epsilon()) &&
          split_test_group == other.split_test_group &&
+         condition_matchers == other.condition_matchers &&
          segments == other.segments && oses == other.oses &&
          conversions == other.conversions &&
          creative_notification_ads == other.creative_notification_ads &&
          creative_inline_content_ads == other.creative_inline_content_ads &&
-         creative_new_tab_page_ads == other.creative_new_tab_page_ads &&
          creative_promoted_content_ads == other.creative_promoted_content_ads;
 }
 
@@ -58,7 +58,7 @@ bool CatalogCreativeSetInfo::DoesSupportOS() const {
 
   const std::string platform_name = PlatformHelper::GetInstance().GetName();
 
-  return base::ranges::any_of(oses, [&platform_name](const CatalogOsInfo& os) {
+  return std::ranges::any_of(oses, [&platform_name](const CatalogOsInfo& os) {
     return os.name == platform_name;
   });
 }

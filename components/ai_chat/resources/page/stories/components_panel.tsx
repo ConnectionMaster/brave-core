@@ -32,47 +32,48 @@ import ErrorServiceOverloaded from '../components/alerts/error_service_overloade
 import LongConversationInfo from '../components/alerts/long_conversation_info'
 import WarningPremiumDisconnected from '../components/alerts/warning_premium_disconnected'
 
+const eventTemplate: Mojom.ConversationEntryEvent = {
+  completionEvent: undefined,
+  pageContentRefineEvent: undefined,
+  searchQueriesEvent: undefined,
+  searchStatusEvent: undefined,
+  selectedLanguageEvent: undefined,
+  conversationTitleEvent: undefined,
+  sourcesEvent: undefined
+}
+
 function getCompletionEvent(text: string): Mojom.ConversationEntryEvent {
   return {
-    completionEvent: { completion: text },
-    pageContentRefineEvent: undefined,
-    searchQueriesEvent: undefined,
-    searchStatusEvent: undefined,
-    conversationTitleEvent: undefined,
-    selectedLanguageEvent: undefined
+    ...eventTemplate,
+    completionEvent: { completion: text }
   }
 }
 
 function getSearchEvent(queries: string[]): Mojom.ConversationEntryEvent {
   return {
-    completionEvent: undefined,
-    pageContentRefineEvent: undefined,
-    searchQueriesEvent: { searchQueries: queries },
-    searchStatusEvent: undefined,
-    conversationTitleEvent: undefined,
-    selectedLanguageEvent: undefined
+    ...eventTemplate,
+    searchQueriesEvent: { searchQueries: queries }
   }
 }
 
 function getSearchStatusEvent(): Mojom.ConversationEntryEvent {
   return {
-    completionEvent: undefined,
-    pageContentRefineEvent: undefined,
-    searchQueriesEvent: undefined,
-    searchStatusEvent: { isSearching: true },
-    selectedLanguageEvent: undefined,
-    conversationTitleEvent: undefined
+    ...eventTemplate,
+    searchStatusEvent: { isSearching: true }
+  }
+}
+
+function getWebSourcesEvent(sources: Mojom.WebSource[]): Mojom.ConversationEntryEvent {
+  return {
+    ...eventTemplate,
+    sourcesEvent: { sources }
   }
 }
 
 function getPageContentRefineEvent(): Mojom.ConversationEntryEvent {
   return {
-    completionEvent: undefined,
-    pageContentRefineEvent: { isRefining: true },
-    searchQueriesEvent: undefined,
-    searchStatusEvent: undefined,
-    selectedLanguageEvent: undefined,
-    conversationTitleEvent: undefined
+    ...eventTemplate,
+    pageContentRefineEvent: { isRefining: true }
   }
 }
 
@@ -85,6 +86,7 @@ const associatedContentNone: Mojom.SiteInfo =  {
   title: undefined,
   hostname: undefined,
   url: undefined,
+  contentId: -1,
 }
 
 const CONVERSATIONS: Mojom.Conversation[] = [
@@ -268,7 +270,16 @@ const HISTORY: Mojom.ConversationTurn[] = [
     selectedText: undefined,
     edits: [],
     createdTime: { internalValue: BigInt('13278618001000000') },
-    events: [getSearchStatusEvent(), getSearchEvent(['pointer compression', 'c++ language specification']), getCompletionEvent('Pointer compression is a memory optimization technique.')],
+    events: [
+      getSearchStatusEvent(),
+      getSearchEvent(['pointer compression', 'c++ language specification']),
+      getCompletionEvent('Pointer compression is a memory optimization technique.'),
+      getWebSourcesEvent([
+        { url: { url: 'https://www.example.com' }, title: 'Pointer Compression', faviconUrl: { url: 'https://www.example.com/favicon.ico' } },
+        { title: 'LTT Store', faviconUrl: { url: 'https://lttstore.com/favicon.ico' }, url: { url: 'https://lttstore.com' } },
+        { title: 'Tesla Model Y', faviconUrl: { url: 'https://www.tesla.com/favicon.ico' }, url: { url: 'https://www.tesla.com/modely' } }
+      ])
+    ],
     fromBraveSearchSERP: false
   },
   {
@@ -397,6 +408,7 @@ const SITE_INFO: Mojom.SiteInfo = {
   hostname: 'www.example.com',
   url: { url: 'https://www.example.com/a' },
   isContentRefined: false,
+  contentId: -1,
 }
 
 type CustomArgs = {
@@ -499,7 +511,7 @@ const meta: Meta<CustomArgs> = {
   ]
 }
 
-function StoryContext(props: React.PropsWithChildren<{args: CustomArgs, setArgs: (newArgs: Partial<CustomArgs>) => void}>) {
+function StoryContext(props: React.PropsWithChildren<{ args: CustomArgs, setArgs: (newArgs: Partial<CustomArgs>) => void }>) {
   const isSmall = useIsSmall()
 
   const options = { args: props.args }
@@ -551,6 +563,7 @@ function StoryContext(props: React.PropsWithChildren<{args: CustomArgs, setArgs:
     isHistoryFeatureEnabled: options.args.isHistoryEnabled,
     isStandalone: options.args.isStandalone,
     allActions: ACTIONS_LIST,
+    tabs: [],
     goPremium: () => {},
     managePremium: () => {},
     handleAgreeClick: () => {},
@@ -576,6 +589,7 @@ function StoryContext(props: React.PropsWithChildren<{args: CustomArgs, setArgs:
   const inputText = options.args.inputText
 
   const conversationContext: ConversationContext = {
+    historyInitialized: true,
     conversationUuid: CONVERSATIONS[1].uuid,
     conversationHistory: options.args.hasConversation ? HISTORY : [],
     associatedContentInfo: siteInfo,
@@ -613,7 +627,9 @@ function StoryContext(props: React.PropsWithChildren<{args: CustomArgs, setArgs:
     handleActionTypeClick: () => {},
     setIsToolsMenuOpen: () => {},
     handleFeedbackFormCancel: () => {},
-    handleFeedbackFormSubmit: () => {}
+    handleFeedbackFormSubmit: () => {},
+    setShowAttachments: () => {},
+    showAttachments: false,
   }
 
   const conversationEntriesContext: UntrustedConversationContext = {

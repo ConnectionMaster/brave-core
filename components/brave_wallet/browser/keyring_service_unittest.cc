@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_wallet/browser/keyring_service.h"
 
+#include <algorithm>
 #include <optional>
 #include <string_view>
 #include <utility>
@@ -13,21 +14,21 @@
 #include "base/containers/span.h"
 #include "base/files/scoped_temp_dir.h"
 #include "base/functional/callback_helpers.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/bind.h"
 #include "base/test/mock_callback.h"
 #include "base/test/scoped_feature_list.h"
 #include "base/test/values_test_util.h"
+#include "brave/components/brave_wallet/browser/bip39.h"
 #include "brave/components/brave_wallet/browser/bitcoin/bitcoin_hd_keyring.h"
 #include "brave/components/brave_wallet/browser/bitcoin/bitcoin_test_utils.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_constants.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_prefs.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_service.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
+#include "brave/components/brave_wallet/browser/ethereum_keyring.h"
 #include "brave/components/brave_wallet/browser/fil_transaction.h"
 #include "brave/components/brave_wallet/browser/filecoin_keyring.h"
-#include "brave/components/brave_wallet/browser/hd_keyring.h"
 #include "brave/components/brave_wallet/browser/json_rpc_service.h"
 #include "brave/components/brave_wallet/browser/keyring_service_migrations.h"
 #include "brave/components/brave_wallet/browser/keyring_service_prefs.h"
@@ -46,6 +47,7 @@
 #include "components/prefs/scoped_user_pref_update.h"
 #include "components/sync_preferences/testing_pref_service_syncable.h"
 #include "content/public/test/browser_task_environment.h"
+#include "crypto/random.h"
 #include "services/data_decoder/public/cpp/test_support/in_process_data_decoder.h"
 #include "services/network/public/cpp/weak_wrapper_shared_url_loader_factory.h"
 #include "services/network/test/test_url_loader_factory.h"
@@ -254,10 +256,8 @@ class KeyringServiceUnitTest : public testing::Test {
     base::RunLoop run_loop;
     service->EncodePrivateKeyForExport(
         std::move(account_id), password,
-        base::BindLambdaForTesting([&](const std::string& key) {
-          if (!key.empty()) {
-            private_key = key;
-          }
+        base::BindLambdaForTesting([&](const std::optional<std::string>& key) {
+          private_key = key;
           run_loop.Quit();
         }));
     run_loop.Run();
@@ -281,14 +281,14 @@ class KeyringServiceUnitTest : public testing::Test {
     return result;
   }
 
-  static mojom::AccountInfoPtr ImportAccount(KeyringService* service,
-                                             const std::string& name,
-                                             const std::string& private_key,
-                                             mojom::CoinType coin) {
+  static mojom::AccountInfoPtr ImportEthereumAccount(
+      KeyringService* service,
+      const std::string& name,
+      const std::string& private_key) {
     mojom::AccountInfoPtr result;
     base::RunLoop run_loop;
-    service->ImportAccount(
-        name, private_key, coin,
+    service->ImportEthereumAccount(
+        name, private_key,
         base::BindLambdaForTesting([&](mojom::AccountInfoPtr account) {
           result = std::move(account);
           run_loop.Quit();
@@ -297,14 +297,30 @@ class KeyringServiceUnitTest : public testing::Test {
     return result;
   }
 
-  static mojom::AccountInfoPtr ImportAccountFromJson(
+  static mojom::AccountInfoPtr ImportSolanaAccount(
+      KeyringService* service,
+      const std::string& name,
+      const std::string& private_key) {
+    mojom::AccountInfoPtr result;
+    base::RunLoop run_loop;
+    service->ImportSolanaAccount(
+        name, private_key,
+        base::BindLambdaForTesting([&](mojom::AccountInfoPtr account) {
+          result = std::move(account);
+          run_loop.Quit();
+        }));
+    run_loop.Run();
+    return result;
+  }
+
+  static mojom::AccountInfoPtr ImportEthereumAccountFromJson(
       KeyringService* service,
       const std::string& name,
       const std::string& password,
       const std::string& json) {
     mojom::AccountInfoPtr result;
     base::RunLoop run_loop;
-    service->ImportAccountFromJson(
+    service->ImportEthereumAccountFromJson(
         name, password, json,
         base::BindLambdaForTesting([&](mojom::AccountInfoPtr account) {
           result = std::move(account);
@@ -450,11 +466,11 @@ class KeyringServiceUnitTest : public testing::Test {
   }
 
   mojom::AccountInfoPtr FirstSolAccount(KeyringService* service) {
-    return base::ranges::find_if(service->GetAllAccountsSync()->accounts,
-                                 [](auto& acc) {
-                                   return acc->account_id->coin ==
-                                          mojom::CoinType::SOL;
-                                 })
+    return std::ranges::find_if(service->GetAllAccountsSync()->accounts,
+                                [](auto& acc) {
+                                  return acc->account_id->coin ==
+                                         mojom::CoinType::SOL;
+                                })
         ->Clone();
   }
 
@@ -481,7 +497,7 @@ TEST_F(KeyringServiceUnitTest, CreateWallet_DoubleCall) {
   EXPECT_CALL(callback1,
               Run(Truly([](const std::optional<std::string>& mnemonic) {
                 EXPECT_TRUE(mnemonic);
-                return IsValidMnemonic(*mnemonic);
+                return bip39::IsValidMnemonic(*mnemonic);
               })));
   service.CreateWallet(kTestWalletPassword, callback1.Get());
 
@@ -641,7 +657,9 @@ TEST_F(KeyringServiceUnitTest, LockAndUnlock) {
   {
     KeyringService service(json_rpc_service(), GetPrefs(), GetLocalState());
     NiceMock<TestKeyringServiceObserver> observer(service, task_environment_);
-    AccountUtils(&service).CreateWallet(GenerateMnemonic(16), kPasswordBrave);
+    AccountUtils(&service).CreateWallet(
+        *bip39::GenerateMnemonic(crypto::RandBytesAsVector(16)),
+        kPasswordBrave);
     ASSERT_TRUE(AddAccount(&service, mojom::CoinType::ETH,
                            mojom::kDefaultKeyringId, "ETH Account 1"));
     EXPECT_FALSE(service.IsLockedSync());
@@ -655,9 +673,10 @@ TEST_F(KeyringServiceUnitTest, LockAndUnlock) {
     service.Lock();
     observer.WaitAndVerify();
     EXPECT_TRUE(service.IsLockedSync());
-    EXPECT_FALSE(service.GetHDKeyringById(mojom::kDefaultKeyringId));
-    EXPECT_FALSE(service.GetHDKeyringById(mojom::kFilecoinKeyringId));
-    EXPECT_FALSE(service.GetHDKeyringById(mojom::kSolanaKeyringId));
+    EXPECT_FALSE(service.GetKeyring<EthereumKeyring>(mojom::kDefaultKeyringId));
+    EXPECT_FALSE(
+        service.GetKeyring<FilecoinKeyring>(mojom::kFilecoinKeyringId));
+    EXPECT_FALSE(service.GetKeyring<SolanaKeyring>(mojom::kSolanaKeyringId));
 
     EXPECT_CALL(observer, Unlocked()).Times(0);
     EXPECT_FALSE(Unlock(&service, "abc"));
@@ -692,7 +711,7 @@ TEST_F(KeyringServiceUnitTest, Reset) {
   EXPECT_FALSE(GetPrefs()->HasPrefPath(kBraveWalletEncryptorSalt));
   EXPECT_FALSE(GetPrefs()->HasPrefPath(kBraveWalletMnemonic));
   EXPECT_FALSE(GetPrefs()->HasPrefPath(kBraveWalletLegacyEthSeedFormat));
-  EXPECT_FALSE(service.GetHDKeyringById(mojom::kDefaultKeyringId));
+  EXPECT_FALSE(service.GetKeyring<EthereumKeyring>(mojom::kDefaultKeyringId));
   EXPECT_FALSE(service.encryptor_);
   observer.WaitAndVerify();
 }
@@ -1027,8 +1046,8 @@ TEST_F(KeyringServiceUnitTest, ImportedAccounts) {
   ASSERT_TRUE(CreateWallet(&service, "brave"));
   for (const std::string invalid_private_key :
        {"0x", "0x0", "0", "0x123abc", "123abc", "", "invalid"}) {
-    EXPECT_FALSE(ImportAccount(&service, "invalid account", invalid_private_key,
-                               mojom::CoinType::ETH));
+    EXPECT_FALSE(ImportEthereumAccount(&service, "invalid account",
+                                       invalid_private_key));
   }
 
   const struct {
@@ -1056,8 +1075,8 @@ TEST_F(KeyringServiceUnitTest, ImportedAccounts) {
           "ddc33eef7cc4c5170c3ba4021cc22fd888856cf8bf846f48db6d11d15efcd652",
       }};
   for (const auto& account : imported_accounts) {
-    auto imported_account = ImportAccount(
-        &service, account.name, account.private_key, mojom::CoinType::ETH);
+    auto imported_account =
+        ImportEthereumAccount(&service, account.name, account.private_key);
     ASSERT_TRUE(imported_account);
     EXPECT_EQ(account.address, imported_account->address);
 
@@ -1155,7 +1174,8 @@ TEST_F(KeyringServiceUnitTest, ImportedAccounts) {
   EXPECT_EQ(imported_accounts[0].private_key, *private_key);
 
   // Imported accounts should also be restored in default keyring
-  auto* default_keyring = service.GetHDKeyringById(mojom::kDefaultKeyringId);
+  auto* default_keyring =
+      service.GetKeyring<EthereumKeyring>(mojom::kDefaultKeyringId);
   EXPECT_EQ(default_keyring->GetImportedAccountsForTesting().size(), 2u);
 
   const base::Value* imported_accounts_value = GetPrefForKeyring(
@@ -1210,14 +1230,14 @@ TEST_F(KeyringServiceUnitTest, ImportedAccountFromJson) {
   KeyringService service(json_rpc_service(), GetPrefs(), GetLocalState());
   ASSERT_TRUE(CreateWallet(&service, "brave"));
 
-  EXPECT_FALSE(
-      ImportAccountFromJson(&service, "Imported 1", "wrong password", json));
+  EXPECT_FALSE(ImportEthereumAccountFromJson(&service, "Imported 1",
+                                             "wrong password", json));
 
-  EXPECT_FALSE(ImportAccountFromJson(&service, "Imported 1", "testtest",
-                                     "{crypto: 123}"));
+  EXPECT_FALSE(ImportEthereumAccountFromJson(&service, "Imported 1", "testtest",
+                                             "{crypto: 123}"));
 
   auto account =
-      ImportAccountFromJson(&service, "Imported 1", "testtest", json);
+      ImportEthereumAccountFromJson(&service, "Imported 1", "testtest", json);
   ASSERT_TRUE(account);
   EXPECT_EQ(account->address, expected_address);
 
@@ -1393,7 +1413,7 @@ TEST_F(KeyringServiceUnitTest, SetDefaultKeyringImportedAccountName) {
        "ddc33eef7cc4c5170c3ba4021cc22fd888856cf8bf846f48db6d11d15efcd652",
        "0xeffF78040EdeF86A9be71ce89c74A35C4cd5D2eA"}};
 
-  const std::string kUpdatedName = "Updated imported accoount 2";
+  const std::string kUpdatedName = "Updated imported account 2";
 
   // Fail when no imported accounts.
   EXPECT_FALSE(SetAccountName(
@@ -1406,8 +1426,8 @@ TEST_F(KeyringServiceUnitTest, SetDefaultKeyringImportedAccountName) {
   // Add import accounts.
   for (const auto& account : imported_accounts) {
     EXPECT_CALL(observer, AccountsChanged());
-    auto imported_account = ImportAccount(
-        &service, account.name, account.private_key, mojom::CoinType::ETH);
+    auto imported_account =
+        ImportEthereumAccount(&service, account.name, account.private_key);
     ASSERT_TRUE(imported_account);
     EXPECT_EQ(account.address, imported_account->address);
     observer.WaitAndVerify();
@@ -1550,8 +1570,8 @@ TEST_F(KeyringServiceUnitTest, HardwareAccounts) {
   };
 
   std::vector<mojom::HardwareWalletAccountPtr> accounts;
-  base::ranges::transform(new_accounts, std::back_inserter(accounts),
-                          [](const auto& account) { return account.Clone(); });
+  std::ranges::transform(new_accounts, std::back_inserter(accounts),
+                         [](const auto& account) { return account.Clone(); });
 
   EXPECT_CALL(observer, AccountsChanged()).Times(0);
   EXPECT_TRUE(service.AddHardwareAccountsSync(new_accounts_func()).empty());
@@ -1935,15 +1955,13 @@ TEST_F(KeyringServiceUnitTest, SelectImportedAccount) {
   KeyringService service(json_rpc_service(), GetPrefs(), GetLocalState());
   ASSERT_TRUE(CreateWallet(&service, "brave"));
 
-  ImportAccount(
+  ImportEthereumAccount(
       &service, "Best Evil Son",
-      "d118a12a1e3b595d7d9e5599370df4ddc58d246a3ae4a795597e50eb6a32afb5",
-      mojom::CoinType::ETH);
+      "d118a12a1e3b595d7d9e5599370df4ddc58d246a3ae4a795597e50eb6a32afb5");
 
-  auto imported = ImportAccount(
+  auto imported = ImportEthereumAccount(
       &service, "Best Evil Son 2",
-      "5b48615b7e43d015c3de46cbe9bc01bff9e106277a91bd44a55f9c4b1a268314",
-      mojom::CoinType::ETH);
+      "5b48615b7e43d015c3de46cbe9bc01bff9e106277a91bd44a55f9c4b1a268314");
 
   ASSERT_EQ(service.GetSelectedWalletAccount(), imported);
 }
@@ -2045,11 +2063,10 @@ TEST_F(KeyringServiceUnitTest, SetSelectedAccount) {
   // Can import only when unlocked.
   // Then check that the account can be set to an imported account.
   EXPECT_TRUE(Unlock(&service, "brave"));
-  auto imported_account = ImportAccount(
+  auto imported_account = ImportEthereumAccount(
       &service, "Best Evil Son",
       // 0xDc06aE500aD5ebc5972A0D8Ada4733006E905976
-      "d118a12a1e3b595d7d9e5599370df4ddc58d246a3ae4a795597e50eb6a32afb5",
-      mojom::CoinType::ETH);
+      "d118a12a1e3b595d7d9e5599370df4ddc58d246a3ae4a795597e50eb6a32afb5");
   ASSERT_TRUE(imported_account);
   EXPECT_EQ(imported_account, service.GetSelectedWalletAccount());
   EXPECT_EQ(imported_account, service.GetSelectedEthereumDappAccount());
@@ -2119,12 +2136,11 @@ TEST_F(KeyringServiceUnitTest, SetSelectedAccount) {
   EXPECT_EQ(fil_imported_account, service.GetSelectedWalletAccount());
 
   // Can set Solana account
-  auto sol_imported_account = ImportAccount(
+  auto sol_imported_account = ImportSolanaAccount(
       &service, "Imported Account 1",
       // C5ukMV73nk32h52MjxtnZXTrrr7rupD9CTDDRnYYDRYQ
       "sCzwsBKmKtk5Hgb4YUJAduQ5nmJq4GTyzCXhrKonAGaexa83MgSZuTSMS6TSZTndnC"
-      "YbQtaJQKLXET9jVjepWXe",
-      mojom::CoinType::SOL);
+      "YbQtaJQKLXET9jVjepWXe");
   ASSERT_TRUE(sol_imported_account);
   EXPECT_EQ(sol_imported_account->address,
             "C5ukMV73nk32h52MjxtnZXTrrr7rupD9CTDDRnYYDRYQ");
@@ -2231,33 +2247,27 @@ TEST_F(KeyringServiceUnitTest, SignMessageByDefaultKeyring) {
   auto account1 = GetAccountUtils(&service).EthAccountId(0);
 
   const std::vector<uint8_t> message = {0xde, 0xad, 0xbe, 0xef};
-  auto sig_with_err = service.SignMessageByDefaultKeyring(account1, message);
-  EXPECT_NE(sig_with_err.signature, std::nullopt);
-  EXPECT_FALSE(sig_with_err.signature->empty());
-  EXPECT_TRUE(sig_with_err.error_message.empty());
+  EXPECT_TRUE(service.SignMessageByDefaultKeyring(account1, message, false)
+                  .has_value());
 
   // message is 0x
-  sig_with_err =
-      service.SignMessageByDefaultKeyring(account1, std::vector<uint8_t>());
-  EXPECT_NE(sig_with_err.signature, std::nullopt);
-  EXPECT_FALSE(sig_with_err.signature->empty());
-  EXPECT_TRUE(sig_with_err.error_message.empty());
+  EXPECT_TRUE(
+      service
+          .SignMessageByDefaultKeyring(account1, std::vector<uint8_t>(), false)
+          .has_value());
 
   // not a valid account in this wallet
   auto invalid_account = GetAccountUtils(&service).EthUnkownAccountId();
-  sig_with_err = service.SignMessageByDefaultKeyring(invalid_account, message);
-  EXPECT_EQ(sig_with_err.signature, std::nullopt);
   EXPECT_EQ(
-      sig_with_err.error_message,
+      service.SignMessageByDefaultKeyring(invalid_account, message, false)
+          .error(),
       l10n_util::GetStringFUTF8(IDS_BRAVE_WALLET_SIGN_MESSAGE_INVALID_ADDRESS,
                                 base::ASCIIToUTF16(invalid_account->address)));
 
   // Cannot sign message when locked
   service.Lock();
-  sig_with_err = service.SignMessageByDefaultKeyring(account1, message);
-  EXPECT_EQ(sig_with_err.signature, std::nullopt);
   EXPECT_EQ(
-      sig_with_err.error_message,
+      service.SignMessageByDefaultKeyring(account1, message, false).error(),
       l10n_util::GetStringUTF8(IDS_BRAVE_WALLET_SIGN_MESSAGE_UNLOCK_FIRST));
 }
 
@@ -2494,10 +2504,8 @@ TEST_F(KeyringServiceUnitTest, SignTransactionByFilecoinKeyring) {
       MakeAccountId(mojom::CoinType::FIL, mojom::KeyringId::kFilecoinTestnet,
                     mojom::AccountKind::kImported,
                     "t1h4n7rphclbmwyjcp6jrdiwlfcuwbroxy3jvg33q");
-  ASSERT_FALSE(
-      service.SignTransactionByFilecoinKeyring(*yet_unknown_account, nullptr));
-  ASSERT_FALSE(service.SignTransactionByFilecoinKeyring(*yet_unknown_account,
-                                                        &transaction.value()));
+  ASSERT_FALSE(service.SignTransactionByFilecoinKeyring(yet_unknown_account,
+                                                        transaction.value()));
 
   ASSERT_TRUE(CreateWallet(&service, "brave"));
 
@@ -2513,7 +2521,7 @@ TEST_F(KeyringServiceUnitTest, SignTransactionByFilecoinKeyring) {
             "t1h4n7rphclbmwyjcp6jrdiwlfcuwbroxy3jvg33q");
 
   auto result = service.SignTransactionByFilecoinKeyring(
-      *imported_account->account_id, &transaction.value());
+      imported_account->account_id, transaction.value());
   ASSERT_TRUE(result);
   std::string expected_result =
       R"({
@@ -2548,10 +2556,9 @@ TEST_F(KeyringServiceUnitTest, AddFilecoinAccounts) {
 
   ASSERT_TRUE(CreateWallet(&service, "brave"));
 
-  ASSERT_TRUE(ImportAccount(
+  ASSERT_TRUE(ImportEthereumAccount(
       &service, "Imported account1",
-      "d118a12a1e3b595d7d9e5599370df4ddc58d246a3ae4a795597e50eb6a32afb5",
-      mojom::CoinType::ETH));
+      "d118a12a1e3b595d7d9e5599370df4ddc58d246a3ae4a795597e50eb6a32afb5"));
 
   ASSERT_TRUE(AddAccount(&service, mojom::CoinType::FIL,
                          mojom::kFilecoinKeyringId, "FIL account1"));
@@ -2651,7 +2658,7 @@ TEST_F(KeyringServiceUnitTest, ImportFilecoinAccounts) {
                          mojom::kFilecoinKeyringId);
 
   auto* filecoin_testnet_keyring =
-      service.GetHDKeyringById(mojom::kFilecoinTestnetKeyringId);
+      service.GetKeyring<FilecoinKeyring>(mojom::kFilecoinTestnetKeyringId);
   EXPECT_EQ(filecoin_testnet_keyring->GetImportedAccountsForTesting().size(),
             imported_testnet_accounts.size());
 
@@ -2726,10 +2733,11 @@ TEST_F(KeyringServiceUnitTest, ImportFilecoinAccounts) {
   EXPECT_EQ(account_infos[0]->name, imported_mainnet_accounts[0].name);
   EXPECT_EQ(account_infos[0]->account_id->kind, mojom::AccountKind::kImported);
 
-  EXPECT_EQ(service.GetHDKeyringById(mojom::kFilecoinTestnetKeyringId)
-                ->GetImportedAccountsForTesting()
-                .size(),
-            imported_testnet_accounts.size() - 1);
+  EXPECT_EQ(
+      service.GetKeyring<FilecoinKeyring>(mojom::kFilecoinTestnetKeyringId)
+          ->GetImportedAccountsForTesting()
+          .size(),
+      imported_testnet_accounts.size() - 1);
   auto payload = EncodePrivateKeyForExport(
       &service,
       MakeAccountId(mojom::CoinType::FIL, mojom::kFilecoinTestnetKeyringId,
@@ -2738,13 +2746,15 @@ TEST_F(KeyringServiceUnitTest, ImportFilecoinAccounts) {
   EXPECT_TRUE(payload);
   EXPECT_EQ(imported_testnet_accounts[0].import_payload, *payload);
 
-  auto* default_keyring = service.GetHDKeyringById(mojom::kDefaultKeyringId);
+  auto* default_keyring =
+      service.GetKeyring<EthereumKeyring>(mojom::kDefaultKeyringId);
   // Imported accounts should also be restored in filecoin keyring
   EXPECT_EQ(default_keyring->GetImportedAccountsForTesting().size(), 0u);
-  EXPECT_EQ(service.GetHDKeyringById(mojom::kFilecoinTestnetKeyringId)
-                ->GetImportedAccountsForTesting()
-                .size(),
-            imported_testnet_accounts.size() - 1);
+  EXPECT_EQ(
+      service.GetKeyring<FilecoinKeyring>(mojom::kFilecoinTestnetKeyringId)
+          ->GetImportedAccountsForTesting()
+          .size(),
+      imported_testnet_accounts.size() - 1);
 }
 
 TEST_F(KeyringServiceUnitTest, ImportBitcoinAccount) {
@@ -2913,11 +2923,10 @@ TEST_F(KeyringServiceUnitTest, SolanaKeyring) {
     KeyringService service(json_rpc_service(), GetPrefs(), GetLocalState());
     ASSERT_TRUE(CreateWallet(&service, "brave"));
 
-    auto imported_account = ImportAccount(
+    auto imported_account = ImportSolanaAccount(
         &service, "Imported Account 1",
         "sCzwsBKmKtk5Hgb4YUJAduQ5nmJq4GTyzCXhrKonAGaexa83MgSZuTSMS6TSZTndnC"
-        "YbQtaJQKLXET9jVjepWXe",
-        mojom::CoinType::SOL);
+        "YbQtaJQKLXET9jVjepWXe");
     ASSERT_TRUE(imported_account);
     EXPECT_EQ(imported_account->address,
               "C5ukMV73nk32h52MjxtnZXTrrr7rupD9CTDDRnYYDRYQ");
@@ -2932,26 +2941,24 @@ TEST_F(KeyringServiceUnitTest, SolanaKeyring) {
               "nCYbQtaJQKLXET9jVjepWXe");
 
     // wrong encoded private key (same bytes but not encoded in keypair)
-    EXPECT_FALSE(ImportAccount(&service, "Imported Failed",
-                               "3v1fSGD1JW5XnAd2FWrjV6HWJHM9DofVjuNt4T5b7CDL",
-                               mojom::CoinType::SOL));
-    imported_account = ImportAccount(
+    EXPECT_FALSE(
+        ImportSolanaAccount(&service, "Imported Failed",
+                            "3v1fSGD1JW5XnAd2FWrjV6HWJHM9DofVjuNt4T5b7CDL"));
+    imported_account = ImportSolanaAccount(
         &service, "Imported Account 2",
         "4pNHX6ATNXad3KZTb2PXTosW5ceaxqx45M9NH9pjcZCH9qoQKx6RMzUjuzm6J9Y2uwjCxJ"
-        "c5JsjL1TrGr1X3nPFP",
-        mojom::CoinType::SOL);
+        "c5JsjL1TrGr1X3nPFP");
     ASSERT_TRUE(imported_account);
     ASSERT_TRUE(
         RemoveAccount(&service, imported_account->account_id, kPasswordBrave));
 
     // import using uint8array
-    imported_account = ImportAccount(
+    imported_account = ImportSolanaAccount(
         &service, "Imported Account 3",
         " [4,109,17,28,245,96,126,232,185,242,61,170,96,51,225,202,152,85,104,"
         "63,4,171,245,175,118,67,238,247,208,163,247,211,201,215,12,121,255,"
         "182,188,11,4,82,78,239,173,146,246,74,66,126,34,173,46,211,145,49,211,"
-        "176,28,89,250,190,34,254]\t\n",
-        mojom::CoinType::SOL);
+        "176,28,89,250,190,34,254]\t\n");
     ASSERT_TRUE(imported_account);
     ASSERT_TRUE(
         RemoveAccount(&service, imported_account->account_id, kPasswordBrave));
@@ -3022,12 +3029,10 @@ class KeyringServiceAccountDiscoveryUnitTest : public KeyringServiceUnitTest {
     saved_mnemonic_ = CreateWallet(&service, "brave").value_or("");
     EXPECT_FALSE(saved_mnemonic_.empty());
 
+    saved_addresses_.clear();
     for (size_t i = 0; i < 100u; ++i) {
-      ASSERT_TRUE(AddAccount(&service, coin_type, keyring_id,
-                             "Acc" + base::NumberToString(i)));
+      saved_addresses_.push_back(*service.GetDiscoveryAddress(keyring_id, i));
     }
-    saved_addresses_ =
-        service.GetHDKeyringById(keyring_id)->GetHDAccountsForTesting();
   }
 
   void set_eth_transaction_count_callback(InterceptorCallback cb) {
@@ -3241,9 +3246,11 @@ TEST_F(KeyringServiceUnitTest, BitcoinDiscovery) {
       *brave_wallet_service.GetBitcoinWalletService());
 
   bitcoin_test_rpc_server.SetUpBitcoinRpc(std::nullopt, std::nullopt);
-  BitcoinHDKeyring keyring_84(*MnemonicToSeed(kMnemonicAbandonAbandon), false);
-  BitcoinHDKeyring keyring_84_test(*MnemonicToSeed(kMnemonicAbandonAbandon),
-                                   true);
+  BitcoinHDKeyring keyring_84(*bip39::MnemonicToSeed(kMnemonicAbandonAbandon),
+                              mojom::KeyringId::kBitcoin84);
+  BitcoinHDKeyring keyring_84_test(
+      *bip39::MnemonicToSeed(kMnemonicAbandonAbandon),
+      mojom::KeyringId::kBitcoin84Testnet);
 
   // Account 0
   bitcoin_test_rpc_server.AddTransactedAddress(
@@ -3573,8 +3580,7 @@ TEST_F(KeyringServiceUnitTest, AccountsAdded) {
   EXPECT_CALL(observer,
               AccountsAdded(testing::Eq(std::ref(added_imported_account))));
   ASSERT_TRUE(service.ImportAccountForKeyring(
-      mojom::CoinType::ETH, mojom::kDefaultKeyringId, "Imported Account",
-      private_key_bytes));
+      mojom::kDefaultKeyringId, "Imported Account", private_key_bytes));
   observer.WaitAndVerify();
 }
 
@@ -3837,50 +3843,6 @@ TEST_F(KeyringServiceUnitTest, SignMessageByBitcoinKeyring) {
       "02202E78E2CBA60B164FF25F5FE71A2649B5788CABE6364417AC1AE7733EB7FFA566",
       base::HexEncode(*service.SignMessageByBitcoinKeyring(
           btc_acc->account_id, mojom::BitcoinKeyId::New(1, 7), message)));
-}
-
-TEST_F(KeyringServiceUnitTest, MigrateSelectedAccount) {
-  auto service = std::make_unique<KeyringService>(json_rpc_service(),
-                                                  GetPrefs(), GetLocalState());
-
-  ASSERT_TRUE(
-      RestoreWallet(service.get(), kMnemonicDivideCruise, "brave", false));
-
-  auto eth_acc = AddAccount(service.get(), mojom::CoinType::ETH,
-                            mojom::KeyringId::kDefault, "ETH 1");
-  auto sol_acc = AddAccount(service.get(), mojom::CoinType::SOL,
-                            mojom::KeyringId::kSolana, "SOL 1");
-  auto fil_acc = AddAccount(service.get(), mojom::CoinType::FIL,
-                            mojom::KeyringId::kFilecoin, "FIL 1");
-  service.reset();
-
-  // Setup legacy selected account prefs.
-  GetPrefs()->ClearPref(kBraveWalletSelectedWalletAccount);
-  GetPrefs()->ClearPref(kBraveWalletSelectedSolDappAccount);
-  GetPrefs()->ClearPref(kBraveWalletSelectedEthDappAccount);
-  GetPrefs()->SetInteger(kBraveWalletSelectedCoinDeprecated,
-                         static_cast<int>(mojom::CoinType::FIL));
-  auto keyrings = GetPrefs()->GetDict(kBraveWalletKeyrings).Clone();
-  keyrings.SetByDottedPath("default.selected_account", eth_acc->address);
-  keyrings.SetByDottedPath("solana.selected_account", sol_acc->address);
-  keyrings.SetByDottedPath("filecoin.selected_account", fil_acc->address);
-  GetPrefs()->SetDict(kBraveWalletKeyrings, std::move(keyrings));
-
-  // Instantiate service, migration should happen.
-  service = std::make_unique<KeyringService>(json_rpc_service(), GetPrefs(),
-                                             GetLocalState());
-
-  // Legacy prefs are missing.
-  EXPECT_FALSE(GetPrefs()->HasPrefPath(kBraveWalletSelectedCoinDeprecated));
-  keyrings = GetPrefs()->GetDict(kBraveWalletKeyrings).Clone();
-  EXPECT_FALSE(keyrings.FindByDottedPath("default.selected_account"));
-  EXPECT_FALSE(keyrings.FindByDottedPath("solana.selected_account"));
-  EXPECT_FALSE(keyrings.FindByDottedPath("filecoin.selected_account"));
-
-  auto all_accounts = service->GetAllAccountsSync();
-  EXPECT_EQ(all_accounts->eth_dapp_selected_account, eth_acc);
-  EXPECT_EQ(all_accounts->sol_dapp_selected_account, sol_acc);
-  EXPECT_EQ(all_accounts->selected_account, fil_acc);
 }
 
 #if BUILDFLAG(ENABLE_ORCHARD)

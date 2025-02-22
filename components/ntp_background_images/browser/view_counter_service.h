@@ -16,6 +16,7 @@
 #include "base/scoped_observation.h"
 #include "base/timer/wall_clock_timer.h"
 #include "base/values.h"
+#include "brave/components/brave_ads/core/mojom/brave_ads.mojom-forward.h"
 #include "brave/components/brave_ads/core/public/serving/targeting/condition_matcher/condition_matcher_util.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_service.h"
 #include "brave/components/ntp_background_images/browser/view_counter_model.h"
@@ -53,8 +54,8 @@ struct TopSite;
 class ViewCounterService : public KeyedService,
                            public NTPBackgroundImagesService::Observer {
  public:
-  ViewCounterService(NTPBackgroundImagesService* service,
-                     BraveNTPCustomBackgroundService* custom_service,
+  ViewCounterService(NTPBackgroundImagesService* background_images_service,
+                     BraveNTPCustomBackgroundService* custom_background_service,
                      brave_ads::AdsService* ads_service,
                      PrefService* prefs,
                      PrefService* local_state,
@@ -79,6 +80,11 @@ class ViewCounterService : public KeyedService,
   void BrandedWallpaperLogoClicked(const std::string& creative_instance_id,
                                    const std::string& destination_url,
                                    const std::string& wallpaper_id);
+
+  void MaybeTriggerNewTabPageAdEvent(
+      const std::string& placement_id,
+      const std::string& creative_instance_id,
+      brave_ads::mojom::NewTabPageAdEventType mojom_ad_event_type);
 
   std::optional<base::Value::Dict> GetNextWallpaperForDisplay();
   std::optional<base::Value::Dict> GetCurrentWallpaperForDisplay();
@@ -147,9 +153,10 @@ class ViewCounterService : public KeyedService,
   void Shutdown() override;
 
   // NTPBackgroundImagesService::Observer
-  void OnUpdated(NTPBackgroundImagesData* data) override;
-  void OnUpdated(NTPSponsoredImagesData* data) override;
-  void OnSuperReferralEnded() override;
+  void OnBackgroundImagesDataDidUpdate(NTPBackgroundImagesData* data) override;
+  void OnSponsoredImagesDataDidUpdate(NTPSponsoredImagesData* data) override;
+  void OnSponsoredContentDidUpdate(const base::Value::Dict& data) override;
+  void OnSuperReferralCampaignDidEnd() override;
 
   void ResetNotificationState();
   bool IsSponsoredImagesWallpaperOptedIn() const;
@@ -172,7 +179,7 @@ class ViewCounterService : public KeyedService,
 
   void UpdateP3AValues();
 
-  raw_ptr<NTPBackgroundImagesService> service_ = nullptr;
+  raw_ptr<NTPBackgroundImagesService> background_images_service_ = nullptr;
   raw_ptr<brave_ads::AdsService> ads_service_ = nullptr;
   raw_ptr<PrefService> prefs_ = nullptr;
   raw_ptr<PrefService> local_state_prefs_ = nullptr;
@@ -182,7 +189,7 @@ class ViewCounterService : public KeyedService,
   base::WallClockTimer p3a_update_timer_;
 
   // Can be null if custom background is not supported.
-  raw_ptr<BraveNTPCustomBackgroundService> custom_bi_service_ = nullptr;
+  raw_ptr<BraveNTPCustomBackgroundService> custom_background_service_ = nullptr;
 
   // If P3A is enabled, these will track number of tabs created
   // and the ratio of those which are branded images.

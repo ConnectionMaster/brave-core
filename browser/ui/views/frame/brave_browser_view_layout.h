@@ -16,6 +16,7 @@ class BraveBrowserViewLayout : public BrowserViewLayout {
  public:
   BraveBrowserViewLayout(std::unique_ptr<BrowserViewLayoutDelegate> delegate,
                          BrowserView* browser_view,
+                         views::View* window_scrim,
                          views::View* top_container,
                          WebAppFrameToolbarView* web_app_frame_toolbar,
                          views::Label* web_app_window_title,
@@ -38,10 +39,6 @@ class BraveBrowserViewLayout : public BrowserViewLayout {
 
   void set_vertical_tab_strip_host(views::View* vertical_tab_strip_host) {
     vertical_tab_strip_host_ = vertical_tab_strip_host;
-  }
-
-  void set_reader_mode_toolbar(views::View* reader_mode_toolbar) {
-    reader_mode_toolbar_ = reader_mode_toolbar;
   }
 
   void set_sidebar_container(SidebarContainerView* sidebar_container) {
@@ -71,9 +68,7 @@ class BraveBrowserViewLayout : public BrowserViewLayout {
  private:
   void LayoutVerticalTabs();
   void LayoutSideBar(gfx::Rect& contents_bounds);
-  void LayoutReaderModeToolbar(gfx::Rect& contents_bounds);
   gfx::Insets GetContentsMargins() const;
-  bool IsReaderModeToolbarVisible() const;
   bool IsFullscreenForTab() const;
   bool IsFullscreenForBrowser() const;
   bool ShouldPushBookmarkBarForVerticalTabs();
@@ -85,7 +80,6 @@ class BraveBrowserViewLayout : public BrowserViewLayout {
 #endif
 
   raw_ptr<views::View, DanglingUntriaged> vertical_tab_strip_host_ = nullptr;
-  raw_ptr<views::View, DanglingUntriaged> reader_mode_toolbar_ = nullptr;
   raw_ptr<SidebarContainerView, DanglingUntriaged> sidebar_container_ = nullptr;
   raw_ptr<views::View> sidebar_separator_ = nullptr;
   raw_ptr<views::View> contents_background_ = nullptr;

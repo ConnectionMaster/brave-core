@@ -6,26 +6,22 @@
 #include "brave/components/brave_ads/core/internal/creatives/creative_ads_database_table.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <utility>
 
 #include "base/check.h"
-#include "base/containers/contains.h"
 #include "base/functional/bind.h"
 #include "base/location.h"
-#include "base/strings/strcat.h"
-#include "base/strings/string_util.h"
 #include "brave/components/brave_ads/core/internal/common/database/database_column_util.h"
 #include "brave/components/brave_ads/core/internal/common/database/database_table_util.h"
 #include "brave/components/brave_ads/core/internal/common/database/database_transaction_util.h"
 #include "brave/components/brave_ads/core/internal/common/logging_util.h"
+#include "brave/components/brave_ads/core/internal/creatives/creative_ads_database_table_util.h"
 #include "brave/components/brave_ads/core/mojom/brave_ads.mojom.h"
 #include "url/gurl.h"
 
 namespace brave_ads::database::table {
-
-using CreativeAdMap =
-    std::map</*creative_ad_uuid*/ std::string, CreativeAdInfo>;
 
 namespace {
 
@@ -43,6 +39,7 @@ void BindColumnTypes(const mojom::DBActionInfoPtr& mojom_db_action) {
       mojom::DBBindColumnType::kInt,     // total_max
       mojom::DBBindColumnType::kDouble,  // value
       mojom::DBBindColumnType::kString,  // split_test_group
+      mojom::DBBindColumnType::kString,  // condition_matchers
       mojom::DBBindColumnType::kString   // target_url
   };
 }
@@ -54,7 +51,7 @@ size_t BindColumns(const mojom::DBActionInfoPtr& mojom_db_action,
 
   size_t row_count = 0;
 
-  int index = 0;
+  int32_t index = 0;
   for (const auto& creative_ad : creative_ads) {
     BindColumnString(mojom_db_action, index++,
                      creative_ad.creative_instance_id);
@@ -65,6 +62,8 @@ size_t BindColumns(const mojom::DBActionInfoPtr& mojom_db_action,
     BindColumnInt(mojom_db_action, index++, creative_ad.total_max);
     BindColumnDouble(mojom_db_action, index++, creative_ad.value);
     BindColumnString(mojom_db_action, index++, creative_ad.split_test_group);
+    BindColumnString(mojom_db_action, index++,
+                     ConditionMatchersToString(creative_ad.condition_matchers));
     BindColumnString(mojom_db_action, index++, creative_ad.target_url.spec());
 
     ++row_count;
@@ -85,8 +84,10 @@ CreativeAdInfo FromMojomRow(const mojom::DBRowInfoPtr& mojom_db_row) {
   creative_ad.per_month = ColumnInt(mojom_db_row, 4);
   creative_ad.total_max = ColumnInt(mojom_db_row, 5);
   creative_ad.value = ColumnDouble(mojom_db_row, 6);
-  creative_ad.split_test_group = ColumnString(mojom_db_row, 13);
-  creative_ad.target_url = GURL(ColumnString(mojom_db_row, 7));
+  creative_ad.split_test_group = ColumnString(mojom_db_row, 7);
+  creative_ad.condition_matchers =
+      StringToConditionMatchers(ColumnString(mojom_db_row, 8));
+  creative_ad.target_url = GURL(ColumnString(mojom_db_row, 9));
 
   return creative_ad;
 }
@@ -96,36 +97,27 @@ CreativeAdList GetCreativeAdsFromResponse(
   CHECK(mojom_db_transaction_result);
   CHECK(mojom_db_transaction_result->rows_union);
 
-  CreativeAdMap creative_ads;
+  std::map<std::string, CreativeAdInfo> creative_ads;
 
   for (const auto& mojom_db_row :
        mojom_db_transaction_result->rows_union->get_rows()) {
-    const CreativeAdInfo creative_ad = FromMojomRow(mojom_db_row);
+    CreativeAdInfo creative_ad = FromMojomRow(mojom_db_row);
 
-    const std::string uuid =
-        base::StrCat({creative_ad.creative_instance_id, creative_ad.segment});
-    const auto iter = creative_ads.find(uuid);
-    if (iter == creative_ads.cend()) {
-      creative_ads.insert({uuid, creative_ad});
-      continue;
-    }
-
-    for (const auto& geo_target : creative_ad.geo_targets) {
-      if (!iter->second.geo_targets.contains(geo_target)) {
-        iter->second.geo_targets.insert(geo_target);
-      }
-    }
-
-    for (const auto& daypart : creative_ad.dayparts) {
-      if (!base::Contains(iter->second.dayparts, daypart)) {
-        iter->second.dayparts.push_back(daypart);
-      }
+    std::string uuid = creative_ad.creative_instance_id + creative_ad.segment;
+    const auto [iter, inserted] =
+        creative_ads.emplace(std::move(uuid), creative_ad);
+    if (!inserted) {
+      iter->second.geo_targets.insert(creative_ad.geo_targets.cbegin(),
+                                      creative_ad.geo_targets.cend());
+      iter->second.dayparts.insert(creative_ad.dayparts.cbegin(),
+                                   creative_ad.dayparts.cend());
     }
   }
 
   CreativeAdList normalized_creative_ads;
-  for (const auto& [_, creative_ad] : creative_ads) {
-    normalized_creative_ads.push_back(creative_ad);
+  normalized_creative_ads.reserve(creative_ads.size());
+  for (auto& [_, creative_ad] : creative_ads) {
+    normalized_creative_ads.push_back(std::move(creative_ad));
   }
 
   return normalized_creative_ads;
@@ -135,7 +127,7 @@ void GetForCreativeInstanceIdCallback(
     const std::string& creative_instance_id,
     GetCreativeAdCallback callback,
     mojom::DBTransactionResultInfoPtr mojom_db_transaction_result) {
-  if (IsError(mojom_db_transaction_result)) {
+  if (!IsTransactionSuccessful(mojom_db_transaction_result)) {
     BLOG(0, "Failed to get creative ad");
     return std::move(callback).Run(/*success=*/false, creative_instance_id,
                                    /*creative_ad=*/{});
@@ -172,16 +164,6 @@ void CreativeAds::Insert(
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
 }
 
-void CreativeAds::Delete(ResultCallback callback) const {
-  mojom::DBTransactionInfoPtr mojom_db_transaction =
-      mojom::DBTransactionInfo::New();
-
-  DeleteTable(mojom_db_transaction, GetTableName());
-
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
-}
-
 void CreativeAds::GetForCreativeInstanceId(
     const std::string& creative_instance_id,
     GetCreativeAdCallback callback) const {
@@ -211,14 +193,14 @@ void CreativeAds::GetForCreativeInstanceId(
           FROM
             $1
           WHERE
-            creative_instance_id = '$2';)",
+            creative_instance_id = '$2')",
       {GetTableName(), creative_instance_id}, nullptr);
   BindColumnTypes(mojom_db_action);
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   base::BindOnce(&GetForCreativeInstanceIdCallback,
-                                  creative_instance_id, std::move(callback)));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 base::BindOnce(&GetForCreativeInstanceIdCallback,
+                                creative_instance_id, std::move(callback)));
 }
 
 std::string CreativeAds::GetTableName() const {
@@ -239,8 +221,9 @@ void CreativeAds::Create(
         total_max INTEGER NOT NULL DEFAULT 0,
         value DOUBLE NOT NULL DEFAULT 0,
         split_test_group TEXT,
+        condition_matchers TEXT NOT NULL,
         target_url TEXT NOT NULL
-      );)");
+      ))");
 }
 
 void CreativeAds::Migrate(
@@ -249,8 +232,13 @@ void CreativeAds::Migrate(
   CHECK(mojom_db_transaction);
 
   switch (to_version) {
-    case 45: {
-      MigrateToV45(mojom_db_transaction);
+    case 48: {
+      MigrateToV48(mojom_db_transaction);
+      break;
+    }
+
+    default: {
+      // No migration needed.
       break;
     }
   }
@@ -258,12 +246,14 @@ void CreativeAds::Migrate(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void CreativeAds::MigrateToV45(
+void CreativeAds::MigrateToV48(
     const mojom::DBTransactionInfoPtr& mojom_db_transaction) {
   CHECK(mojom_db_transaction);
 
-  // We can safely recreate the table because it will be repopulated after
-  // downloading the catalog.
+  // It is safe to recreate the table because it will be repopulated after
+  // downloading the catalog post-migration. However, after this migration, we
+  // should not drop the table as it will store catalog and non-catalog ad units
+  // and maintain relationships with other tables.
   DropTable(mojom_db_transaction, GetTableName());
   Create(mojom_db_transaction);
 }
@@ -287,10 +277,11 @@ std::string CreativeAds::BuildInsertSql(
             total_max,
             value,
             split_test_group,
+            condition_matchers,
             target_url
-          ) VALUES $2;)",
+          ) VALUES $2)",
       {GetTableName(),
-       BuildBindColumnPlaceholders(/*column_count=*/9, row_count)},
+       BuildBindColumnPlaceholders(/*column_count=*/10, row_count)},
       nullptr);
 }
 

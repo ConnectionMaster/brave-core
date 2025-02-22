@@ -5,10 +5,14 @@
 
 #include "brave/components/brave_shields/content/browser/ad_block_custom_filters_provider.h"
 
+#include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
+#include "base/strings/string_tokenizer.h"
 #include "base/task/single_thread_task_runner.h"
+#include "brave/components/brave_shields/content/browser/ad_block_custom_filter_reset_util.h"
 #include "brave/components/brave_shields/core/browser/ad_block_filters_provider_manager.h"
 #include "brave/components/brave_shields/core/common/pref_names.h"
 #include "components/prefs/pref_service.h"
@@ -49,6 +53,21 @@ void AdBlockCustomFiltersProvider::AddUserCosmeticFilter(
     const std::string& filter) {
   std::string custom_filters = GetCustomFilters();
   UpdateCustomFilters(custom_filters + '\n' + filter);
+}
+
+void AdBlockCustomFiltersProvider::ResetCosmeticFilter(
+    const std::string& host) {
+  if (host.empty()) {
+    return;
+  }
+
+  const auto modified_filters =
+      ResetCustomFiltersForHost(host, GetCustomFilters());
+  if (!modified_filters) {
+    return;
+  }
+
+  UpdateCustomFilters(modified_filters.value());
 }
 
 std::string AdBlockCustomFiltersProvider::GetNameForDebugging() {

@@ -7,23 +7,8 @@
 
 namespace brave_ads {
 
-NewTabPageAdInfo::NewTabPageAdInfo() = default;
-
-NewTabPageAdInfo::NewTabPageAdInfo(const NewTabPageAdInfo& other) = default;
-
-NewTabPageAdInfo& NewTabPageAdInfo::operator=(const NewTabPageAdInfo& other) =
-    default;
-
-NewTabPageAdInfo::NewTabPageAdInfo(NewTabPageAdInfo&& other) noexcept = default;
-
-NewTabPageAdInfo& NewTabPageAdInfo::operator=(
-    NewTabPageAdInfo&& other) noexcept = default;
-
-NewTabPageAdInfo::~NewTabPageAdInfo() = default;
-
 bool NewTabPageAdInfo::IsValid() const {
-  return AdInfo::IsValid() && !company_name.empty() && image_url.is_valid() &&
-         !alt.empty() && !wallpapers.empty();
+  return AdInfo::IsValid() && !company_name.empty() && !alt.empty();
 }
 
 }  // namespace brave_ads

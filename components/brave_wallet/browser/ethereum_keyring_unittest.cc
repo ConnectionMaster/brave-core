@@ -12,6 +12,7 @@
 #include "base/base64.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
+#include "brave/components/brave_wallet/browser/bip39.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
 #include "brave/components/brave_wallet/browser/eth_transaction.h"
 #include "testing/gmock/include/gmock/gmock.h"
@@ -26,6 +27,8 @@ constexpr char kMnemonic[] =
 }
 
 namespace brave_wallet {
+
+using bip39::MnemonicToSeed;
 
 TEST(EthereumKeyringUnitTest, ConstructRootHDKey) {
   std::vector<uint8_t> seed;
@@ -53,7 +56,7 @@ TEST(EthereumKeyringUnitTest, EncodePrivateKeyForExport) {
       "8f9e36c31dc46e81472b6a5e40a4487e725ace445b8203f243fb8958",
       &seed));
   EthereumKeyring keyring(seed);
-  auto address = keyring.AddNewHDAccount()->address;
+  auto address = *keyring.AddNewHDAccount(0);
   EXPECT_EQ(keyring.EncodePrivateKeyForExport(address),
             "8140cea58e3bebd6174dbc589a7f70e049556233d32e44969d62e51dd0d1189a");
 }
@@ -65,28 +68,33 @@ TEST(EthereumKeyringUnitTest, Accounts) {
       "8f9e36c31dc46e81472b6a5e40a4487e725ace445b8203f243fb8958",
       &seed));
   EthereumKeyring keyring(seed);
-  keyring.AddNewHDAccount();
+  EXPECT_TRUE(keyring.AddNewHDAccount(0));
+  EXPECT_FALSE(keyring.AddNewHDAccount(0));
   EXPECT_THAT(keyring.GetHDAccountsForTesting(),
               ElementsAre("0x2166fB4e11D44100112B1124ac593081519cA1ec"));
 
-  keyring.AddNewHDAccount();
-  keyring.AddNewHDAccount();
+  EXPECT_TRUE(keyring.AddNewHDAccount(1));
+  EXPECT_FALSE(keyring.AddNewHDAccount(1));
+  EXPECT_TRUE(keyring.AddNewHDAccount(2));
+  EXPECT_FALSE(keyring.AddNewHDAccount(2));
   EXPECT_THAT(keyring.GetHDAccountsForTesting(),
               ElementsAre("0x2166fB4e11D44100112B1124ac593081519cA1ec",
                           "0x2A22ad45446E8b34Da4da1f4ADd7B1571Ab4e4E7",
                           "0x02e77f0e2fa06F95BDEa79Fad158477723145838"));
 
   // remove the last account
-  keyring.RemoveLastHDAccount();
+  EXPECT_TRUE(keyring.RemoveHDAccount(2));
+  EXPECT_FALSE(keyring.RemoveHDAccount(2));
   EXPECT_THAT(keyring.GetHDAccountsForTesting(),
               ElementsAre("0x2166fB4e11D44100112B1124ac593081519cA1ec",
                           "0x2A22ad45446E8b34Da4da1f4ADd7B1571Ab4e4E7"));
 
-  keyring.AddNewHDAccount();
+  EXPECT_TRUE(keyring.AddNewHDAccount(2));
   EXPECT_THAT(keyring.GetHDAccountsForTesting(),
               ElementsAre("0x2166fB4e11D44100112B1124ac593081519cA1ec",
                           "0x2A22ad45446E8b34Da4da1f4ADd7B1571Ab4e4E7",
                           "0x02e77f0e2fa06F95BDEa79Fad158477723145838"));
+  EXPECT_FALSE(keyring.RemoveHDAccount(20));
 }
 
 TEST(EthereumKeyringUnitTest, SignTransaction) {
@@ -105,7 +113,7 @@ TEST(EthereumKeyringUnitTest, SignTransaction) {
       "8f9e36c31dc46e81472b6a5e40a4487e725ace445b8203f243fb8958",
       &seed));
   EthereumKeyring keyring2(seed);
-  auto address = keyring2.AddNewHDAccount()->address;
+  auto address = *keyring2.AddNewHDAccount(0);
   keyring2.SignTransaction(address, &tx, 0);
   EXPECT_TRUE(tx.IsSigned());
 }
@@ -120,42 +128,39 @@ TEST(EthereumKeyringUnitTest, SignMessage) {
   key->SetPrivateKey(private_key);
 
   EthereumKeyring keyring(*MnemonicToSeed(kMnemonic));
-  keyring.accounts_.push_back(std::move(key));
-  auto address = keyring.GetHDAccountsForTesting()[0];
+  auto address = *keyring.ImportAccount(private_key);
   EXPECT_EQ(address, "0xbE93f9BacBcFFC8ee6663f2647917ed7A20a57BB");
 
   std::vector<uint8_t> message;
   EXPECT_TRUE(base::HexStringToBytes("deadbeef", &message));
-  std::vector<uint8_t> sig = keyring.SignMessage(address, message, 0, false);
+  auto sig = *keyring.SignMessage(address, message, 0, false);
   EXPECT_EQ(base::ToLowerASCII(base::HexEncode(sig)),
             "a77440e5c84e5f16ca3636c7af5857c828d2a8f1afbc0a6945d33d4fc45f216e"
             "3eefd69ccc5b3cee000fdaa564d8f1512789af8fe62f2907f5a8c87885b508fa"
             "1b");
 
-  sig = keyring.SignMessage(address, message, 3, false);
+  sig = *keyring.SignMessage(address, message, 3, false);
   EXPECT_EQ(base::ToLowerASCII(base::HexEncode(sig)),
             "a77440e5c84e5f16ca3636c7af5857c828d2a8f1afbc0a6945d33d4fc45f216e"
             "3eefd69ccc5b3cee000fdaa564d8f1512789af8fe62f2907f5a8c87885b508fa"
             "29");
 
-  sig = keyring.SignMessage(address, message, 300, false);
+  sig = *keyring.SignMessage(address, message, 300, false);
   EXPECT_EQ(base::ToLowerASCII(base::HexEncode(sig)),
             "a77440e5c84e5f16ca3636c7af5857c828d2a8f1afbc0a6945d33d4fc45f216e"
             "3eefd69ccc5b3cee000fdaa564d8f1512789af8fe62f2907f5a8c87885b508fa"
             "7b");
 
-  EXPECT_TRUE(keyring
-                  .SignMessage("0xDEADBEEFdeadbeefdeadbeefdeadbeefDEADBEEF",
-                               message, 0, false)
-                  .empty());
+  EXPECT_FALSE(keyring.SignMessage("0xDEADBEEFdeadbeefdeadbeefdeadbeefDEADBEEF",
+                                   message, 0, false));
 
   // when message is not Keccak hash
-  EXPECT_TRUE(keyring.SignMessage(address, message, 0, true).empty());
+  EXPECT_FALSE(keyring.SignMessage(address, message, 0, true));
   message.clear();
   EXPECT_TRUE(base::HexStringToBytes(
       "be609aee343fb3c4b28e1df9e632fca64fcfaede20f02e86244efddf30957bd2",
       &message));
-  sig = keyring.SignMessage(address, message, 3, true);
+  sig = *keyring.SignMessage(address, message, 3, true);
   EXPECT_EQ(base::ToLowerASCII(base::HexEncode(sig)),
             "789c0e9025bbf9410b58c2ca43ea1add3c6cfed66001300b9c102f78022cf6e21b"
             "bf3780d68ff28e72c0ccb4f515b3d527c585abf59bc03531f5047b0357ef3329");
@@ -194,13 +199,13 @@ TEST(EthereumKeyringUnitTest, ImportedAccounts) {
   // Trying to add a duplicate account
   std::vector<uint8_t> private_key0;
   EXPECT_TRUE(base::HexStringToBytes(test_keys[0].key, &private_key0));
-  EXPECT_TRUE(keyring.ImportAccount(private_key0).empty());
+  EXPECT_FALSE(keyring.ImportAccount(private_key0));
 
   // SignMessage
   std::vector<uint8_t> message;
   EXPECT_TRUE(base::HexStringToBytes("68656c6c6f20776f726c64", &message));
-  const std::vector<uint8_t> sig = keyring.SignMessage(
-      "0xbE93f9BacBcFFC8ee6663f2647917ed7A20a57BB", message, 0, false);
+  auto sig = *keyring.SignMessage("0xbE93f9BacBcFFC8ee6663f2647917ed7A20a57BB",
+                                  message, 0, false);
   EXPECT_EQ(base::ToLowerASCII(base::HexEncode(sig)),
             "ce909e8ea6851bc36c007a0072d0524b07a3ff8d4e623aca4c71ca8e57250c4d0a"
             "3fc38fa8fbaaa81ead4b9f6bd03356b6f8bf18bccad167d78891636e1d69561b");
@@ -213,10 +218,8 @@ TEST(EthereumKeyringUnitTest, ImportedAccounts) {
       "0xbE93f9BacBcFFC8ee6663f2647917ed7A20a57BB"));
   EXPECT_FALSE(keyring.RemoveImportedAccount(""));
   EXPECT_FALSE(keyring.RemoveImportedAccount("*****0x*****"));
-  EXPECT_TRUE(keyring
-                  .SignMessage("0xbE93f9BacBcFFC8ee6663f2647917ed7A20a57BB",
-                               message, 0, false)
-                  .empty());
+  EXPECT_FALSE(keyring.SignMessage("0xbE93f9BacBcFFC8ee6663f2647917ed7A20a57BB",
+                                   message, 0, false));
 
   // Sign Transaction
   EthTransaction tx = *EthTransaction::FromTxData(mojom::TxData::New(
@@ -230,18 +233,18 @@ TEST(EthereumKeyringUnitTest, ImportedAccounts) {
   EXPECT_TRUE(tx.IsSigned());
 
   // Try adding derived account.
-  auto address = keyring.AddNewHDAccount()->address;
+  auto address = keyring.AddNewHDAccount(0);
   EXPECT_EQ(address, "0x2166fB4e11D44100112B1124ac593081519cA1ec");
   const std::string account_0_pri_key =
       "8140cea58e3bebd6174dbc589a7f70e049556233d32e44969d62e51dd0d1189a";
   std::vector<uint8_t> private_key;
   EXPECT_TRUE(base::HexStringToBytes(account_0_pri_key, &private_key));
-  EXPECT_TRUE(keyring.ImportAccount(private_key).empty());
+  EXPECT_FALSE(keyring.ImportAccount(private_key));
 }
 
 TEST(EthereumKeyringUnitTest, GetPublicKeyFromX25519_XSalsa20_Poly1305) {
   EthereumKeyring keyring(*MnemonicToSeed(kMnemonic));
-  auto address = keyring.AddNewHDAccount()->address;
+  auto address = *keyring.AddNewHDAccount(0);
   std::string public_encryption_key;
   EXPECT_TRUE(keyring.GetPublicKeyFromX25519_XSalsa20_Poly1305(
       address, &public_encryption_key));
@@ -261,7 +264,7 @@ TEST(EthereumKeyringUnitTest, DecryptCipherFromX25519_XSalsa20_Poly1305) {
 
   // pub encryption key:
   // "eui9/fqCHT7aSUkKK9eooQFnOCD9COK9Mi1ZtOxIj2A="
-  auto address = keyring.AddNewHDAccount()->address;
+  auto address = *keyring.AddNewHDAccount(0);
 
   // {
   //   version: 'x25519-xsalsa20-poly1305',

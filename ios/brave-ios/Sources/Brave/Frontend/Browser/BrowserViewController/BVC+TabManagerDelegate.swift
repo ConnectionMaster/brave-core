@@ -59,6 +59,7 @@ extension BrowserViewController: TabManagerDelegate {
         topToolbar.hideProgressBar()
       }
 
+      previous?.shownPromptAlert?.dismiss(animated: false)
       readerModeCache = ReaderModeScriptHandler.cache(for: tab)
       ReaderModeHandler.readerModeCache = readerModeCache
 
@@ -470,7 +471,10 @@ extension BrowserViewController: TabManagerDelegate {
 
     var closeAllTabMenuChildren: [UIAction] = []
 
-    if FeatureList.kBraveShredFeature.enabled {
+    if FeatureList.kBraveShredFeature.enabled,
+      let url = tabManager.selectedTab?.url,
+      url.isShredAvailable
+    {
       let shredDataAction = UIAction(
         title: Strings.Shields.shredSiteData,
         image: UIImage(braveSystemNamed: "leo.shred.data"),

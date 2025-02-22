@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_wallet/browser/ethereum_provider_impl.h"
 
+#include <algorithm>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -743,15 +744,14 @@ void EthereumProviderImpl::OnSignMessageRequestProcessed(
 
   base::Value formed_response;
   if (account_id->kind != mojom::AccountKind::kHardware) {
-    auto signature_with_err = keyring_service_->SignMessageByDefaultKeyring(
+    auto signature = keyring_service_->SignMessageByDefaultKeyring(
         account_id, message, is_eip712);
-    if (!signature_with_err.signature) {
-      formed_response =
-          GetProviderErrorDictionary(mojom::ProviderError::kInternalError,
-                                     signature_with_err.error_message);
+    if (!signature.has_value()) {
+      formed_response = GetProviderErrorDictionary(
+          mojom::ProviderError::kInternalError, signature.error());
       reject = true;
     } else {
-      formed_response = base::Value(ToHex(*signature_with_err.signature));
+      formed_response = base::Value(ToHex(signature.value()));
     }
   } else {
     if (!hw_signature) {  // Missing hardware signature.
@@ -1485,11 +1485,11 @@ void EthereumProviderImpl::OnGetBlockByNumber(
     mojom::ProviderError error,
     const std::string& error_message) {
   if (events_listener_.is_bound() && error == mojom::ProviderError::kSuccess) {
-    base::ranges::for_each(eth_subscriptions_,
-                           [this, &result](const std::string& subscription_id) {
-                             events_listener_->MessageEvent(subscription_id,
-                                                            result.Clone());
-                           });
+    std::ranges::for_each(eth_subscriptions_,
+                          [this, &result](const std::string& subscription_id) {
+                            events_listener_->MessageEvent(subscription_id,
+                                                           result.Clone());
+                          });
   }
 }
 

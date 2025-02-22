@@ -33,8 +33,8 @@ class OrchardSyncState {
       const mojom::AccountIdPtr& account_id,
       uint64_t account_birthday_block);
 
-  base::expected<std::optional<OrchardStorage::AccountMeta>,
-                 OrchardStorage::Error>
+  virtual base::expected<std::optional<OrchardStorage::AccountMeta>,
+                         OrchardStorage::Error>
   GetAccountMeta(const mojom::AccountIdPtr& account_id);
 
   virtual base::expected<OrchardStorage::Result, OrchardStorage::Error> Rewind(
@@ -52,9 +52,7 @@ class OrchardSyncState {
   ApplyScanResults(const mojom::AccountIdPtr& account_id,
                    // Value is used here to allow moving scanned_blocks which
                    // wraps rust object.
-                   OrchardBlockScanner::Result block_scanner_results,
-                   const uint32_t latest_scanned_block,
-                   const std::string& latest_scanned_block_hash);
+                   OrchardBlockScanner::Result block_scanner_results);
 
   base::expected<std::optional<uint32_t>, OrchardStorage::Error>
   GetLatestShardIndex(const mojom::AccountIdPtr& account_id);

@@ -5,10 +5,10 @@
 
 #include "brave/renderer/brave_content_renderer_client.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "base/feature_list.h"
-#include "base/ranges/algorithm.h"
 #include "brave/components/ai_chat/core/common/features.h"
 #include "brave/components/ai_chat/renderer/page_content_extractor.h"
 #include "brave/components/ai_rewriter/common/buildflags/buildflags.h"
@@ -24,6 +24,7 @@
 #include "brave/components/skus/common/features.h"
 #include "brave/components/skus/renderer/skus_render_frame_observer.h"
 #include "brave/components/speedreader/common/buildflags/buildflags.h"
+#include "brave/components/web_discovery/buildflags/buildflags.h"
 #include "brave/renderer/brave_render_frame_observer.h"
 #include "brave/renderer/brave_render_thread_observer.h"
 #include "brave/renderer/brave_wallet/brave_wallet_render_frame_observer.h"
@@ -68,19 +69,23 @@
 #include "third_party/widevine/cdm/widevine_cdm_common.h"
 #endif
 
+#if BUILDFLAG(ENABLE_WEB_DISCOVERY_NATIVE)
+#include "brave/components/web_discovery/common/features.h"
+#include "brave/components/web_discovery/renderer/blink_document_extractor.h"
+#endif
+
 namespace {
 void MaybeRemoveWidevineSupport(media::GetSupportedKeySystemsCB cb,
                                 media::KeySystemInfos key_systems) {
 #if BUILDFLAG(ENABLE_WIDEVINE)
   auto dynamic_params = BraveRenderThreadObserver::GetDynamicParams();
   if (!dynamic_params.widevine_enabled) {
-    key_systems.erase(
-        base::ranges::remove(
-            key_systems, kWidevineKeySystem,
-            [](const std::unique_ptr<media::KeySystemInfo>& key_system) {
-              return key_system->GetBaseKeySystemName();
-            }),
-        key_systems.cend());
+    auto to_remove = std::ranges::remove(
+        key_systems, kWidevineKeySystem,
+        [](const std::unique_ptr<media::KeySystemInfo>& key_system) {
+          return key_system->GetBaseKeySystemName();
+        });
+    key_systems.erase(to_remove.begin(), to_remove.end());
   }
 #endif
   cb.Run(std::move(key_systems));
@@ -112,6 +117,8 @@ void BraveContentRendererClient::
         "FileSystemAccessAPIExperimental", false);
   }
   blink::WebRuntimeFeatures::EnableFeatureFromString("FledgeMultiBid", false);
+  blink::WebRuntimeFeatures::EnableFeatureFromString("PrivateStateTokens",
+                                                     false);
 
 #if BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
   if (base::FeatureList::IsEnabled(
@@ -209,6 +216,14 @@ void BraveContentRendererClient::RenderFrameCreated(
 #if BUILDFLAG(ENABLE_AI_REWRITER)
   if (ai_rewriter::features::IsAIRewriterEnabled()) {
     new ai_rewriter::AIRewriterAgent(render_frame, registry);
+  }
+#endif
+
+#if BUILDFLAG(ENABLE_WEB_DISCOVERY_NATIVE)
+  if (base::FeatureList::IsEnabled(
+          web_discovery::features::kBraveWebDiscoveryNative) &&
+      !IsIncognitoProcess()) {
+    new web_discovery::BlinkDocumentExtractor(render_frame, registry);
   }
 #endif
 }
