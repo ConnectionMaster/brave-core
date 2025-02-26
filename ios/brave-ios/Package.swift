@@ -288,6 +288,7 @@ var package = Package(
       dependencies: [
         "BraveCore",
         "BraveShared",
+        "BraveStrings",
         "BraveUI",
         "DesignSystem",
         "Preferences",
@@ -574,9 +575,6 @@ var braveTarget: PackageDescription.Target = .target(
       "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Paged/TrackingProtectionStats.js"
     ),
     .copy(
-      "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Paged/RewardsReportingScript.js"
-    ),
-    .copy(
       "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Paged/WalletEthereumProviderScript.js"
     ),
     .copy(
@@ -592,12 +590,6 @@ var braveTarget: PackageDescription.Target = .target(
     .copy("Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Sandboxed/FaviconScript.js"),
     .copy(
       "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Sandboxed/ResourceDownloaderScript.js"
-    ),
-    .copy(
-      "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Sandboxed/SelectorsPollerScript.js"
-    ),
-    .copy(
-      "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Sandboxed/ProceduralFilters.js"
     ),
     .copy(
       "Frontend/UserContent/UserScripts/Scripts_Dynamic/Scripts/Sandboxed/SiteStateListenerScript.js"

@@ -33,6 +33,7 @@ import org.chromium.chrome.browser.browser_controls.BrowserStateBrowserControlsV
 import org.chromium.chrome.browser.compositor.CompositorViewHolder;
 import org.chromium.chrome.browser.compositor.layouts.LayoutManagerImpl;
 import org.chromium.chrome.browser.compositor.overlays.strip.StripLayoutHelperManager;
+import org.chromium.chrome.browser.customtabs.FullScreenCustomTabActivity;
 import org.chromium.chrome.browser.data_sharing.DataSharingTabManager;
 import org.chromium.chrome.browser.ephemeraltab.EphemeralTabCoordinator;
 import org.chromium.chrome.browser.findinpage.FindToolbarManager;
@@ -76,7 +77,7 @@ import org.chromium.chrome.browser.ui.edge_to_edge.EdgeToEdgeController;
 import org.chromium.chrome.browser.ui.system.StatusBarColorController;
 import org.chromium.components.browser_ui.bottomsheet.BottomSheetController;
 import org.chromium.components.browser_ui.desktop_windowing.DesktopWindowStateManager;
-import org.chromium.components.browser_ui.widget.scrim.ScrimCoordinator;
+import org.chromium.components.browser_ui.widget.scrim.ScrimManager;
 import org.chromium.components.omnibox.action.OmniboxActionDelegate;
 import org.chromium.misc_metrics.mojom.MiscAndroidMetrics;
 import org.chromium.ui.base.WindowAndroid;
@@ -94,7 +95,7 @@ public class BraveToolbarManager extends ToolbarManager {
     private FullscreenManager mFullscreenManager;
     private ActivityTabProvider mActivityTabProvider;
     private AppThemeColorProvider mAppThemeColorProvider;
-    private ScrimCoordinator mScrimCoordinator;
+    private ScrimManager mScrimManager;
     private MenuButtonCoordinator mMenuButtonCoordinator;
     private ToolbarTabControllerImpl mToolbarTabController;
     private LocationBar mLocationBar;
@@ -115,10 +116,11 @@ public class BraveToolbarManager extends ToolbarManager {
     private LayoutStateProvider mLayoutStateProvider;
     private ObservableSupplier<ReadAloudController> mReadAloudControllerSupplier;
     private TopUiThemeColorProvider mTopUiThemeColorProvider;
+    private int mCurrentOrientation;
 
     // Own members.
     private TabGroupUi mTabGroupUi;
-    private boolean mIsBottomToolbarVisible;
+    private boolean mIsBraveBottomControlsVisible;
     private ObservableSupplier<Boolean> mOmniboxFocusStateSupplier;
     private OneshotSupplier<LayoutStateProvider> mLayoutStateProviderSupplier;
     private HomepageManager.HomepageStateListener mBraveHomepageStateListener;
@@ -150,7 +152,7 @@ public class BraveToolbarManager extends ToolbarManager {
             ObservableSupplier<ShareDelegate> shareDelegateSupplier,
             List<ButtonDataProvider> buttonDataProviders,
             ActivityTabProvider tabProvider,
-            ScrimCoordinator scrimCoordinator,
+            ScrimManager scrimManager,
             ToolbarActionModeCallback toolbarActionModeCallback,
             FindToolbarManager findToolbarManager,
             ObservableSupplier<Profile> profileSupplier,
@@ -196,7 +198,7 @@ public class BraveToolbarManager extends ToolbarManager {
                 shareDelegateSupplier,
                 buttonDataProviders,
                 tabProvider,
-                scrimCoordinator,
+                scrimManager,
                 toolbarActionModeCallback,
                 findToolbarManager,
                 profileSupplier,
@@ -239,7 +241,7 @@ public class BraveToolbarManager extends ToolbarManager {
         mTabModelSelectorSupplier = tabModelSelectorSupplier;
 
         if (isToolbarPhone()) {
-            updateBottomToolbarVisibility();
+            updateBraveBottomControlsVisibility();
         }
 
         mBraveHomepageStateListener =
@@ -262,7 +264,7 @@ public class BraveToolbarManager extends ToolbarManager {
                 return;
             }
             mBottomControlsEnabled = true;
-            if (!BottomToolbarConfiguration.isBottomToolbarEnabled()) {
+            if (!BottomToolbarConfiguration.isBraveBottomControlsEnabled()) {
                 super.enableBottomControls();
                 return;
             }
@@ -275,6 +277,7 @@ public class BraveToolbarManager extends ToolbarManager {
                     new BottomUiThemeColorProvider(
                             mTopUiThemeColorProvider,
                             mBrowserControlsSizer,
+                            mBottomControlsStacker,
                             mIncognitoStateProvider,
                             mActivity);
 
@@ -284,7 +287,7 @@ public class BraveToolbarManager extends ToolbarManager {
                                     mActivity,
                                     mBottomControls.findViewById(R.id.bottom_container_slot),
                                     mBrowserControlsSizer,
-                                    mScrimCoordinator,
+                                    mScrimManager,
                                     mOmniboxFocusStateSupplier,
                                     mBottomSheetController,
                                     mDataSharingTabManager,
@@ -337,8 +340,8 @@ public class BraveToolbarManager extends ToolbarManager {
                             }));
             mBottomControls.setBottomControlsCoordinatorSupplier(
                     mBottomControlsCoordinatorSupplier);
-            updateBottomToolbarVisibility();
-            if (mIsBottomToolbarVisible) {
+            updateBraveBottomControlsVisibility();
+            if (mIsBraveBottomControlsVisible) {
                 mBottomControls.setVisibility(View.VISIBLE);
             }
         }
@@ -358,7 +361,8 @@ public class BraveToolbarManager extends ToolbarManager {
             Runnable openGridTabSwitcherHandler,
             OnClickListener bookmarkClickHandler,
             OnClickListener customTabsBackClickHandler,
-            @Nullable ObservableSupplier<Integer> archivedTabCountSupplier) {
+            @Nullable ObservableSupplier<Integer> archivedTabCountSupplier,
+            ObservableSupplier<Boolean> tabModelNotificationDotSupplier) {
 
         super.initializeWithNative(
                 layoutManager,
@@ -366,15 +370,17 @@ public class BraveToolbarManager extends ToolbarManager {
                 openGridTabSwitcherHandler,
                 bookmarkClickHandler,
                 customTabsBackClickHandler,
-                archivedTabCountSupplier);
+                archivedTabCountSupplier,
+                tabModelNotificationDotSupplier);
 
-        if (isToolbarPhone() && BottomToolbarConfiguration.isBottomToolbarEnabled()) {
+        if (isToolbarPhone() && BottomToolbarConfiguration.isBraveBottomControlsEnabled()) {
             enableBottomControls();
             Runnable closeAllTabsAction =
                     () -> {
                         mTabModelSelector
                                 .getModel(mIncognitoStateProvider.isIncognitoSelected())
-                                .closeTabs(TabClosureParams.closeAllTabs().build());
+                                .getTabRemover()
+                                .closeTabs(TabClosureParams.closeAllTabs().build(), false);
                     };
 
             assert (mActivity instanceof ChromeActivity);
@@ -440,17 +446,24 @@ public class BraveToolbarManager extends ToolbarManager {
         }
     }
 
-    protected void onOrientationChange(int newOrientation) {
+    protected void onOrientationChange() {
         if (mActionModeController != null) mActionModeController.showControlsOnOrientationChange();
 
         if (mBottomControlsCoordinatorSupplier.get() != null
-                && BottomToolbarConfiguration.isBottomToolbarEnabled()) {
-            boolean isBottomToolbarVisible = newOrientation != Configuration.ORIENTATION_LANDSCAPE;
-            setBottomToolbarVisible(isBottomToolbarVisible);
+                && BottomToolbarConfiguration.isBraveBottomControlsEnabled()) {
+            boolean isBraveBottomControlsVisible =
+                    mCurrentOrientation != Configuration.ORIENTATION_LANDSCAPE;
+            setBraveBottomControlsVisible(isBraveBottomControlsVisible);
+        }
+
+        if (mActivity instanceof FullScreenCustomTabActivity) {
+            // When rewards page is shown on rotated screen we don't care about
+            // the toolbar.
+            return;
         }
 
         if (mActivity instanceof BraveActivity) {
-            ((BraveActivity) mActivity).updateBottomSheetPosition(newOrientation);
+            ((BraveActivity) mActivity).updateBottomSheetPosition(mCurrentOrientation);
         }
     }
 
@@ -474,14 +487,16 @@ public class BraveToolbarManager extends ToolbarManager {
         assert false;
     }
 
-    private void setBottomToolbarVisible(boolean visible) {
-        mIsBottomToolbarVisible = visible;
+    private void setBraveBottomControlsVisible(boolean visible) {
+        mIsBraveBottomControlsVisible = visible;
         boolean isMenuFromBottom =
-                mIsBottomToolbarVisible && BottomToolbarConfiguration.isBottomToolbarEnabled();
+                (mIsBraveBottomControlsVisible
+                                && BottomToolbarConfiguration.isBraveBottomControlsEnabled())
+                        || BottomToolbarConfiguration.isToolbarBottomAnchored();
         BraveMenuButtonCoordinator.setMenuFromBottom(isMenuFromBottom);
 
         if (mToolbar instanceof BraveTopToolbarCoordinator) {
-            ((BraveTopToolbarCoordinator) mToolbar).onBottomToolbarVisibilityChanged(visible);
+            ((BraveTopToolbarCoordinator) mToolbar).onBottomControlsVisibilityChanged(visible);
         }
         if (mBottomControlsCoordinatorSupplier.get() instanceof BraveBottomControlsCoordinator) {
             ((BraveBottomControlsCoordinator) mBottomControlsCoordinatorSupplier.get())
@@ -489,11 +504,12 @@ public class BraveToolbarManager extends ToolbarManager {
         }
     }
 
-    private void updateBottomToolbarVisibility() {
-        boolean isBottomToolbarVisible = BottomToolbarConfiguration.isBottomToolbarEnabled()
-                && mActivity.getResources().getConfiguration().orientation
-                        != Configuration.ORIENTATION_LANDSCAPE;
-        setBottomToolbarVisible(isBottomToolbarVisible);
+    private void updateBraveBottomControlsVisibility() {
+        boolean isBraveBottomControlsVisible =
+                BottomToolbarConfiguration.isBraveBottomControlsEnabled()
+                        && mActivity.getResources().getConfiguration().orientation
+                                != Configuration.ORIENTATION_LANDSCAPE;
+        setBraveBottomControlsVisible(isBraveBottomControlsVisible);
     }
 
     private boolean isToolbarPhone() {

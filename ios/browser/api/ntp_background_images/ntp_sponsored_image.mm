@@ -86,9 +86,9 @@
   auto campaignId = base::SysUTF8ToNSString(campaign.campaign_id);
   auto backgrounds =
       [[NSMutableArray<NTPSponsoredImageBackground*> alloc] init];
-  for (const auto& background : campaign.backgrounds) {
+  for (const auto& creative : campaign.creatives) {
     [backgrounds addObject:[[NTPSponsoredImageBackground alloc]
-                               initWithSponsoredBackground:background]];
+                               initWithSponsoredBackground:creative]];
   }
   return [self initWithCampaignId:campaignId backgrounds:backgrounds];
 }
@@ -124,10 +124,10 @@
 }
 
 - (instancetype)initWithSponsoredBackground:
-    (const ntp_background_images::SponsoredBackground&)sponsoredBackground {
+    (const ntp_background_images::Creative&)sponsoredBackground {
   auto imagePath =
       [NSURL fileURLWithPath:base::SysUTF8ToNSString(
-                                 sponsoredBackground.image_file.value())];
+                                 sponsoredBackground.file_path.value())];
   auto focalPoint = sponsoredBackground.focal_point.ToCGPoint();
   auto backgroundColor =
       base::SysUTF8ToNSString(sponsoredBackground.background_color);
@@ -147,7 +147,7 @@
 @end
 
 @interface NTPSponsoredImageLogo ()
-@property(nonatomic, copy) NSURL* imagePath;
+@property(nonatomic, copy, nullable) NSURL* imagePath;
 @property(nonatomic, copy) NSString* altText;
 @property(nonatomic, copy, nullable) NSURL* destinationURL;
 @property(nonatomic, copy) NSString* companyName;

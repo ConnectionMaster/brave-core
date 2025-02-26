@@ -15,7 +15,6 @@
 #include "base/json/json_value_converter.h"
 #include "base/logging.h"
 #include "base/numerics/safe_conversions.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/string_util.h"
 #include "base/values.h"
 
@@ -178,7 +177,7 @@ bool FilterListCatalogEntry::SupportsCurrentPlatform() const {
 std::vector<FilterListCatalogEntry>::const_iterator FindAdBlockFilterListByUUID(
     const std::vector<FilterListCatalogEntry>& region_lists,
     const std::string& uuid) {
-  return base::ranges::find(region_lists, uuid, &FilterListCatalogEntry::uuid);
+  return std::ranges::find(region_lists, uuid, &FilterListCatalogEntry::uuid);
 }
 
 // Given a locale like `en-US`, find regional lists corresponding to the
@@ -212,16 +211,16 @@ std::vector<FilterListCatalogEntry> FilterListCatalogFromJSON(
   std::vector<FilterListCatalogEntry> catalog =
       std::vector<FilterListCatalogEntry>();
 
-  std::optional<base::Value> parsed_json = base::JSONReader::Read(catalog_json);
-  if (!parsed_json || !parsed_json->is_list()) {
+  std::optional<base::Value::List> parsed_json =
+      base::JSONReader::ReadList(catalog_json);
+  if (!parsed_json) {
     LOG(ERROR) << "Could not load regional adblock catalog";
     return catalog;
   }
 
   base::JSONValueConverter<FilterListCatalogEntry> converter;
 
-  base::Value::List& regional_lists = parsed_json->GetList();
-  for (const auto& item : regional_lists) {
+  for (const auto& item : *parsed_json) {
     DCHECK(item.is_dict());
     FilterListCatalogEntry entry;
     converter.Convert(item, &entry);

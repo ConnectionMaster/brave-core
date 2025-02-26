@@ -20,7 +20,6 @@
 #include "base/values.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_prefs.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
-#include "brave/components/brave_wallet/browser/hd_keyring.h"
 #include "brave/components/brave_wallet/browser/keyring_service.h"
 #include "brave/components/brave_wallet/browser/keyring_service_prefs.h"
 #include "brave/components/brave_wallet/browser/password_encryptor.h"
@@ -45,6 +44,28 @@ constexpr char kEncryptedMnemonicDeprecated[] = "encrypted_mnemonic";
 constexpr char kImportedAccountCoinTypeDeprecated[] = "coin_type";
 constexpr char kSelectedAccountDeprecated[] = "selected_account";
 
+std::string GetRootPath(mojom::KeyringId keyring_id) {
+  if (keyring_id == mojom::KeyringId::kDefault) {
+    return "m/44'/60'/0'/0";
+  } else if (keyring_id == mojom::KeyringId::kSolana) {
+    return "m/44'/501'";
+  } else if (keyring_id == mojom::KeyringId::kFilecoin) {
+    return "m/44'/461'/0'/0";
+  } else if (keyring_id == mojom::KeyringId::kFilecoinTestnet) {
+    return "m/44'/1'/0'/0";
+  } else if (keyring_id == mojom::KeyringId::kBitcoin84) {
+    return "m/84'/0'";
+  } else if (keyring_id == mojom::KeyringId::kBitcoin84Testnet) {
+    return "m/84'/1'";
+  } else if (keyring_id == mojom::KeyringId::kZCashMainnet) {
+    return "m/44'/133'";
+  } else if (keyring_id == mojom::KeyringId::kZCashTestnet) {
+    return "m/44'/1'";
+  }
+
+  NOTREACHED() << keyring_id;
+}
+
 std::optional<uint32_t> ExtractAccountIndex(mojom::KeyringId keyring_id,
                                             const std::string& path) {
   CHECK(keyring_id == mojom::KeyringId::kDefault ||
@@ -60,7 +81,7 @@ std::optional<uint32_t> ExtractAccountIndex(mojom::KeyringId keyring_id,
   // For all types remove root path and slash. For Solana also remove '/0'.
 
   auto account_index = std::string_view(path);
-  auto root_path = HDKeyring::GetRootPath(keyring_id);
+  auto root_path = GetRootPath(keyring_id);
   if (!account_index.starts_with(root_path)) {
     return std::nullopt;
   }
@@ -194,83 +215,6 @@ void MigrateDerivedAccountIndex(PrefService* profile_prefs) {
   }
 }
 
-void MaybeMigrateSelectedAccountPrefs(
-    PrefService* profile_prefs,
-    const std::vector<mojom::AccountInfoPtr>& all_accounts) {
-  if (!profile_prefs->HasPrefPath(kBraveWalletSelectedCoinDeprecated)) {
-    return;
-  }
-
-  if (all_accounts.empty()) {
-    return;
-  }
-
-  auto find_account = [&](mojom::KeyringId keyring_id) -> mojom::AccountIdPtr {
-    if (!profile_prefs->GetDict(kBraveWalletKeyrings)
-             .FindDict(KeyringIdPrefString(keyring_id))) {
-      return nullptr;
-    }
-
-    std::string address;
-    {
-      ScopedDictPrefUpdate update(profile_prefs, kBraveWalletKeyrings);
-      auto extracted = update->EnsureDict(KeyringIdPrefString(keyring_id))
-                           ->Extract(kSelectedAccountDeprecated);
-      if (extracted && extracted->is_string()) {
-        address = extracted->GetString();
-      }
-    }
-
-    if (address.empty()) {
-      return nullptr;
-    }
-
-    for (auto& acc : all_accounts) {
-      if (acc->account_id->keyring_id == keyring_id &&
-          base::EqualsCaseInsensitiveASCII(acc->address, address)) {
-        return acc->account_id.Clone();
-      }
-    }
-
-    return nullptr;
-  };
-
-  mojom::AccountIdPtr eth_selected = find_account(mojom::KeyringId::kDefault);
-  mojom::AccountIdPtr sol_selected = find_account(mojom::KeyringId::kSolana);
-  mojom::AccountIdPtr fil_selected = find_account(mojom::KeyringId::kFilecoin);
-
-  SetSelectedDappAccountInPrefs(profile_prefs, mojom::CoinType::ETH,
-                                eth_selected ? eth_selected->unique_key : "");
-  SetSelectedDappAccountInPrefs(profile_prefs, mojom::CoinType::SOL,
-                                sol_selected ? sol_selected->unique_key : "");
-
-  mojom::AccountIdPtr wallet_selected;
-  auto coin = static_cast<mojom::CoinType>(
-      profile_prefs->GetInteger(kBraveWalletSelectedCoinDeprecated));
-  switch (coin) {
-    case mojom::CoinType::ETH:
-      wallet_selected = eth_selected.Clone();
-      break;
-    case mojom::CoinType::SOL:
-      wallet_selected = sol_selected.Clone();
-      break;
-    case mojom::CoinType::FIL:
-      wallet_selected = fil_selected.Clone();
-      break;
-    case mojom::CoinType::ZEC:
-      NOTREACHED();
-    case mojom::CoinType::BTC:
-      NOTREACHED();
-  }
-
-  if (!wallet_selected) {
-    wallet_selected = all_accounts.front()->account_id->Clone();
-    DCHECK_EQ(mojom::CoinType::ETH, wallet_selected->coin);
-  }
-  SetSelectedWalletAccountInPrefs(profile_prefs, wallet_selected->unique_key);
-  profile_prefs->ClearPref(kBraveWalletSelectedCoinDeprecated);
-}
-
 void MaybeRunPasswordMigrations(PrefService* profile_prefs,
                                 const std::string& password) {
   MaybeMigratePBKDF2Iterations(profile_prefs, password);
@@ -304,8 +248,7 @@ void MaybeMigratePBKDF2Iterations(PrefService* profile_prefs,
 
     auto deprecated_encryptor =
         PasswordEncryptor::DeriveKeyFromPasswordUsingPbkdf2(
-            password, *deprecated_salt, kPbkdf2IterationsLegacy,
-            kPbkdf2KeySize);
+            password, *deprecated_salt, kPbkdf2IterationsLegacy);
     if (!deprecated_encryptor) {
       continue;
     }
@@ -320,7 +263,7 @@ void MaybeMigratePBKDF2Iterations(PrefService* profile_prefs,
                                                     /*force_create = */ true);
 
     auto encryptor = PasswordEncryptor::DeriveKeyFromPasswordUsingPbkdf2(
-        password, salt, kPbkdf2Iterations, kPbkdf2KeySize);
+        password, salt, kPbkdf2Iterations);
     if (!encryptor) {
       continue;
     }
@@ -398,7 +341,7 @@ void MaybeMigrateToWalletMnemonic(PrefService* profile_prefs,
 
   auto deprecated_eth_encryptor =
       PasswordEncryptor::DeriveKeyFromPasswordUsingPbkdf2(
-          password, *deprecated_eth_salt, kPbkdf2Iterations, kPbkdf2KeySize);
+          password, *deprecated_eth_salt, kPbkdf2Iterations);
   if (!deprecated_eth_encryptor) {
     return;
   }
@@ -469,7 +412,7 @@ void MaybeMigrateToWalletMnemonic(PrefService* profile_prefs,
 
     auto deprecated_encryptor =
         PasswordEncryptor::DeriveKeyFromPasswordUsingPbkdf2(
-            password, *deprecated_salt, kPbkdf2Iterations, kPbkdf2KeySize);
+            password, *deprecated_salt, kPbkdf2Iterations);
     if (!deprecated_encryptor) {
       continue;
     }

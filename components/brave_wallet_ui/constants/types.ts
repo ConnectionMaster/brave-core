@@ -214,6 +214,7 @@ export interface WalletState {
   isAnkrBalancesFeatureEnabled: boolean
   isRefreshingNetworksAndTokens: boolean
   isZCashShieldedTransactionsEnabled: boolean
+  isCardanoEnabled: boolean
 }
 
 export interface PanelState {
@@ -556,9 +557,6 @@ export enum WalletRoutes {
   Restore = '/crypto/restore-wallet',
   Unlock = '/crypto/unlock',
 
-  // Activity (Transactions)
-  Activity = '/crypto/activity',
-
   // portfolio
   Portfolio = '/crypto/portfolio',
   PortfolioAssets = '/crypto/portfolio/assets',
@@ -668,14 +666,6 @@ export interface TransactionProviderErrorRegistry {
   [transactionId: string]: TransactionProviderError
 }
 
-export const SupportedCoinTypes = [
-  BraveWallet.CoinType.SOL,
-  BraveWallet.CoinType.ETH,
-  BraveWallet.CoinType.FIL,
-  BraveWallet.CoinType.BTC,
-  BraveWallet.CoinType.ZEC
-]
-
 export const SupportedOnRampNetworks = [
   BraveWallet.SOLANA_MAINNET,
   BraveWallet.MAINNET_CHAIN_ID, // ETH
@@ -712,7 +702,8 @@ export const SupportedTestNetworks = [
   BraveWallet.FILECOIN_TESTNET,
   BraveWallet.FILECOIN_ETHEREUM_TESTNET_CHAIN_ID,
   BraveWallet.BITCOIN_TESTNET,
-  BraveWallet.Z_CASH_TESTNET
+  BraveWallet.Z_CASH_TESTNET,
+  BraveWallet.CARDANO_TESTNET
 ]
 
 export const SupportedTestNetworkEntityIds: EntityId[] = [
@@ -727,7 +718,8 @@ export const SupportedTestNetworkEntityIds: EntityId[] = [
   BraveWallet.FILECOIN_TESTNET,
   BraveWallet.FILECOIN_ETHEREUM_TESTNET_CHAIN_ID,
   BraveWallet.BITCOIN_TESTNET,
-  BraveWallet.Z_CASH_TESTNET
+  BraveWallet.Z_CASH_TESTNET,
+  BraveWallet.CARDANO_TESTNET
 ]
 
 export const DAppSupportedCoinTypes = [
@@ -757,6 +749,10 @@ export const BitcoinTestnetKeyringIds = [
   BraveWallet.KeyringId.kBitcoinHardwareTestnet
 ]
 
+export const ZCashTestnetKeyringIds = [BraveWallet.KeyringId.kZCashTestnet]
+
+export const CardanoTestnetKeyringIds = [BraveWallet.KeyringId.kCardanoTestnet]
+
 /**
  * Should match BraveWallet.CoinType defined with "as const" to allow for use
  * as a type-guard.
@@ -767,6 +763,7 @@ export const CoinTypes = {
   ETH: 60,
   FIL: 461,
   SOL: 501,
+  ADA: 1815,
   MIN_VALUE: 0,
   MAX_VALUE: 501
 } as const
@@ -778,7 +775,8 @@ export enum CoinTypesMap {
   FIL = BraveWallet.CoinType.FIL,
   SOL = BraveWallet.CoinType.SOL,
   BTC = BraveWallet.CoinType.BTC,
-  ZEC = BraveWallet.CoinType.ZEC
+  ZEC = BraveWallet.CoinType.ZEC,
+  ADA = BraveWallet.CoinType.ADA
 }
 
 export type BuyOption = {
@@ -930,14 +928,18 @@ export interface CommonNftMetadata {
 export enum AddressMessageInfoIds {
   sameAddressError = 0,
   invalidAddressError = 1,
-  invalidUnifiedAddressError = 2,
   invalidChecksumError = 3,
   missingChecksumWarning = 4,
   contractAddressError = 5,
   FEVMTranslationWarning = 6,
   ensOffchainLookupWarning = 7,
   hasNoDomainAddress = 8,
-  invalidDomainExtension = 9
+  invalidDomainExtension = 9,
+  zcashInvalidTransparentAddressError = 10,
+  zcashInvalidUnifiedAddressError = 11,
+  zcashInvalidUnifiedAddressMissingTransparentPartError = 12,
+  zcashInvalidUnifiedAddressMissingOrchardPartError = 13,
+  zcashInvalidAddressNetworkMismatchError = 14
 }
 
 export type AddressMessageInfo = {

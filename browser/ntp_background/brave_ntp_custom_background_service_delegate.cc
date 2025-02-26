@@ -5,6 +5,7 @@
 
 #include "brave/browser/ntp_background/brave_ntp_custom_background_service_delegate.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "base/files/file_path.h"
@@ -144,10 +145,11 @@ BraveNTPCustomBackgroundServiceDelegate::GetPreferredBraveBackground() const {
     return {};
   }
 
-  auto iter = base::ranges::find_if(
-      image_data->backgrounds, [image_data, &image_url](const auto& data) {
+  auto iter = std::ranges::find_if(
+      image_data->backgrounds,
+      [image_data, &image_url](const auto& background) {
         return image_data->url_prefix +
-                   data.image_file.BaseName().AsUTF8Unsafe() ==
+                   background.file_path.BaseName().AsUTF8Unsafe() ==
                image_url.spec();
       });
 

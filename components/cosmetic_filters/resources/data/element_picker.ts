@@ -12,8 +12,8 @@ const api = {
   cosmeticFilterCreate: (selector: string) => {
     cf_worker.addSiteCosmeticFilter(selector)
   },
-  cosmeticFilterManage: () => {
-    cf_worker.manageCustomFilters()
+  cosmeticFilterReset: () => {
+    cf_worker.resetSiteCosmeticFilter()
   },
   getElementPickerThemeInfo: (callback: (
     isDarkModeEnabled: boolean, bgcolor: number) => void) => {
@@ -593,6 +593,7 @@ const launchElementPicker = (root: ShadowRoot) => {
   if (!isAndroid) {
     section.classList.add('desktop')
   }
+
   const togglePopup = (show: boolean) => {
       enableButtons(!show)
       if (show) {
@@ -685,9 +686,10 @@ const launchElementPicker = (root: ShadowRoot) => {
     quitElementPicker()
   })
 
-  const manageButton = root.getElementById('btnManage')!
-  manageButton.addEventListener('click', () => {
-    api.cosmeticFilterManage();
+  const resetButton = root.getElementById('btnReset')!
+  resetButton.addEventListener('click', () => {
+    api.cosmeticFilterReset()
+    quitElementPicker()
   })
 
   const toggleDisplay = (target: HTMLElement | null,

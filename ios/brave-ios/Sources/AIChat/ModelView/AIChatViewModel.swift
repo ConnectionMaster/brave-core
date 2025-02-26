@@ -17,17 +17,34 @@ public enum AIChatModelKey: String {
   case chatClaudeSonnet = "chat-claude-sonnet"
 }
 
+public protocol AIChatWebDelegate: AnyObject {
+  var title: String? { get }
+  var url: URL? { get }
+  var isLoading: Bool { get }
+
+  @MainActor
+  func getPageContentType() async -> String?
+
+  @MainActor
+  func getMainArticle() async -> String?
+
+  @MainActor
+  func getPDFDocument() async -> String?
+
+  @MainActor
+  func getPrintViewPDF() async -> Data?
+}
+
 public class AIChatViewModel: NSObject, ObservableObject {
   // TODO(petemill): AIChatService, ConversationHandler refs should
   // be passed directly to this object instead of proxied through the
   // AIChat class.
   private var api: AIChat!
-  private weak var webView: WKWebView?
-  private let script: any AIChatJavascript.Type
+  private weak var webDelegate: AIChatWebDelegate?
   private let braveTalkScript: AIChatBraveTalkJavascript?
   var querySubmited: String?
 
-  @Published var siteInfo: AiChat.SiteInfo?
+  @Published var siteInfo: AiChat.AssociatedContent?
   @Published var _shouldSendPageContents: Bool = true
   @Published var _canShowPremiumPrompt: Bool = false
   @Published var premiumStatus: AiChat.PremiumStatus = .inactive
@@ -52,7 +69,7 @@ public class AIChatViewModel: NSObject, ObservableObject {
   }
 
   public var isContentAssociationPossible: Bool {
-    return webView?.url?.isWebPage(includeDataURIs: true) == true
+    return webDelegate?.url?.isWebPage(includeDataURIs: true) == true
   }
 
   public var shouldSendPageContents: Bool {
@@ -117,13 +134,11 @@ public class AIChatViewModel: NSObject, ObservableObject {
 
   public init(
     braveCore: BraveCoreMain,
-    webView: WKWebView?,
-    script: any AIChatJavascript.Type,
+    webDelegate: AIChatWebDelegate?,
     braveTalkScript: AIChatBraveTalkJavascript?,
     querySubmited: String? = nil
   ) {
-    self.webView = webView
-    self.script = script
+    self.webDelegate = webDelegate
     self.braveTalkScript = braveTalkScript
     self.querySubmited = querySubmited
 
@@ -194,7 +209,7 @@ public class AIChatViewModel: NSObject, ObservableObject {
     self.requestInProgress = state.isRequestInProgress
     self.suggestedQuestions = state.suggestedQuestions
     self.suggestionsStatus = state.suggestionStatus
-    self.siteInfo = state.associatedContentInfo
+    self.siteInfo = state.associatedContent
     self._shouldSendPageContents = state.shouldSendContent
     self.apiError = state.error
     self.models = state.allModels
@@ -232,12 +247,8 @@ public class AIChatViewModel: NSObject, ObservableObject {
 
 extension AIChatViewModel: AIChatDelegate {
   public func getPageTitle() -> String? {
-    guard let webView = webView else {
-      return nil
-    }
-
     // Return the Page Title
-    if let title = webView.title, !title.isEmpty {
+    if let title = webDelegate?.title, !title.isEmpty {
       return title
     }
 
@@ -257,7 +268,7 @@ extension AIChatViewModel: AIChatDelegate {
   }
 
   public func getLastCommittedURL() -> URL? {
-    if let url = webView?.url {
+    if let url = webDelegate?.url {
       return InternalURL.isValid(url: url) ? nil : url
     }
     return nil
@@ -265,40 +276,41 @@ extension AIChatViewModel: AIChatDelegate {
 
   @MainActor
   public func pageContent() async -> (String?, Bool) {
-    guard let webView = webView else {
+    guard let webDelegate else {
       return (nil, false)
     }
-
-    requestInProgress = true
-    defer { requestInProgress = self.requestInProgress }
 
     if let transcript = await braveTalkScript?.getTranscript() {
       return (transcript, false)
     }
 
-    if await script.getPageContentType(webView: webView) == "application/pdf" {
-      if let base64EncodedPDF = await script.getPDFDocument(webView: webView) {
+    if await webDelegate.getPageContentType() == "application/pdf" {
+      if let base64EncodedPDF = await webDelegate.getPDFDocument() {
         return (await AIChatPDFRecognition.parse(pdfData: base64EncodedPDF), false)
       }
 
       // Attempt to parse the page as a PDF/Image
-      let pdfData = await script.getPrintViewPDF(webView: webView)
+      guard let pdfData = await webDelegate.getPrintViewPDF() else {
+        return (nil, false)
+      }
       return (await AIChatPDFRecognition.parseToImage(pdfData: pdfData), false)
     }
 
     // Fetch regular page content
-    let text = await script.getMainArticle(webView: webView)
+    let text = await webDelegate.getMainArticle()
     if let text = text, !text.isEmpty {
       return (text, false)
     }
 
     // No article text. Attempt to parse the page as a PDF/Image
-    let pdfData = await script.getPrintViewPDF(webView: webView)
+    guard let pdfData = await webDelegate.getPrintViewPDF() else {
+      return (nil, false)
+    }
     return (await AIChatPDFRecognition.parseToImage(pdfData: pdfData), false)
   }
 
   public func isDocumentOnLoadCompletedInPrimaryFrame() -> Bool {
-    return webView?.isLoading == false
+    return webDelegate?.isLoading == false
   }
 
   public func onHistoryUpdate() {
@@ -327,7 +339,7 @@ extension AIChatViewModel: AIChatDelegate {
   }
 
   public func onPageHasContent(
-    _ siteInfo: AiChat.SiteInfo,
+    _ siteInfo: AiChat.AssociatedContent,
     shouldSendContent shouldSendPageContents: Bool
   ) {
     self.siteInfo = siteInfo

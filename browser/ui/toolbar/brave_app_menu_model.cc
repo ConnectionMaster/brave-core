@@ -238,24 +238,6 @@ void BraveAppMenuModel::BuildBrowserSection() {
     InsertItemWithStringIdAt(bookmark_item_index.value(), IDC_SHOW_DOWNLOADS,
                              IDS_SHOW_DOWNLOADS);
   }
-
-  // Use this command's enabled state to not having it in guest window.
-  // It's disabled in guest window. Upstream's guest window has extensions
-  // menu in app menu, but we hide it.
-  if (IsCommandIdEnabled(IDC_MANAGE_EXTENSIONS)) {
-    // Upstream enabled extensions submenu by default.
-    CHECK(features::IsExtensionMenuInRootAppMenu());
-
-    // Use IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS instead of
-    // IDC_MANAGE_EXTENSIONS because executing it from private(tor) window
-    // causes crash as LogSafetyHubInteractionMetrics() tries to refer
-    // SafetyHubMenuNotificationService. But it's not instantiated in private
-    // window. Upstream also has this crash if ExtensionsMenuInAppMenu feature
-    // is disabled.
-    InsertItemWithStringIdAt(
-        GetIndexOfCommandId(IDC_SHOW_DOWNLOADS).value() + 1,
-        IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS, IDS_SHOW_EXTENSIONS);
-  }
 }
 
 void BraveAppMenuModel::BuildMoreToolsSubMenu() {
@@ -318,8 +300,8 @@ void BraveAppMenuModel::BuildMoreToolsSubMenu() {
   }
 #endif
 
-  if (auto index =
-          more_tools_menu_model->GetIndexOfCommandId(IDC_TASK_MANAGER)) {
+  if (auto index = more_tools_menu_model->GetIndexOfCommandId(
+          IDC_TASK_MANAGER_APP_MENU)) {
     more_tools_menu_model->InsertItemWithStringIdAt(*index, IDC_DEV_TOOLS,
                                                     IDS_DEV_TOOLS);
   }
@@ -338,13 +320,6 @@ void BraveAppMenuModel::RemoveUpstreamMenus() {
   ui::SimpleMenuModel* more_tools_model = static_cast<ui::SimpleMenuModel*>(
       GetSubmenuModelAt(GetIndexOfCommandId(IDC_MORE_TOOLS_MENU).value()));
   DCHECK(more_tools_model);
-
-  // Remove upstream's extensions item. It'll be added into top level third
-  // section. Upstream enabled extensions submenu by default.
-  CHECK(features::IsExtensionMenuInRootAppMenu());
-  // Hide extensions sub menu.
-  DCHECK(GetIndexOfCommandId(IDC_EXTENSIONS_SUBMENU).has_value());
-  RemoveItemAt(GetIndexOfCommandId(IDC_EXTENSIONS_SUBMENU).value());
 
   {
     // Remove upstream's profile menu. "Add new profile" will be added into more
@@ -381,7 +356,8 @@ void BraveAppMenuModel::RemoveUpstreamMenus() {
     // item. Otherwise, remove separator and item both.
     DCHECK_EQ(ui::MenuModel::TYPE_SEPARATOR,
               more_tools_model->GetTypeAt((*index) - 1));
-    if (!more_tools_model->GetIndexOfCommandId(IDC_TASK_MANAGER).has_value()) {
+    if (!more_tools_model->GetIndexOfCommandId(IDC_TASK_MANAGER_APP_MENU)
+             .has_value()) {
       more_tools_model->RemoveItemAt((*index) - 1);
     } else {
       more_tools_model->RemoveItemAt(*index);
@@ -421,12 +397,6 @@ void BraveAppMenuModel::ExecuteCommand(int id, int event_flags) {
 }
 
 bool BraveAppMenuModel::IsCommandIdEnabled(int id) const {
-  if (id == IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS) {
-    // Always returns true as this command id is only added when it could be
-    // used.
-    return true;
-  }
-
 #if defined(TOOLKIT_VIEWS)
   if (id == IDC_SIDEBAR_SHOW_OPTION_ALWAYS ||
       id == IDC_SIDEBAR_SHOW_OPTION_MOUSEOVER ||

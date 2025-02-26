@@ -19,14 +19,20 @@ import { AccountBalance } from '../account_balance'
 
 import { style } from './payout_account_card.style'
 
+const payoutDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: 'long',
+  day: 'numeric'
+})
+
 export function PayoutAccountCard() {
   const model = React.useContext(AppModelContext)
   const tabOpener = React.useContext(TabOpenerContext)
   const { getString } = useLocaleContext()
 
-  const [externalWallet, balance] = useAppState((state) => [
+  const [externalWallet, balance, adsInfo] = useAppState((state) => [
     state.externalWallet,
-    state.balance
+    state.balance,
+    state.adsInfo
   ])
 
   const [showDetails, setShowDetails] = React.useState(false)
@@ -80,7 +86,7 @@ export function PayoutAccountCard() {
       return null
     }
     return (
-      <section>
+      <section className='account-info'>
         <div className='balance'>
           <label>
             {getString('payoutAccountBalanceLabel')}
@@ -103,7 +109,9 @@ export function PayoutAccountCard() {
             <span className='provider-icon'>
               <WalletProviderIcon provider={externalWallet.provider} />
             </span>
-            <span>{externalWallet.name}</span>
+            <span className='account-name'>
+              {externalWallet.name || providerName}
+            </span>
             <Icon name='arrow-small-down' />
           </button>
           {renderAccountDetails()}
@@ -130,11 +138,7 @@ export function PayoutAccountCard() {
           <div className='provider'>
             <WalletProviderIcon provider={externalWallet.provider} />
             <span className='provider-name'>
-              {
-                formatMessage(getString('payoutAccountDetailsTitle'), [
-                  providerName
-                ])
-              }
+              {providerName}
             </span>
             <Label color='green'>
               <Icon name='check-circle-outline' slot='icon-before' />
@@ -174,6 +178,15 @@ export function PayoutAccountCard() {
         </Tooltip>
       </h4>
       {externalWallet.authenticated ? renderAccountInfo() : renderReconnect()}
+      {
+        adsInfo &&
+          <div className='content-card-footer'>
+            <span>{getString('adsSettingsPayoutDateLabel')}</span>
+            <span className='date'>
+              {payoutDateFormatter.format(new Date(adsInfo.nextPaymentDate))}
+            </span>
+          </div>
+      }
     </div>
   )
 }

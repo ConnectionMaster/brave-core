@@ -12,6 +12,7 @@ import { RecurringContribution } from '../../lib/app_state'
 import { AppModelContext, useAppState } from '../../lib/app_model_context'
 import { useLocaleContext } from '../../lib/locale_strings'
 import { getCreatorIconSrc, getCreatorPlatformIcon } from '../../lib/creator_icon'
+import { isSelfCustodyProvider } from '../../../shared/lib/external_wallet'
 import { NewTabLink } from '../../../shared/components/new_tab_link'
 
 import { style } from './recurring_contribution_card.style'
@@ -91,10 +92,6 @@ export function RecurringContributionCard() {
   }
 
   function renderList() {
-    if (contributions.length === 0) {
-      return <p className='empty'>{getString('recurringListEmptyText')}</p>
-    }
-
     const topEntries = [...contributions]
       .sort((a, b) => a.nextContributionDate - b.nextContributionDate)
       .slice(0, showAll ? Infinity : 5)
@@ -114,7 +111,11 @@ export function RecurringContributionCard() {
     </>
   }
 
-  if (!externalWallet) {
+  if (!externalWallet || isSelfCustodyProvider(externalWallet.provider)) {
+    return null
+  }
+
+  if (contributions.length === 0) {
     return null
   }
 

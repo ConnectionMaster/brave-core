@@ -10,7 +10,7 @@
 #include <string>
 
 #include "base/memory/raw_ptr.h"
-#include "brave/components/brave_rewards/common/mojom/rewards_page.mojom.h"
+#include "brave/components/brave_rewards/core/mojom/rewards_page.mojom.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/pending_remote.h"
 #include "mojo/public/cpp/bindings/receiver.h"
@@ -44,7 +44,6 @@ class RewardsPageHandler : public mojom::RewardsPageHandler {
   };
 
   RewardsPageHandler(
-      mojo::PendingRemote<mojom::RewardsPage> page,
       mojo::PendingReceiver<mojom::RewardsPageHandler> receiver,
       std::unique_ptr<BubbleDelegate> bubble_delegate,
       RewardsService* rewards_service,
@@ -55,6 +54,7 @@ class RewardsPageHandler : public mojom::RewardsPageHandler {
   ~RewardsPageHandler() override;
 
   // mojom::RewardsPageHandler:
+  void SetRewardsPage(mojo::PendingRemote<mojom::RewardsPage> page) override;
   void OnPageReady() override;
   void OpenTab(const std::string& url) override;
   void GetPluralString(const std::string& key,
@@ -78,6 +78,8 @@ class RewardsPageHandler : public mojom::RewardsPageHandler {
       DismissSelfCustodyInviteCallback callback) override;
   void GetPublisherIdForActiveTab(
       GetPublisherIdForActiveTabCallback callback) override;
+  void RefreshPublisher(const std::string& publisher_id,
+                        RefreshPublisherCallback callback) override;
   void GetPublisherInfo(const std::string& publisher_id,
                         GetPublisherInfoCallback callback) override;
   void GetPublisherBanner(const std::string& publisher_id,

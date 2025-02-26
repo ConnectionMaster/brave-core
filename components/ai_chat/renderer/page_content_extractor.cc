@@ -23,7 +23,6 @@
 
 #include "base/check.h"
 #include "base/check_op.h"
-#include "base/containers/contains.h"
 #include "base/containers/fixed_flat_set.h"
 #include "base/containers/flat_tree.h"
 #include "base/containers/span.h"
@@ -173,7 +172,7 @@ void PageContentExtractor::ExtractPageContent(
 
   if (origin.is_valid()) {
     std::string host = origin.host();
-    if (base::Contains(kYouTubeHosts, host)) {
+    if (kYouTubeHosts.contains(host)) {
       VLOG(1) << "YouTube transcript type";
       // Do Youtube extraction
       v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
@@ -193,7 +192,7 @@ void PageContentExtractor::ExtractPageContent(
           blink::mojom::WantResultOption::kWantResult,
           blink::mojom::PromiseResultOption::kAwait);
       return;
-    } else if (base::Contains(kVideoTrackHosts, host)) {
+    } else if (kVideoTrackHosts.contains(host)) {
       VLOG(1) << "Video track transcript type";
       // Video <track> extraction
       // TODO(petemill): Use heuristics to determine if page's main focus is
@@ -285,7 +284,7 @@ void PageContentExtractor::OnJSTranscriptUrlResult(
            << "\nResult: " << (value ? value->DebugString() : "[undefined]");
 
   // Handle no result from script
-  if (!value.has_value()) {
+  if (!value.has_value() || !value->is_list()) {
     std::move(callback).Run({});
     return;
   }
@@ -293,7 +292,7 @@ void PageContentExtractor::OnJSTranscriptUrlResult(
   // Optional parsing
   std::string url;
   if (type == mojom::PageContentType::VideoTranscriptYouTube) {
-    auto maybe_url = ChooseCaptionTrackUrl(value->GetIfList());
+    auto maybe_url = ChooseCaptionTrackUrl(value->GetList());
     if (maybe_url.has_value()) {
       url = maybe_url.value();
     }

@@ -8,6 +8,7 @@ import("//brave/browser/shell_integrations/buildflags/buildflags.gni")
 import("//brave/browser/ui/config.gni")
 import("//brave/build/config.gni")
 import("//brave/components/ai_rewriter/common/buildflags/buildflags.gni")
+import("//brave/components/brave_education/buildflags.gni")
 import("//brave/components/brave_vpn/common/buildflags/buildflags.gni")
 import("//brave/components/brave_wayback_machine/buildflags/buildflags.gni")
 import("//brave/components/commander/common/buildflags/buildflags.gni")
@@ -17,6 +18,7 @@ import("//brave/components/request_otr/common/buildflags/buildflags.gni")
 import("//brave/components/speedreader/common/buildflags/buildflags.gni")
 import("//brave/components/text_recognition/common/buildflags/buildflags.gni")
 import("//brave/components/tor/buildflags/buildflags.gni")
+import("//brave/components/web_discovery/buildflags/buildflags.gni")
 import("//build/config/features.gni")
 import("//chrome/common/features.gni")
 import("//components/gcm_driver/config.gni")
@@ -24,7 +26,7 @@ import("//mojo/public/tools/bindings/mojom.gni")
 import("//printing/buildflags/buildflags.gni")
 import("//third_party/widevine/cdm/widevine.gni")
 
-# See //chrome/browser/ui:ui_public_depdendencies.
+# See //chrome/browser/ui:ui_public_dependencies.
 group("ui_public_dependencies") {
   visibility = [
     "//brave/browser/ui",
@@ -57,7 +59,12 @@ source_set("ui") {
     "//brave/components/brave_shields/core/browser",
     "//brave/components/webcompat/core/common",
     "//chrome/browser/ui:browser_navigator_params_headers",
+    "//chrome/browser/ui/tabs:tabs_public",
   ]
+
+  if (!is_android) {
+    deps += [ "//brave/browser/ui/tabs:impl" ]
+  }
 
   allow_circular_includes_from = brave_ui_allow_circular_includes_from
   deps += brave_ui_allow_circular_includes_from
@@ -101,6 +108,8 @@ source_set("ui") {
     "webui/brave_webui_source.h",
     "webui/skus_internals_ui.cc",
     "webui/skus_internals_ui.h",
+    "webui/untrusted_sanitized_image_source.cc",
+    "webui/untrusted_sanitized_image_source.h",
   ]
 
   # It doesn't make sense to view the webcompat webui on iOS & Android.
@@ -109,7 +118,11 @@ source_set("ui") {
       "webui/webcompat_reporter/webcompat_reporter_ui.cc",
       "webui/webcompat_reporter/webcompat_reporter_ui.h",
     ]
-    deps += [ "//brave/components/webcompat_reporter/common:mojom" ]
+    deps += [
+      "//brave/browser/ui/webui/brave_browser_command",
+      "//brave/components/webcompat_reporter/common:mojom",
+      "//brave/ui/webui/resources/js/brave_browser_command:mojo_bindings",
+    ]
   }
 
   if (enable_print_preview) {
@@ -134,6 +147,8 @@ source_set("ui") {
     sources += [
       "android/ai_chat/brave_leo_settings_launcher_helper.cc",
       "android/ai_chat/brave_leo_settings_launcher_helper.h",
+      "android/brave_rewards/rewards_page_helper.cc",
+      "android/brave_rewards/rewards_page_helper.h",
     ]
 
     deps += [ "//brave/build/android:jni_headers" ]
@@ -152,6 +167,10 @@ source_set("ui") {
       "//brave/components/ai_rewriter/resources/page:generated_resources",
       "//components/web_modal",
     ]
+  }
+
+  if (enable_brave_education) {
+    deps += [ "webui/brave_education" ]
   }
 
   if (!is_android) {
@@ -471,7 +490,6 @@ source_set("ui") {
 
   if (toolkit_views) {
     sources += [
-      "side_panel/brave_side_panel_utils.h",
       "views/bookmarks/bookmark_bar_instructions_view.cc",
       "views/bookmarks/bookmark_bar_instructions_view.h",
       "views/bookmarks/brave_bookmark_bar_view.cc",
@@ -517,12 +535,16 @@ source_set("ui") {
       "views/frame/brave_browser_view.h",
       "views/frame/brave_browser_view_layout.cc",
       "views/frame/brave_browser_view_layout.h",
+      "views/frame/brave_contents_layout_manager.cc",
+      "views/frame/brave_contents_layout_manager.h",
       "views/frame/brave_contents_view_util.cc",
       "views/frame/brave_contents_view_util.h",
       "views/frame/brave_non_client_hit_test_helper.cc",
       "views/frame/brave_non_client_hit_test_helper.h",
       "views/frame/brave_opaque_browser_frame_view.cc",
       "views/frame/brave_opaque_browser_frame_view.h",
+      "views/frame/brave_system_menu_model_builder.cc",
+      "views/frame/brave_system_menu_model_builder.h",
       "views/frame/brave_tab_strip_region_view.cc",
       "views/frame/brave_tab_strip_region_view.h",
       "views/frame/brave_window_frame_graphic.cc",
@@ -592,11 +614,11 @@ source_set("ui") {
       "views/tabs/brave_tab_strip.h",
       "views/tabs/brave_tab_strip_layout_helper.cc",
       "views/tabs/brave_tab_strip_layout_helper.h",
+      "views/tabs/dragging/tab_drag_controller.cc",
+      "views/tabs/dragging/tab_drag_controller.h",
       "views/tabs/shared_pinned_tab_dummy_view_views.cc",
       "views/tabs/shared_pinned_tab_dummy_view_views.h",
       "views/tabs/switches.h",
-      "views/tabs/tab_drag_controller.cc",
-      "views/tabs/tab_drag_controller.h",
       "views/tabs/vertical_tab_utils.cc",
       "views/tabs/vertical_tab_utils.h",
       "views/toolbar/ai_chat_button.cc",
@@ -616,14 +638,22 @@ source_set("ui") {
     ]
 
     deps += [
+      "//brave/browser/ui/side_panel",
+      "//chrome/browser:shell_integration",
       "//chrome/browser/devtools",
+      "//chrome/browser/enterprise/watermark:watermark_view_lib",
       "//chrome/browser/ui/download",
       "//chrome/browser/ui/exclusive_access",
       "//chrome/browser/ui/javascript_dialogs",
       "//chrome/browser/ui/views/bubble",
+      "//chrome/browser/ui/views/download",
       "//chrome/browser/ui/views/toolbar",
       "//components/bookmarks/browser",
     ]
+
+    if (enable_glic) {
+      deps += [ "//chrome/browser/glic" ]
+    }
 
     if (enable_brave_vpn) {
       if (is_win) {
@@ -780,17 +810,15 @@ source_set("ui") {
     "//brave/components/brave_adblock_ui/adblock_internals:generated_resources",
     "//brave/components/brave_ads/browser",
     "//brave/components/brave_ads/core",
-    "//brave/components/brave_federated",
-    "//brave/components/brave_federated/public/interfaces",
     "//brave/components/brave_news/browser",
     "//brave/components/brave_news/common",
     "//brave/components/brave_perf_predictor/common",
-    "//brave/components/brave_rewards/browser",
-    "//brave/components/brave_rewards/common",
-    "//brave/components/brave_rewards/common:features",
-    "//brave/components/brave_rewards/common/mojom",
-    "//brave/components/brave_rewards/common/mojom:webui",
-    "//brave/components/brave_rewards/core:headers",
+    "//brave/components/brave_rewards/content",
+    "//brave/components/brave_rewards/core",
+    "//brave/components/brave_rewards/core:features",
+    "//brave/components/brave_rewards/core/engine:headers",
+    "//brave/components/brave_rewards/core/mojom",
+    "//brave/components/brave_rewards/core/mojom:webui",
     "//brave/components/brave_rewards/resources",
     "//brave/components/brave_rewards/resources:internals_generated_resources",
     "//brave/components/brave_rewards/resources:page_generated_resources",
@@ -840,6 +868,7 @@ source_set("ui") {
     "//brave/components/tor/buildflags",
     "//brave/components/url_sanitizer/browser",
     "//brave/components/vector_icons",
+    "//brave/components/web_discovery/buildflags",
     "//brave/components/webui",
     "//chrome/app:command_ids",
     "//chrome/app/vector_icons:vector_icons",
@@ -851,7 +880,6 @@ source_set("ui") {
     "//chrome/browser/ui/color:color_headers",
     "//chrome/browser/ui/color:mixers",
     "//chrome/browser/ui/webui",
-    "//chrome/browser/ui/webui:webui_util",
     "//chrome/common",
     "//components/bookmarks/common",
     "//components/content_settings/browser",
@@ -907,6 +935,10 @@ source_set("ui") {
     }
   }
 
+  if (enable_web_discovery_native) {
+    deps += [ "//brave/components/web_discovery/common" ]
+  }
+
   if (is_linux) {
     sources += [
       "views/brave_views_delegate_linux.cc",
@@ -960,16 +992,19 @@ source_set("ui") {
     ]
   }
 
-  # This is no longer compiled into Chromium on Android, but we still
-  # need it
+  # These are no longer compiled into Chromium on Android, but we still
+  # need them
   if (is_android) {
     sources += [
       "//chrome/browser/ui/webui/favicon_source.cc",
       "//chrome/browser/ui/webui/favicon_source.h",
+      "//chrome/browser/ui/webui/sanitized_image_source.cc",
+      "//chrome/browser/ui/webui/sanitized_image_source.h",
     ]
 
     deps += [
       "//chrome/browser/favicon",
+      "//chrome/browser/image_fetcher",
       "//components/favicon/core",
       "//components/favicon_base",
       "//components/history/core/browser",
@@ -1062,7 +1097,7 @@ source_set("ui") {
       "//brave/components/brave_private_new_tab_ui/common",
       "//brave/components/brave_private_new_tab_ui/common:mojom",
       "//brave/components/brave_private_new_tab_ui/resources/page:generated_resources",
-      "//brave/components/brave_rewards/browser",
+      "//brave/components/brave_rewards/content",
       "//brave/components/brave_rewards/resources/rewards_panel:brave_rewards_panel_generated",
       "//brave/components/brave_rewards/resources/tip_panel:tip_panel_generated",
       "//brave/components/brave_shields/resources/cookie_list_opt_in:cookie_list_opt_in_generated",
@@ -1464,6 +1499,7 @@ source_set("browser_tests") {
 
     sources = [
       "brave_browser_browsertest.cc",
+      "views/frame/brave_system_menu_model_builder_browsertest.cc",
       "window_closing_confirm_browsertest.cc",
     ]
 

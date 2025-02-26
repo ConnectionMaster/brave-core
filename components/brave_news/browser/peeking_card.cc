@@ -56,8 +56,8 @@ base::flat_set<std::string> GetTopStoryUrls(
     const base::span<TopicAndArticles>& topics) {
   std::vector<std::string> urls;
   for (auto& [topic, articles] : topics) {
-    base::ranges::transform(articles, std::back_inserter(urls),
-                            [](const auto& article) { return article.url; });
+    std::ranges::transform(articles, std::back_inserter(urls),
+                           [](const auto& article) { return article.url; });
   }
   return base::flat_set<std::string>(urls);
 }
@@ -114,7 +114,7 @@ std::optional<size_t> PickPeekingCardWithMax(
       // Boost enabled channels.
     } else if (std::ranges::any_of(article->channels, [&subscribed_channels](
                                                           const auto& channel) {
-                 return base::Contains(subscribed_channels, channel);
+                 return subscribed_channels.contains(channel);
                })) {
       score += kChannelBoost;
     }
@@ -124,7 +124,7 @@ std::optional<size_t> PickPeekingCardWithMax(
       continue;
     }
 
-    if (base::Contains(top_story_urls, article->url.spec())) {
+    if (top_story_urls.contains(article->url.spec())) {
       score *= kTopStoryMultiplier;
     }
 
@@ -163,7 +163,7 @@ std::optional<size_t> PickPeekingCardWithMax(
     }
   }
 
-  base::ranges::sort(candidates, [get_article](const auto& a, const auto& b) {
+  std::ranges::sort(candidates, [get_article](const auto& a, const auto& b) {
     const auto& [a_index, a_score] = a;
     const auto& [b_index, b_score] = b;
     if (a_score != b_score) {
@@ -211,7 +211,7 @@ std::optional<size_t> PickPeekingCardWithMax(
     return std::nullopt;
   }
 
-  auto [index, score] = PickRandom(final_candidates);
+  auto [index, score] = PickRandom(base::span(final_candidates));
   return index;
 }
 

@@ -6,6 +6,7 @@
 #include "brave/components/brave_ads/core/internal/creatives/conversions/creative_set_conversion_database_table.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <utility>
 #include <vector>
 
@@ -49,7 +50,7 @@ size_t BindColumns(const mojom::DBActionInfoPtr& mojom_db_action,
 
   size_t row_count = 0;
 
-  int index = 0;
+  int32_t index = 0;
   for (const auto& creative_set_conversion : creative_set_conversions) {
     if (!creative_set_conversion.IsValid()) {
       // TODO(https://github.com/brave/brave-browser/issues/43314): Invalid
@@ -117,7 +118,7 @@ CreativeSetConversionInfo FromMojomRow(
 void GetCallback(
     GetCreativeSetConversionsCallback callback,
     mojom::DBTransactionResultInfoPtr mojom_db_transaction_result) {
-  if (IsError(mojom_db_transaction_result)) {
+  if (!IsTransactionSuccessful(mojom_db_transaction_result)) {
     BLOG(0, "Failed to get creative set conversions");
     return std::move(callback).Run(/*success=*/false,
                                    /*conversion_set_conversions=*/{});
@@ -191,8 +192,8 @@ void CreativeSetConversions::Save(
 
   Insert(mojom_db_transaction, creative_set_conversions);
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 std::move(callback));
 }
 
 void CreativeSetConversions::GetUnexpired(
@@ -212,13 +213,13 @@ void CreativeSetConversions::GetUnexpired(
           FROM
             $1
           WHERE
-            $2 < expire_at;)",
+            $2 < expire_at)",
       {GetTableName(), TimeToSqlValueAsString(base::Time::Now())}, nullptr);
   BindColumnTypes(mojom_db_action);
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   base::BindOnce(&GetCallback, std::move(callback)));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 base::BindOnce(&GetCallback, std::move(callback)));
 }
 
 void CreativeSetConversions::GetActive(
@@ -240,7 +241,7 @@ void CreativeSetConversions::GetActive(
             INNER JOIN ad_events ON ad_events.creative_set_id = creative_set_conversion.creative_set_id
           WHERE
             $2 < expire_at
-            AND ad_events.confirmation_type IN ('$3', '$4');)",
+            AND ad_events.confirmation_type IN ('$3', '$4'))",
       {GetTableName(), TimeToSqlValueAsString(base::Time::Now()),
        ToString(mojom::ConfirmationType::kViewedImpression),
        ToString(mojom::ConfirmationType::kClicked)},
@@ -248,8 +249,8 @@ void CreativeSetConversions::GetActive(
   BindColumnTypes(mojom_db_action);
   mojom_db_transaction->actions.push_back(std::move(mojom_db_action));
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   base::BindOnce(&GetCallback, std::move(callback)));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 base::BindOnce(&GetCallback, std::move(callback)));
 }
 
 void CreativeSetConversions::PurgeExpired(ResultCallback callback) const {
@@ -259,11 +260,11 @@ void CreativeSetConversions::PurgeExpired(ResultCallback callback) const {
             DELETE FROM
               $1
             WHERE
-              $2 >= expire_at;)",
+              $2 >= expire_at)",
           {GetTableName(), TimeToSqlValueAsString(base::Time::Now())});
 
-  RunDBTransaction(FROM_HERE, std::move(mojom_db_transaction),
-                   std::move(callback));
+  RunTransaction(FROM_HERE, std::move(mojom_db_transaction),
+                 std::move(callback));
 }
 
 std::string CreativeSetConversions::GetTableName() const {
@@ -281,7 +282,7 @@ void CreativeSetConversions::Create(
         verifiable_advertiser_public_key TEXT,
         observation_window INTEGER NOT NULL,
         expire_at TIMESTAMP NOT NULL
-      );)");
+      ))");
 
   // Optimize database query for `GetUnexpired` from schema 35.
   CreateTableIndex(mojom_db_transaction, GetTableName(),
@@ -305,6 +306,11 @@ void CreativeSetConversions::Migrate(
 
     case 43: {
       MigrateToV43(mojom_db_transaction);
+      break;
+    }
+
+    default: {
+      // No migration needed.
       break;
     }
   }
@@ -345,7 +351,7 @@ std::string CreativeSetConversions::BuildInsertSql(
             verifiable_advertiser_public_key,
             observation_window,
             expire_at
-          ) VALUES $2;)",
+          ) VALUES $2)",
       {GetTableName(),
        BuildBindColumnPlaceholders(/*column_count=*/5, row_count)},
       nullptr);

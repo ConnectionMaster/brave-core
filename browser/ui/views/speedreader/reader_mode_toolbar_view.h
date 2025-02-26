@@ -13,12 +13,19 @@
 
 namespace content {
 class BrowserContext;
-}
+class WebContents;
+}  // namespace content
 
 class ReaderModeToolbarView : public views::View {
   METADATA_HEADER(ReaderModeToolbarView, views::View)
  public:
-  explicit ReaderModeToolbarView(content::BrowserContext* browser_context);
+  struct Delegate {
+    virtual ~Delegate() = default;
+    virtual void OnReaderModeToolbarActivate(ReaderModeToolbarView* toolbar) {}
+  };
+
+  ReaderModeToolbarView(content::BrowserContext* browser_context,
+                        bool use_rounded_corners);
   ~ReaderModeToolbarView() override;
 
   ReaderModeToolbarView(const ReaderModeToolbarView&) = delete;
@@ -26,16 +33,28 @@ class ReaderModeToolbarView : public views::View {
   ReaderModeToolbarView& operator=(const ReaderModeToolbarView&) = delete;
   ReaderModeToolbarView& operator=(ReaderModeToolbarView&&) = delete;
 
+  void SetVisible(bool visible) override;
+
   content::WebContents* GetWebContentsForTesting();
 
   views::View* toolbar() const { return toolbar_.get(); }
+
+  void SetDelegate(Delegate* delegate);
+  void SwapToolbarContents(ReaderModeToolbarView* toolbar);
+  void RestoreToolbarContents(ReaderModeToolbarView* toolbar);
+
+  void ActivateContents();
 
  private:
   gfx::Size CalculatePreferredSize(
       const views::SizeBounds& available_size) const override;
   void OnBoundsChanged(const gfx::Rect& previous_bounds) override;
+  bool OnMousePressed(const ui::MouseEvent& event) override;
 
+  bool use_rounded_corners_ = false;
   std::unique_ptr<views::WebView> toolbar_;
+  std::unique_ptr<content::WebContents> toolbar_contents_;
+  raw_ptr<Delegate> delegate_ = nullptr;
 };
 
 #endif  // BRAVE_BROWSER_UI_VIEWS_SPEEDREADER_READER_MODE_TOOLBAR_VIEW_H_

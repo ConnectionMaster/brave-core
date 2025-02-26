@@ -68,6 +68,7 @@ export type StringKey =
   'authorizeUpholdBatNotAllowedTitle' |
   'authorizeUpholdInsufficientCapabilitiesText' |
   'authorizeUpholdInsufficientCapabilitiesTitle' |
+  'batUtilityTitle' |
   'benefitsStoreSubtext' |
   'benefitsStoreText' |
   'benefitsTitle' |
@@ -160,7 +161,6 @@ export type StringKey =
   'onboardingTitle' |
   'payoutAccountBalanceLabel' |
   'payoutAccountConnectedLabel' |
-  'payoutAccountDetailsTitle' |
   'payoutAccountLabel' |
   'payoutAccountLink' |
   'payoutAccountLoggedOutTitle' |
@@ -173,7 +173,6 @@ export type StringKey =
   'payoutPendingText' |
   'payoutProcessingText' |
   'payoutSupportLink' |
-  'recurringListEmptyText' |
   'recurringNextContributionLabel' |
   'recurringTitle' |
   'removeButtonLabel' |

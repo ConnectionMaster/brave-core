@@ -37,7 +37,8 @@ type Props = Pick<
 
 interface InputBoxProps {
   context: Props
-  onFocusInputMobile?: () => unknown
+  conversationStarted: boolean
+  maybeShowSoftKeyboard?: (querySubmitted: boolean) => unknown
 }
 
 function InputBox(props: InputBoxProps) {
@@ -45,7 +46,10 @@ function InputBox(props: InputBoxProps) {
     props.context.setInputText(e.target.value)
   }
 
+  const querySubmitted = React.useRef(false)
+
   const handleSubmit = () => {
+    querySubmitted.current = true
     props.context.submitInputTextToAPI()
   }
 
@@ -75,18 +79,12 @@ function InputBox(props: InputBoxProps) {
     }
   }
 
-  // We don't want to handle that event on desktop
-  let handleFocusMobile
-  if (props.context.isMobile) {
-    handleFocusMobile = (event: React.FormEvent<HTMLTextAreaElement>) => {
-      if (props.onFocusInputMobile) {
-        props.onFocusInputMobile()
-      }
-    }
-  }
-
   const maybeAutofocus = (node: HTMLTextAreaElement | null) => {
-    if (node && props.context.selectedActionType) {
+    if (!node) {
+      return
+    }
+    if (props.context.selectedActionType ||
+      props.maybeShowSoftKeyboard?.(querySubmitted.current)) {
       node.focus()
     }
   }
@@ -108,10 +106,11 @@ function InputBox(props: InputBoxProps) {
       >
         <textarea
           ref={maybeAutofocus}
-          placeholder={getLocale('placeholderLabel')}
+          placeholder={getLocale(props.conversationStarted
+            ? 'placeholderLabel'
+            : 'initialPlaceholderLabel')}
           onChange={onInputChange}
           onKeyDown={handleOnKeyDown}
-          onFocus={handleFocusMobile}
           value={props.context.inputText}
           autoFocus
           rows={1}

@@ -21,6 +21,7 @@
 #include "brave/components/brave_wallet/browser/bitcoin/bitcoin_wallet_service.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_p3a.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_service_delegate.h"
+#include "brave/components/brave_wallet/browser/cardano/cardano_wallet_service.h"
 #include "brave/components/brave_wallet/browser/simple_hash_client.h"
 #include "brave/components/brave_wallet/browser/zcash/zcash_wallet_service.h"
 #include "brave/components/brave_wallet/common/brave_wallet.mojom.h"
@@ -80,7 +81,6 @@ class BraveWalletService : public KeyedService,
   template <class T>
   void Bind(mojo::PendingReceiver<T> receiver);
 
-  static void MigrateHiddenNetworks(PrefService* profile_prefs);
   static void MigrateDeadNetwork(PrefService* prefs,
                                  const std::string& chain_id,
                                  const std::string& fallback_chain_id,
@@ -89,10 +89,8 @@ class BraveWalletService : public KeyedService,
                                      const mojom::NetworkInfo& network,
                                      bool is_eip1559,
                                      std::string_view pref_key);
-  static void MigrateFantomMainnetAsCustomNetwork(PrefService* prefs);
   static void MigrateGoerliNetwork(PrefService* prefs);
   static void MigrateAuroraMainnetAsCustomNetwork(PrefService* prefs);
-  static void MigrateAssetsPrefToList(PrefService* prefs);
   static void MigrateEip1559ForCustomNetworks(PrefService* prefs);
   void MaybeMigrateCompressedNfts();
   void MaybeMigrateSPLTokenProgram();
@@ -219,8 +217,7 @@ class BraveWalletService : public KeyedService,
       GetBalanceScannerSupportedChainsCallback callback) override;
 
   void GetSimpleHashSpamNFTs(const std::string& wallet_address,
-                             const std::vector<std::string>& chain_ids,
-                             mojom::CoinType coin,
+                             std::vector<mojom::ChainIdPtr> chain_ids,
                              const std::optional<std::string>& cursor,
                              GetSimpleHashSpamNFTsCallback callback) override;
 
@@ -303,6 +300,8 @@ class BraveWalletService : public KeyedService,
   BitcoinWalletService* GetBitcoinWalletService();
   // Might return nullptr.
   ZCashWalletService* GetZcashWalletService();
+  // Might return nullptr.
+  CardanoWalletService* GetCardanoWalletService();
 
   void GetCountryCode(GetCountryCodeCallback callback) override;
 
@@ -395,6 +394,7 @@ class BraveWalletService : public KeyedService,
   std::unique_ptr<KeyringService> keyring_service_;
   std::unique_ptr<BitcoinWalletService> bitcoin_wallet_service_;
   std::unique_ptr<ZCashWalletService> zcash_wallet_service_;
+  std::unique_ptr<CardanoWalletService> cardano_wallet_service_;
   std::unique_ptr<TxService> tx_service_;
   raw_ptr<PrefService> profile_prefs_ = nullptr;
   std::unique_ptr<BraveWalletP3A> brave_wallet_p3a_;

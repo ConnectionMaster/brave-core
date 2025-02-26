@@ -15,6 +15,7 @@
 #include "base/no_destructor.h"
 #include "base/strings/stringprintf.h"
 #include "base/trace_event/trace_event.h"
+#include "base/values.h"
 #include "brave/components/brave_shields/core/common/features.h"
 #include "brave/components/content_settings/renderer/brave_content_settings_agent_impl.h"
 #include "brave/components/cosmetic_filters/resources/grit/cosmetic_filters_generated.h"
@@ -292,8 +293,8 @@ void CosmeticFiltersJSHandler::OnAddSiteCosmeticFilter(
   GetElementPickerRemoteHandler()->AddSiteCosmeticFilter(selector);
 }
 
-void CosmeticFiltersJSHandler::OnManageCustomFilters() {
-  GetElementPickerRemoteHandler()->ManageCustomFilters();
+void CosmeticFiltersJSHandler::OnResetSiteCosmeticFilter() {
+  GetElementPickerRemoteHandler()->ResetCosmeticFilterForCurrentHost();
 }
 
 mojo::AssociatedRemote<cosmetic_filters::mojom::CosmeticFiltersHandler>&
@@ -441,12 +442,10 @@ void CosmeticFiltersJSHandler::BindFunctionsToObject(
       isolate, javascript_object, "addSiteCosmeticFilter",
       base::BindRepeating(&CosmeticFiltersJSHandler::OnAddSiteCosmeticFilter,
                           base::Unretained(this)));
-
   BindFunctionToObject(
-      isolate, javascript_object, "manageCustomFilters",
-      base::BindRepeating(&CosmeticFiltersJSHandler::OnManageCustomFilters,
+      isolate, javascript_object, "resetSiteCosmeticFilter",
+      base::BindRepeating(&CosmeticFiltersJSHandler::OnResetSiteCosmeticFilter,
                           base::Unretained(this)));
-
   BindFunctionToObject(
       isolate, javascript_object, "getElementPickerThemeInfo",
       base::BindRepeating(&CosmeticFiltersJSHandler::GetCosmeticFilterThemeInfo,
@@ -664,7 +663,7 @@ void CosmeticFiltersJSHandler::ApplyRules(bool de_amp_enabled) {
             blink::BackForwardCacheAware::kAllow);
     if (!v8_stylesheet.IsEmpty() && v8_stylesheet->IsString()) {
       v8::Local<v8::String> v8_str = v8_stylesheet.As<v8::String>();
-      int length = v8_str->Utf8Length(isolate);
+      int length = v8_str->Utf8LengthV2(isolate);
       if (length > 0) {
         std::string str;
         gin::Converter<std::string>::FromV8(isolate, v8_str, &str);

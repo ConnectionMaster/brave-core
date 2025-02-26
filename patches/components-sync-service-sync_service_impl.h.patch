@@ -1,9 +1,9 @@
 diff --git a/components/sync/service/sync_service_impl.h b/components/sync/service/sync_service_impl.h
-index f8c3e0f86a0293e42d1c7a9041562e72ec1b7ae0..333bd8f8baa11a30a67e000e3c61a0dcb799d793 100644
+index d64de7c4e5a3bb1603b4ae63e4a302fd9b59fbdc..0b0d1da775d1245ae80e97b47bf755fdd23340d6 100644
 --- a/components/sync/service/sync_service_impl.h
 +++ b/components/sync/service/sync_service_impl.h
-@@ -259,6 +259,7 @@ class SyncServiceImpl : public SyncService,
-   void ReportDataTypeErrorForTest(DataType type);
+@@ -266,6 +266,7 @@ class SyncServiceImpl : public SyncService,
+   size_t GetQueuedLocalDataMigrationItemCountForTest() const;
  
   private:
 +  BRAVE_SYNC_SERVICE_IMPL_H_

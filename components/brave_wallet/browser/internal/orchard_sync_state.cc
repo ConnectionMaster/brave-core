@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_wallet/browser/internal/orchard_sync_state.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "base/check_is_test.h"
@@ -101,9 +102,7 @@ OrchardSyncState::GetNullifiers(const mojom::AccountIdPtr& account_id) {
 base::expected<OrchardStorage::Result, OrchardStorage::Error>
 OrchardSyncState::ApplyScanResults(
     const mojom::AccountIdPtr& account_id,
-    OrchardBlockScanner::Result block_scanner_results,
-    const uint32_t latest_scanned_block,
-    const std::string& latest_scanned_block_hash) {
+    OrchardBlockScanner::Result block_scanner_results) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   auto existing_notes = storage_.GetSpendableNotes(account_id);
   RETURN_IF_ERROR(existing_notes);
@@ -115,7 +114,7 @@ OrchardSyncState::ApplyScanResults(
   std::vector<OrchardNoteSpend> nf_to_add;
 
   for (const auto& nf : block_scanner_results.found_spends) {
-    if (base::ranges::find_if(existing_notes.value(), [&nf](const auto& v) {
+    if (std::ranges::find_if(existing_notes.value(), [&nf](const auto& v) {
           return v.nullifier == nf.nullifier;
         }) != existing_notes.value().end()) {
       nf_to_add.push_back(nf);
@@ -127,6 +126,7 @@ OrchardSyncState::ApplyScanResults(
     if (!tx.has_value()) {
       return base::unexpected(tx.error());
     }
+
     if (!GetOrCreateShardTree(account_id)
              .ApplyScanResults(
                  std::move(block_scanner_results.scanned_blocks))) {
@@ -137,11 +137,14 @@ OrchardSyncState::ApplyScanResults(
 
     auto update_notes_result =
         storage_.UpdateNotes(account_id, notes_to_add, std::move(nf_to_add),
-                             latest_scanned_block, latest_scanned_block_hash);
+                             block_scanner_results.latest_scanned_block_id,
+                             block_scanner_results.latest_scanned_block_hash);
+
     if (!update_notes_result.has_value() ||
         update_notes_result.value() != OrchardStorage::Result::kSuccess) {
       return update_notes_result;
     }
+
     return tx->Commit();
   }
 }

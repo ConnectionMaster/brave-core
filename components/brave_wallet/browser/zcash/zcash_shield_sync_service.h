@@ -21,6 +21,7 @@ namespace brave_wallet {
 class OrchardStorage;
 class ZCashScanBlocksTask;
 class ZCashVerifyChainStateTask;
+class ZCashWalletService;
 
 // ZCashShieldSyncService downloads and scans blockchain blocks to find
 // spendable notes related to the account.
@@ -80,10 +81,19 @@ class ZCashShieldSyncService {
             callback);
 
    private:
-    base::SequenceBound<OrchardBlockScanner> background_block_scanner_;
+    static base::expected<OrchardBlockScanner::Result,
+                          OrchardBlockScanner::ErrorCode>
+    ScanBlocksInBackground(OrchardFullViewKey full_view_key,
+                           OrchardTreeState tree_state,
+                           std::vector<zcash::mojom::CompactBlockPtr> blocks);
+    OrchardFullViewKey full_view_key_;
+    scoped_refptr<base::TaskRunner> task_runner_;
+
+    base::WeakPtrFactory<OrchardBlockScannerProxy> weak_ptr_factory_{this};
   };
 
   ZCashShieldSyncService(
+      ZCashWalletService& zcash_wallet_service,
       ZCashActionContext context,
       const mojom::ZCashAccountShieldBirthdayPtr& account_birthday,
       const OrchardFullViewKey& fvk,
@@ -142,6 +152,7 @@ class ZCashShieldSyncService {
   std::optional<Error> error() { return error_; }
 
   // Params
+  raw_ref<ZCashWalletService> zcash_wallet_service_;
   ZCashActionContext context_;
   // Birthday of the account will be used to resolve initial scan range.
   mojom::ZCashAccountShieldBirthdayPtr account_birthday_;
@@ -157,17 +168,12 @@ class ZCashShieldSyncService {
   std::unique_ptr<ZCashVerifyChainStateTask> verify_chain_state_task_;
   bool chain_state_verified_ = false;
 
-  bool subtree_roots_updated_ = false;
-
   std::unique_ptr<ZCashScanBlocksTask> scan_blocks_task_;
-  bool scanning_finished_ = false;
-
   std::optional<ScanRangeResult> latest_scanned_block_result_;
 
   // Local cache of spendable notes to fast check on discovered nullifiers
   std::optional<std::vector<OrchardNote>> spendable_notes_;
   std::optional<Error> error_;
-  bool stopped_ = false;
 
   mojom::ZCashShieldSyncStatusPtr current_sync_status_;
 

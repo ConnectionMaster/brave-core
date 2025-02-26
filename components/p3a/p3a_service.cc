@@ -76,12 +76,15 @@ inline void DCheckCurrentlyOnUIThread() {
 
 P3AService::P3AService(PrefService& local_state,
                        std::string channel,
-                       std::string week_of_install,
+                       base::Time first_run_time,
                        P3AConfig config)
     : local_state_(local_state), config_(std::move(config)) {
   LoadDynamicMetrics();
+  if (first_run_time.is_null()) {
+    first_run_time = base::Time::Now();
+  }
   message_manager_ = std::make_unique<MessageManager>(
-      local_state, &config_, *this, channel, week_of_install);
+      local_state, &config_, *this, channel, first_run_time);
   pref_change_registrar_.Init(&local_state);
   pref_change_registrar_.Add(
       kP3AEnabled, base::BindRepeating(&P3AService::OnP3AEnabledChanged,
@@ -98,6 +101,7 @@ void P3AService::RegisterPrefs(PrefRegistrySimple* registry, bool first_run) {
   registry->RegisterBooleanPref(kP3ANoticeAcknowledged, first_run);
 
   registry->RegisterDictionaryPref(kDynamicMetricsDictPref);
+  registry->RegisterDictionaryPref(kActivationDatesDictPref);
 }
 
 void P3AService::InitCallback(std::string_view histogram_name) {
@@ -124,6 +128,7 @@ void P3AService::InitCallbacks() {
 }
 
 void P3AService::StartTeardown() {
+  dynamic_metric_sample_callbacks_.clear();
   pref_change_registrar_.RemoveAll();
 }
 
@@ -242,7 +247,7 @@ void P3AService::OnP3AEnabledChanged() {
 
 void P3AService::OnHistogramChanged(const char* histogram_name,
                                     uint64_t name_hash,
-                                    base::HistogramBase::Sample sample) {
+                                    base::HistogramBase::Sample32 sample) {
   DCHECK(histogram_name != nullptr);
 
   std::unique_ptr<base::HistogramSamples> samples =
@@ -292,7 +297,7 @@ void P3AService::OnHistogramChanged(const char* histogram_name,
 }
 
 void P3AService::OnHistogramChangedOnUI(const char* histogram_name,
-                                        base::HistogramBase::Sample sample,
+                                        base::HistogramBase::Sample32 sample,
                                         size_t bucket) {
   VLOG(2) << "P3AService::OnHistogramChanged: histogram_name = "
           << histogram_name << " Sample = " << sample << " bucket = " << bucket;

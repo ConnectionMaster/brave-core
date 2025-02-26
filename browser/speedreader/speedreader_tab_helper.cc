@@ -76,6 +76,7 @@ SpeedreaderTabHelper::SpeedreaderTabHelper(
   dom_distiller::AddObserver(web_contents, this);
   speedreader_service_observation_.Observe(GetSpeedreaderService());
   tts_player_observation_.Observe(speedreader::TtsPlayer::GetInstance());
+  is_visible_ = web_contents->GetVisibility() != content::Visibility::HIDDEN;
 }
 
 SpeedreaderTabHelper::~SpeedreaderTabHelper() {
@@ -203,7 +204,7 @@ void SpeedreaderTabHelper::ShowSpeedreaderBubble(
   Browser* browser = chrome::FindBrowserWithTab(contents);
   DCHECK(browser);
 
-  speedreader_bubble_ = static_cast<BraveBrowserWindow*>(browser->window())
+  speedreader_bubble_ = BraveBrowserWindow::From(browser->window())
                             ->ShowSpeedreaderBubble(this, location);
 #endif
 }
@@ -342,14 +343,7 @@ void SpeedreaderTabHelper::UpdateUI() {
   }
 #if !BUILDFLAG(IS_ANDROID)
   if (const auto* browser = chrome::FindBrowserWithTab(web_contents())) {
-    if (!DistillStates::IsDistilled(PageDistillState())) {
-      static_cast<BraveBrowserWindow*>(browser->window())
-          ->HideReaderModeToolbar();
-    } else {
-      static_cast<BraveBrowserWindow*>(browser->window())
-          ->ShowReaderModeToolbar();
-    }
-
+    BraveBrowserWindow::From(browser->window())->UpdateReaderModeToolbar();
     browser->window()->UpdatePageActionIcon(
         brave::kSpeedreaderPageActionIconType);
   }
@@ -627,7 +621,7 @@ bool SpeedreaderTabHelper::SendGestureEvent(ui::ViewAndroid* view,
                                             int64_t time_ms,
                                             float scale) {
   float dip_scale = view->GetDipScale();
-  auto size = view->GetSize();
+  auto size = view->GetSizeDIPs();
   float x = size.width() / 2;
   float y = size.height() / 2;
   gfx::PointF root_location =

@@ -78,6 +78,8 @@ provideStrings({
   cancelButtonLabel: 'Cancel',
   saveButtonLabel: 'Save',
   editButtonLabel: 'Edit',
+  editPromptButtonLabel: 'Edit prompt',
+  copyPromptButtonLabel: 'Copy prompt',
   editedLabel: 'Edited',
   optionNotHelpful: 'Not helpful',
   optionIncorrect: 'Incorrect',
@@ -98,6 +100,8 @@ provideStrings({
   errorConversationEnd: 'This conversation is too long and cannot continue. There may be other models available with which Leo is capable of maintaining accuracy for longer conversations.',
   searchInProgress: 'Improving your answer with Brave Search…',
   searchQueries: 'Improved answer searching for $1.',
+  sources: 'Sources',
+  expandSources: '$1 more…',
   leoSettingsTooltipLabel: 'Leo settings',
   summarizePageButtonLabel: 'Summarize this page',
   welcomeGuideTitle: 'Hi, I\'m Leo!',
@@ -126,5 +130,9 @@ provideStrings({
   stopGenerationButtonLabel: 'Stop answering',
   deleteButtonLabel: 'Delete',
   deleteConversationWarning: 'Are you sure you want to delete this conversation? This action cannot be undone.',
-  menuDeleteConversation: 'Delete conversation'
+  menuDeleteConversation: 'Delete conversation',
+  reasoningLabel: 'Reasoning...',
+  reasoningCompleteLabel: 'Reasoning complete',
+  hideDetailsButtonLabel: 'Hide details',
+  showDetailsButtonLabel: 'Show details'
 })

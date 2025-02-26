@@ -11,16 +11,15 @@
 #include <utility>
 
 #include "base/files/scoped_temp_dir.h"
-#include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
 #include "base/task/sequenced_task_runner.h"
 #include "base/test/bind.h"
 #include "base/test/task_environment.h"
+#include "base/test/values_test_util.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_prefs.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
 #include "brave/components/brave_wallet/browser/fil_transaction.h"
 #include "brave/components/brave_wallet/browser/fil_tx_meta.h"
-#include "brave/components/brave_wallet/browser/hd_keyring.h"
 #include "brave/components/brave_wallet/browser/json_rpc_service.h"
 #include "brave/components/brave_wallet/browser/keyring_service.h"
 #include "brave/components/brave_wallet/browser/network_manager.h"
@@ -40,14 +39,6 @@
 namespace brave_wallet {
 
 namespace {
-void EqualJSONs(const std::string& current_string,
-                const std::string& expected_string) {
-  auto current_json = base::JSONReader::Read(current_string);
-  ASSERT_TRUE(current_json);
-  auto expected_string_json = base::JSONReader::Read(expected_string);
-  ASSERT_TRUE(expected_string_json);
-  EXPECT_EQ(*current_json, *expected_string_json);
-}
 std::string GetSignedMessage(const std::string& message,
                              const std::string& data) {
   base::Value::Dict dict;
@@ -137,7 +128,8 @@ class FilTxManagerUnitTest : public testing::Test {
                           EXPECT_EQ(!!json_message,
                                     expected_message.has_value());
                           if (expected_message.has_value()) {
-                            EqualJSONs(*json_message, *expected_message);
+                            EXPECT_EQ(base::test::ParseJson(*json_message),
+                                      base::test::ParseJson(*expected_message));
                           }
                           run_loop.Quit();
                         }));

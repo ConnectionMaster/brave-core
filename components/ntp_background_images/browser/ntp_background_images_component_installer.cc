@@ -5,16 +5,16 @@
 
 #include "brave/components/ntp_background_images/browser/ntp_background_images_component_installer.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "base/base64.h"
 #include "base/functional/bind.h"
-#include "base/functional/callback.h"
 #include "brave/components/brave_component_updater/browser/brave_on_demand_updater.h"
 #include "brave/components/ntp_background_images/browser/ntp_background_images_update_util.h"
-#include "brave/components/ntp_background_images/browser/sponsored_images_component_data.h"
 #include "components/component_updater/component_installer.h"
 #include "components/component_updater/component_updater_service.h"
 #include "crypto/sha2.h"
@@ -77,14 +77,14 @@ class NTPBackgroundImagesComponentInstallerPolicy
 };
 
 NTPBackgroundImagesComponentInstallerPolicy::
-NTPBackgroundImagesComponentInstallerPolicy(
-    const std::string& component_public_key,
-    const std::string& component_id,
-    const std::string& component_name,
-    OnComponentReadyCallback callback)
+    NTPBackgroundImagesComponentInstallerPolicy(
+        const std::string& component_public_key,
+        const std::string& component_id,
+        const std::string& component_name,
+        OnComponentReadyCallback callback)
     : component_id_(component_id),
       component_name_(component_name),
-      ready_callback_(callback) {
+      ready_callback_(std::move(callback)) {
   // Generate hash from public key.
   std::string decoded_public_key;
   base::Base64Decode(component_public_key, &decoded_public_key);
@@ -106,23 +106,23 @@ bool NTPBackgroundImagesComponentInstallerPolicy::
 
 update_client::CrxInstaller::Result
 NTPBackgroundImagesComponentInstallerPolicy::OnCustomInstall(
-    const base::Value::Dict& manifest,
-    const base::FilePath& install_dir) {
+    const base::Value::Dict& /*manifest*/,
+    const base::FilePath& /*install_dir*/) {
   return update_client::CrxInstaller::Result(0);
 }
 
 void NTPBackgroundImagesComponentInstallerPolicy::OnCustomUninstall() {}
 
 void NTPBackgroundImagesComponentInstallerPolicy::ComponentReady(
-    const base::Version& version,
+    const base::Version& /*version*/,
     const base::FilePath& path,
-    base::Value::Dict manifest) {
+    base::Value::Dict /*manifest*/) {
   ready_callback_.Run(path);
 }
 
 bool NTPBackgroundImagesComponentInstallerPolicy::VerifyInstallation(
-    const base::Value::Dict& manifest,
-    const base::FilePath& install_dir) const {
+    const base::Value::Dict& /*manifest*/,
+    const base::FilePath& /*install_dir*/) const {
   return true;
 }
 
@@ -164,40 +164,42 @@ void RegisterNTPSponsoredImagesComponentCallback(
 }  // namespace
 
 void RegisterNTPBackgroundImagesComponent(
-    component_updater::ComponentUpdateService* cus,
+    component_updater::ComponentUpdateService* component_update_service,
     OnComponentReadyCallback callback) {
-  // In test, |cus| could be nullptr.
-  if (!cus)
+  if (!component_update_service) {
+    // In test, `component_update_service` could be nullptr.
     return;
+  }
 
   auto installer = base::MakeRefCounted<component_updater::ComponentInstaller>(
       std::make_unique<NTPBackgroundImagesComponentInstallerPolicy>(
           kNTPBIComponentPublicKey, kNTPBIComponentID, "NTP Background Images",
-          callback));
+          std::move(callback)));
   installer->Register(
-      cus, base::BindOnce(&RegisterNTPBackgroundImagesComponentCallback,
-                          kNTPBIComponentID));
+      component_update_service,
+      base::BindOnce(&RegisterNTPBackgroundImagesComponentCallback,
+                     kNTPBIComponentID));
 }
 
 void RegisterNTPSponsoredImagesComponent(
-    component_updater::ComponentUpdateService* cus,
+    component_updater::ComponentUpdateService* component_update_service,
     const std::string& component_public_key,
     const std::string& component_id,
     const std::string& component_name,
     OnComponentReadyCallback callback) {
-  // In test, |cus| could be nullptr.
-  if (!cus)
+  if (!component_update_service) {
+    // In test, `component_update_service` could be nullptr.
     return;
+  }
 
   auto installer = base::MakeRefCounted<component_updater::ComponentInstaller>(
       std::make_unique<NTPBackgroundImagesComponentInstallerPolicy>(
-          component_public_key,
-          component_id,
-          component_name,
-          callback));
+          component_public_key, component_id, component_name,
+          std::move(callback)));
   installer->Register(
-      cus, base::BindOnce(&RegisterNTPSponsoredImagesComponentCallback,
-                          component_id));
+      component_update_service,
+      base::BindOnce(&RegisterNTPSponsoredImagesComponentCallback,
+                     component_id));
 }
 
 }  // namespace ntp_background_images

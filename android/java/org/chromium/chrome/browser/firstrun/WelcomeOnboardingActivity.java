@@ -13,6 +13,8 @@ import android.animation.LayoutTransition;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -36,6 +38,7 @@ import org.chromium.base.BravePreferenceKeys;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.BraveConfig;
 import org.chromium.chrome.browser.BraveLocalState;
 import org.chromium.chrome.browser.back_press.SecondaryActivityBackPressUma.SecondaryActivity;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
@@ -50,7 +53,11 @@ import org.chromium.chrome.browser.set_default_browser.BraveSetDefaultBrowserUti
 import org.chromium.chrome.browser.util.BraveConstants;
 import org.chromium.chrome.browser.util.BraveTouchUtils;
 import org.chromium.chrome.browser.util.PackageUtils;
+import org.chromium.components.user_prefs.UserPrefs;
 import org.chromium.ui.base.DeviceFormFactor;
+import org.chromium.ui.text.ChromeClickableSpan;
+import org.chromium.ui.text.SpanApplier;
+import org.chromium.ui.text.SpanApplier.SpanInfo;
 
 import java.util.Locale;
 
@@ -64,6 +71,8 @@ import java.util.Locale;
 public class WelcomeOnboardingActivity extends FirstRunActivityBase {
     private static final String P3A_URL =
             "https://support.brave.com/hc/en-us/articles/9140465918093-What-is-P3A-in-Brave";
+    private static final String WDP_LINK =
+            "https://www.brave.com/browser/privacy/#web-discovery-project";
 
     private static final String TAG = "WelcomeOnboarding";
 
@@ -220,6 +229,10 @@ public class WelcomeOnboardingActivity extends FirstRunActivityBase {
                     view -> {
                         if (mCurrentStep == 0 && !isDefaultBrowser()) {
                             setDefaultBrowserAndProceedToNextStep();
+                        } else if (isWDPEnabled() && mCurrentStep == getWDPPageStep()) {
+                            UserPrefs.get(getProfileProviderSupplier().get().getOriginalProfile())
+                                    .setBoolean(BravePref.WEB_DISCOVERY_ENABLED, true);
+                            nextOnboardingStep();
                         } else {
                             nextOnboardingStep();
                         }
@@ -236,10 +249,6 @@ public class WelcomeOnboardingActivity extends FirstRunActivityBase {
                         }
                     });
         }
-    }
-
-    private boolean shouldForceDefaultBrowserPrompt() {
-        return !isDefaultBrowser();
     }
 
     private void setDefaultBrowserAndProceedToNextStep() {
@@ -267,15 +276,21 @@ public class WelcomeOnboardingActivity extends FirstRunActivityBase {
         mCurrentStep++;
         if (mCurrentStep == 0) {
             if (!BraveSetDefaultBrowserUtils.supportsDefaultRoleManager()) {
-                mIvBrave.setVisibility(View.VISIBLE);
+                if (mIvBrave != null) {
+                    mIvBrave.setVisibility(View.VISIBLE);
+                }
                 showBrowserSelectionPage();
             } else if (!isDefaultBrowser()) {
                 setDefaultBrowserAndProceedToNextStep();
             } else {
                 nextOnboardingStep();
             }
+        } else if (isWDPEnabled() && mCurrentStep == getWDPPageStep()) {
+            if (mIvBrave != null) {
+                mIvBrave.setVisibility(View.VISIBLE);
+            }
+            showWDPPage();
         } else if (mCurrentStep == getAnalyticsConsentPageStep()) {
-            mIvBrave.setVisibility(View.VISIBLE);
             showAnalyticsConsentPage();
         } else {
             OnboardingPrefManager.getInstance().setP3aOnboardingShown(true);
@@ -288,11 +303,19 @@ public class WelcomeOnboardingActivity extends FirstRunActivityBase {
             FirstRunUtils.setEulaAccepted();
 
             finish();
-            sendFirstRunCompletePendingIntent();
+            sendFirstRunCompleteIntent();
         }
     }
 
+    private boolean isWDPEnabled() {
+        return BraveConfig.WEB_DISCOVERY_ENABLED;
+    }
+
     private int getAnalyticsConsentPageStep() {
+        return 2;
+    }
+
+    private int getWDPPageStep() {
         return 1;
     }
 
@@ -437,6 +460,69 @@ public class WelcomeOnboardingActivity extends FirstRunActivityBase {
         }
         if (mIvArrowDown != null) {
             mIvArrowDown.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void showWDPPage() {
+        int margin = mIsTablet ? 250 : 60;
+        setLeafAnimation(mVLeafAlignTop, mIvLeafTop, 1.5f, margin, true);
+        setLeafAnimation(mVLeafAlignBottom, mIvLeafBottom, 1.5f, margin, false);
+
+        if (mLayoutCard != null) {
+            mLayoutCard.setVisibility(View.GONE);
+        }
+        if (mIvArrowDown != null) {
+            mIvArrowDown.setVisibility(View.GONE);
+        }
+
+        if (mTvCard != null) {
+            mTvCard.setText(getResources().getString(R.string.wdp_title));
+        }
+        if (mTvDefault != null) {
+            ChromeClickableSpan wdpLearnMoreClickableSpan =
+                    new ChromeClickableSpan(
+                            WelcomeOnboardingActivity.this,
+                            R.color.brave_blue_tint_color,
+                            (textView) -> {
+                                CustomTabActivity.showInfoPage(this, WDP_LINK);
+                            });
+            String wdpText = getResources().getString(R.string.wdp_text);
+
+            SpannableString wdpLearnMoreSpannableString =
+                    SpanApplier.applySpans(
+                            wdpText,
+                            new SpanInfo(
+                                    "<learn_more>", "</learn_more>", wdpLearnMoreClickableSpan));
+
+            mTvDefault.setMovementMethod(LinkMovementMethod.getInstance());
+            mTvDefault.setText(wdpLearnMoreSpannableString);
+        }
+        if (mBtnPositive != null) {
+            mBtnPositive.setText(getResources().getString(R.string.sure_ill_help_onboarding));
+        }
+        if (mBtnNegative != null) {
+            mBtnNegative.setText(getResources().getString(R.string.maybe_later));
+            mBtnNegative.setVisibility(View.VISIBLE);
+        }
+
+        if (mTvCard != null) {
+            mTvCard.setVisibility(View.VISIBLE);
+        }
+
+        if (mTvDefault != null) {
+            mTvDefault.setVisibility(View.VISIBLE);
+        }
+        if (mLayoutCard != null) {
+            mLayoutCard.setVisibility(View.VISIBLE);
+        }
+        if (mIvArrowDown != null) {
+            mIvArrowDown.setVisibility(View.VISIBLE);
+        }
+        if (mCheckboxCrash != null) {
+            mCheckboxCrash.setVisibility(View.GONE);
+        }
+        if (mCheckboxP3a != null) {
+            mCheckboxP3a.setVisibility(View.GONE);
         }
     }
 

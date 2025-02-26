@@ -23,6 +23,7 @@ inline constexpr char kRewardsPageTopHost[] = "rewards.top-chrome";
 inline constexpr char kRewardsPageTopURL[] = "chrome://rewards.top-chrome";
 inline constexpr char kRewardsInternalsHost[] = "rewards-internals";
 inline constexpr char kWelcomeHost[] = "welcome";
+inline constexpr char kWelcomeURL[] = "chrome://welcome/";
 inline constexpr char kWelcomeJS[] = "brave_welcome.js";
 inline constexpr char kBraveRewardsPanelURL[] =
     "chrome://rewards-panel.top-chrome";
@@ -70,8 +71,6 @@ inline constexpr char kShieldsPanelHost[] = "brave-shields.top-chrome";
 inline constexpr char kCookieListOptInHost[] = "cookie-list-opt-in.top-chrome";
 inline constexpr char kCookieListOptInURL[] =
     "chrome://cookie-list-opt-in.top-chrome";
-inline constexpr char kFederatedInternalsURL[] = "brave://federated-internals";
-inline constexpr char kFederatedInternalsHost[] = "federated-internals";
 inline constexpr char kContentFiltersPath[] = "shields/filters";
 inline constexpr char kPlaylistHost[] = "playlist";
 inline constexpr char kPlaylistURL[] = "chrome-untrusted://playlist/";
@@ -88,12 +87,18 @@ inline constexpr char kAIChatUntrustedConversationUIURL[] =
     "chrome-untrusted://leo-ai-conversation-entries/";
 inline constexpr char kAIChatUntrustedConversationUIHost[] =
     "leo-ai-conversation-entries";
-
+inline constexpr char kBraveGettingStartedURL[] = "chrome://getting-started/";
+inline constexpr char kBraveGettingStartedHost[] = "getting-started";
 inline constexpr char kRewriterUIURL[] = "chrome://rewriter/";
 inline constexpr char kRewriterUIHost[] = "rewriter";
 
 inline constexpr char16_t kTransactionSimulationLearnMoreURL[] =
     u"https://github.com/brave/brave-browser/wiki/Transaction-Simulation";
+
+inline constexpr char kNTPNewTabTakeoverRichMediaUrl[] =
+    "chrome-untrusted://new-tab-takeover/";
+
+inline constexpr char kBraveUINewTabURL[] = "chrome://newtab/";
 
 // Hosts that are allowed to be installed as PWAs, which is usually
 // a blocked action for WebUIs. In Chromium, the "password-manager" host

@@ -3,7 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
+
 #include "base/test/bind.h"
+#include "base/test/run_until.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/browser/ui/browser_commands.h"
 #include "brave/browser/ui/tabs/brave_tab_menu_model.h"
@@ -14,8 +17,10 @@
 #include "brave/browser/ui/views/frame/vertical_tab_strip_widget_delegate_view.h"
 #include "brave/browser/ui/views/tabs/brave_browser_tab_strip_controller.h"
 #include "brave/browser/ui/views/tabs/brave_compound_tab_container.h"
+#include "brave/browser/ui/views/tabs/brave_new_tab_button.h"
 #include "brave/browser/ui/views/tabs/brave_tab_context_menu_contents.h"
 #include "brave/browser/ui/views/tabs/brave_tab_strip.h"
+#include "brave/browser/ui/views/tabs/brave_tab_strip_layout_helper.h"
 #include "brave/browser/ui/views/tabs/switches.h"
 #include "brave/browser/ui/views/tabs/vertical_tab_utils.h"
 #include "brave/components/constants/pref_names.h"
@@ -300,15 +305,15 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, WindowTitle) {
 
 IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, NewTabVisibility) {
   EXPECT_TRUE(
-      browser_view()->tab_strip_region_view()->new_tab_button()->GetVisible());
+      browser_view()->tab_strip_region_view()->GetNewTabButton()->GetVisible());
 
   ToggleVerticalTabStrip();
   EXPECT_FALSE(
-      browser_view()->tab_strip_region_view()->new_tab_button()->GetVisible());
+      browser_view()->tab_strip_region_view()->GetNewTabButton()->GetVisible());
 
   ToggleVerticalTabStrip();
   EXPECT_TRUE(
-      browser_view()->tab_strip_region_view()->new_tab_button()->GetVisible());
+      browser_view()->tab_strip_region_view()->GetNewTabButton()->GetVisible());
 }
 
 IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, MinHeight) {
@@ -405,7 +410,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, MAYBE_Fullscreen) {
       browser_view()->GetExclusiveAccessManager()->fullscreen_controller();
   {
     auto observer = FullscreenNotificationObserver(browser());
-    fullscreen_controller->ToggleBrowserFullscreenMode();
+    fullscreen_controller->ToggleBrowserFullscreenMode(/*user_initiated=*/true);
     observer.Wait();
   }
 
@@ -418,7 +423,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, MAYBE_Fullscreen) {
 
   {
     auto observer = FullscreenNotificationObserver(browser());
-    fullscreen_controller->ToggleBrowserFullscreenMode();
+    fullscreen_controller->ToggleBrowserFullscreenMode(/*user_initiated=*/true);
     observer.Wait();
   }
   ASSERT_FALSE(fullscreen_controller->IsFullscreenForBrowser());
@@ -501,6 +506,48 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, LayoutSanity) {
     EXPECT_TRUE(GetBoundsInScreen(region_view, region_view->GetLocalBounds())
                     .Contains(GetBoundsInScreen(tab, tab->GetLocalBounds())));
   }
+}
+
+IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest,
+                       LayoutAfterFirstTabCreation) {
+  ToggleVerticalTabStrip();
+
+  auto* widget_delegate_view =
+      browser_view()->vertical_tab_strip_widget_delegate_view();
+  ASSERT_TRUE(widget_delegate_view);
+
+  auto* region_view = widget_delegate_view->vertical_tab_strip_region_view();
+  ASSERT_TRUE(region_view);
+  ASSERT_EQ(VerticalTabStripRegionView::State::kExpanded, region_view->state());
+
+  auto* model = browser()->tab_strip_model();
+  model->SetTabPinned(0, true);
+  ASSERT_EQ(1, model->count());
+
+  browser_view()->tabstrip()->StopAnimating(/* layout= */ true);
+
+  int contents_view_height = region_view->contents_view_->height();
+  AppendTab(browser());
+  browser_view()->tabstrip()->StopAnimating(/* layout= */ true);
+
+  // When first tab is added, height should have tab's height plus top & bottom
+  // margin.
+  contents_view_height +=
+      (tabs::kVerticalTabHeight + tabs::kMarginForVerticalTabContainers * 2);
+  ASSERT_TRUE(base::test::RunUntil([&]() {
+    return region_view->contents_view_->height() == contents_view_height;
+  }));
+
+  AppendTab(browser());
+  browser_view()->tabstrip()->StopAnimating(/* layout= */ true);
+
+  // When second tab is added, height should be increased with tab height plus
+  // tab spacing.
+  contents_view_height +=
+      (tabs::kVerticalTabHeight + tabs::kVerticalTabsSpacing);
+  ASSERT_TRUE(base::test::RunUntil([&]() {
+    return region_view->contents_view_->height() == contents_view_height;
+  }));
 }
 
 IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, ScrollBarVisibility) {
@@ -682,7 +729,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripStringBrowserTest, ContextMenuString) {
     // Check if there's no "Below" in context menu labels when it's horizontal
     // tab strip
     auto context_menu_contents = create_tab_context_menu_contents();
-    EXPECT_TRUE(base::ranges::none_of(get_all_labels(), [](const auto& label) {
+    EXPECT_TRUE(std::ranges::none_of(get_all_labels(), [](const auto& label) {
 #if BUILDFLAG(IS_MAC)
       return base::Contains(label, u"Below");
 #else
@@ -697,7 +744,7 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripStringBrowserTest, ContextMenuString) {
     // vertical tab strip. When this fails, we should revisit
     // BraveTabMenuModel::GetLabelAt().
     auto context_menu_contents = create_tab_context_menu_contents();
-    EXPECT_TRUE(base::ranges::none_of(get_all_labels(), [](const auto& label) {
+    EXPECT_TRUE(std::ranges::none_of(get_all_labels(), [](const auto& label) {
 #if BUILDFLAG(IS_MAC)
       return base::Contains(label, u"Right") || base::Contains(label, u"Left");
 #else
@@ -716,13 +763,8 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripBrowserTest, OriginalTabSearchButton) {
   auto* region_view = widget_delegate_view->vertical_tab_strip_region_view();
   ASSERT_TRUE(region_view);
 
-  auto* tab_search_container =
-      region_view->original_region_view_->tab_search_container();
-  if (!tab_search_container) {
-    return;
-  }
-
-  auto* original_tab_search_button = tab_search_container->tab_search_button();
+  auto* original_tab_search_button =
+      region_view->original_region_view_->GetTabSearchButton();
   if (!original_tab_search_button) {
     // On Windows 10, the button is on the window frame and vertical tab strip
     // does nothing to it.
@@ -933,10 +975,10 @@ IN_PROC_BROWSER_TEST_F(VerticalTabStripDragAndDropBrowserTest,
                 // Creating new browser during drag-and-drop will create
                 // a nested run loop. So we should do things within callback.
                 auto* browser_list = BrowserList::GetInstance();
-                EXPECT_EQ(
-                    2, base::ranges::count_if(*browser_list, [&](Browser* b) {
-                      return b->profile() == browser()->profile();
-                    }));
+                EXPECT_EQ(2,
+                          std::ranges::count_if(*browser_list, [&](Browser* b) {
+                            return b->profile() == browser()->profile();
+                          }));
                 ReleaseMouse();
                 auto* new_browser = browser_list->GetLastActive();
                 new_browser->window()->Close();

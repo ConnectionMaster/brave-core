@@ -22,6 +22,7 @@ import org.chromium.components.safe_browsing.BraveSafeBrowsingUtils.SafeBrowsing
 import org.chromium.components.safe_browsing.SafeBrowsingApiHandler.LookupResult;
 
 import java.util.List;
+import java.util.Observer;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +46,8 @@ public class BraveSafeBrowsingApiHandler implements SafeBrowsingApiHandler {
         default boolean isSafeBrowsingEnabled() {
             return true;
         }
+
+        default void maybeShowSafeBrowsingError(String error) {}
 
         Activity getActivity();
     }
@@ -84,6 +87,7 @@ public class BraveSafeBrowsingApiHandler implements SafeBrowsingApiHandler {
         mObserver = observer;
     }
 
+    @SuppressWarnings("NoStreams")
     @Override
     public void startUriLookup(long callbackId, String uri, int[] threatTypes, int protocol) {
         if (mBraveSafeBrowsingApiHandlerDelegate == null
@@ -149,22 +153,26 @@ public class BraveSafeBrowsingApiHandler implements SafeBrowsingApiHandler {
                                 // An error with the Google Play Services API contains some
                                 // additional details.
                                 ApiException apiException = (ApiException) e;
+                                String error =
+                                        "Error: "
+                                                + CommonStatusCodes.getStatusCodeString(
+                                                        apiException.getStatusCode())
+                                                + ", code: "
+                                                + apiException.getStatusCode();
                                 if (isDebuggable()) {
-                                    Log.d(
-                                            TAG,
-                                            "Error: "
-                                                    + CommonStatusCodes.getStatusCodeString(
-                                                            apiException.getStatusCode())
-                                                    + ", code: "
-                                                    + apiException.getStatusCode());
+                                    Log.d(TAG, error);
                                 }
-                                if (apiException.getStatusCode()
-                                        == CommonStatusCodes.API_NOT_CONNECTED) {
-                                    // That means that device doesn't have Google Play Services API.
-                                    // Delegate is used to turn off safe browsing option as every
-                                    // request is
-                                    // delayed when it's turned on and not working
-                                    mBraveSafeBrowsingApiHandlerDelegate.turnSafeBrowsingOff();
+                                if (mBraveSafeBrowsingApiHandlerDelegate != null) {
+                                    mBraveSafeBrowsingApiHandlerDelegate.maybeShowSafeBrowsingError(
+                                            error);
+                                    if (apiException.getStatusCode()
+                                            == CommonStatusCodes.API_NOT_CONNECTED) {
+                                        // That means that device doesn't have Google Play Services
+                                        // API. Delegate is used to turn off safe browsing option as
+                                        // every request is delayed when it's turned on and not
+                                        // working
+                                        mBraveSafeBrowsingApiHandlerDelegate.turnSafeBrowsingOff();
+                                    }
                                 }
 
                                 // Note: If the status code, apiException.getStatusCode(),
@@ -189,8 +197,13 @@ public class BraveSafeBrowsingApiHandler implements SafeBrowsingApiHandler {
                                 }
                             } else {
                                 // A different, unknown type of error occurred.
+                                String error = "Error: " + e.getMessage();
                                 if (isDebuggable()) {
-                                    Log.d(TAG, "Error: " + e.getMessage());
+                                    Log.d(TAG, error);
+                                }
+                                if (mBraveSafeBrowsingApiHandlerDelegate != null) {
+                                    mBraveSafeBrowsingApiHandlerDelegate.maybeShowSafeBrowsingError(
+                                            error);
                                 }
                                 mObserver.onUrlCheckDone(
                                         callbackId,

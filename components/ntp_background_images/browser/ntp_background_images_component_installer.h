@@ -8,8 +8,11 @@
 
 #include <string>
 
-#include "base/files/file_path.h"
 #include "base/functional/callback.h"
+
+namespace base {
+class FilePath;
+}  // namespace base
 
 namespace component_updater {
 class ComponentUpdateService;
@@ -21,11 +24,11 @@ using OnComponentReadyCallback =
       base::RepeatingCallback<void(const base::FilePath& install_path)>;
 
 void RegisterNTPBackgroundImagesComponent(
-    component_updater::ComponentUpdateService* cus,
+    component_updater::ComponentUpdateService* component_update_service,
     OnComponentReadyCallback callback);
 
 void RegisterNTPSponsoredImagesComponent(
-    component_updater::ComponentUpdateService* cus,
+    component_updater::ComponentUpdateService* component_update_service,
     const std::string& component_public_key,
     const std::string& component_id,
     const std::string& component_name,

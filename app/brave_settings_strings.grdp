@@ -895,11 +895,6 @@
     Don't allow site to open Leo AI chat
   </message>
 
-  <!-- Settings / Privacy and security / Safety Check -->
-  <message name="IDS_SETTINGS_BRAVE_SAFETY_CHECK_SAFE_BROWSING_ENABLED_STANDARD_AVAILABLE_ENHANCED" desc="This text points out that Safe Browsing is enabled as standard protection.">
-    Standard protection is on.
-  </message>
-
   <!-- Settings / Sync -->
   <message name="IDS_SETTINGS_BRAVE_SYNC_TITLE" desc="The title for Brave Sync in settings">
     Sync
@@ -1107,10 +1102,10 @@
 
   <!-- Settings / Search engine -->
   <message name="IDS_SETTINGS_BRAVE_SEARCH_ENGINES_SEARCH_SUGGEST_LABEL" desc="The label of the option to enable/disable sending omnibox input to the user's default search engine to get additional suggestions.">
-    Show search suggestions
+    Improve search suggestions
   </message>
   <message name="IDS_SETTINGS_BRAVE_SEARCH_ENGINES_SEARCH_SUGGEST_DESC" desc="The desc of the option to enable/disable sending omnibox input to the user's default search engine to get additional suggestions.">
-    When you type in the address bar or search box, Brave sends what you type to your default search engine to get better suggestions. This is not available in private windows.
+    When on, Brave sends what you type in the address bar or search box to your default search engine to get better suggestions. When off, Brave only shows suggestions generated on your device. This is always off in private windows.
   </message>
   <message name="IDS_SETTINGS_BRAVE_OTHER_SEARCH_ENGINES_LABEL" desc="The label for the settings switch controlling the addition of custom search engines">
     Index other search engines
@@ -1388,6 +1383,9 @@
   <message name="IDS_SETTINGS_WALLET_ZEC_NETWORK_LIST_TITLE" desc="The title of the list with wallet Zcash networks">
     Zcash networks
   </message>
+  <message name="IDS_SETTINGS_WALLET_CARDANO_NETWORK_LIST_TITLE" desc="The title of the list with wallet Cardano networks">
+    Cardano networks
+  </message>
   <message name="IDS_SETTINGS_SHOW_BRAVE_WALLET_TEST_NETWORKS" desc="The description for showing the Brave wallet test networks">
     Show test networks
   </message>
@@ -1628,7 +1626,7 @@ Leo AI. This action can't be undone.
     Connect your self-hosted or third-party hosted LLM to Leo and use them within the browser.
   </message>
   <message name="IDS_SETTINGS_LEO_ASSISTANT_YOUR_MODELS_DESC_2" desc="A description explaning what protocols are accepted">
-    Use any OpenAI Chat Protocol compatible framework such as Ollama.
+    Use any OpenAI Chat Protocol compatible framework such as Ollama. <ph name="BEGIN_LINK">&lt;a target="_blank" href="$1"&gt;</ph>Learn more<ph name="END_LINK">&lt;/a&gt;</ph>
   </message>
   <message name="IDS_SETTINGS_LEO_ASSISTANT_ADD_MODEL_BUTTON_LABEL" desc="A button label for user to click when they want to add a new model">
     Add model

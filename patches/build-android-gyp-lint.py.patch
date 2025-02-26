@@ -1,9 +1,9 @@
 diff --git a/build/android/gyp/lint.py b/build/android/gyp/lint.py
-index efac6ab90ec93f9c036eb735c14e1ec8fc6aee84..3730e8c888a790f19e4ea2dcc12d00d5f7078419 100755
+index bf8dc8136d96b493bfbfda960c9503fe40229ff8..27baecce4e3176ddc7a1c1f5aa17f7f6beb5707c 100755
 --- a/build/android/gyp/lint.py
 +++ b/build/android/gyp/lint.py
 @@ -548,5 +548,6 @@ def main():
-   build_utils.Touch(args.stamp)
+   server_utils.MaybeTouch(args.stamp)
  
  
 +from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

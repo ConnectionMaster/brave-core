@@ -6,12 +6,10 @@
 package org.chromium.chrome.browser.settings;
 
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
-import android.util.DisplayMetrics;
 
 import androidx.preference.Preference;
 
@@ -174,12 +172,12 @@ public abstract class BraveMainPreferencesBase extends BravePreferenceFragment
 
     private void updateBravePreferences() {
         // Below prefs are removed from main settings.
-        removePreferenceIfPresent(MainSettings.PREF_SYNC_PROMO);
         removePreferenceIfPresent(MainSettings.PREF_SIGN_IN);
         removePreferenceIfPresent(MainSettings.PREF_SEARCH_ENGINE);
         removePreferenceIfPresent(MainSettings.PREF_UI_THEME);
         removePreferenceIfPresent(MainSettings.PREF_DOWNLOADS);
         removePreferenceIfPresent(MainSettings.PREF_SAFETY_CHECK);
+        removePreferenceIfPresent(MainSettings.PREF_SAFETY_HUB);
         removePreferenceIfPresent(MainSettings.PREF_ACCOUNT_AND_GOOGLE_SERVICES_SECTION);
         removePreferenceIfPresent(MainSettings.PREF_GOOGLE_SERVICES);
         removePreferenceIfPresent(MainSettings.PREF_HOME_MODULES_CONFIG);
@@ -359,8 +357,10 @@ public abstract class BraveMainPreferencesBase extends BravePreferenceFragment
         }
         findPreference(PREF_ABOUT_CHROME).setOrder(++aboutSectionOrder);
 
-        // We don't have home button on top toolbar at the moment
-        if (!DeviceFormFactor.isTablet() && !BottomToolbarConfiguration.isBottomToolbarEnabled()) {
+        // We don't have home button on address bar at the moment.
+        if (!DeviceFormFactor.isTablet()
+                && !BottomToolbarConfiguration.isBraveBottomControlsEnabled()
+                && BottomToolbarConfiguration.isToolbarTopAnchored()) {
             removePreferenceIfPresent(MainSettings.PREF_HOMEPAGE);
         }
     }
@@ -395,6 +395,7 @@ public abstract class BraveMainPreferencesBase extends BravePreferenceFragment
         updatePreferenceIcon(PREF_NOTIFICATIONS, R.drawable.ic_notification);
         updatePreferenceIcon(MainSettings.PREF_DEVELOPER, R.drawable.ic_info);
         updatePreferenceIcon(MainSettings.PREF_HOMEPAGE, R.drawable.ic_homepage);
+        updatePreferenceIcon(MainSettings.PREF_TABS, R.drawable.ic_browser_mobile_tabs);
     }
 
     private void updateSearchEnginePreference() {
@@ -453,14 +454,6 @@ public abstract class BraveMainPreferencesBase extends BravePreferenceFragment
                         }
                     });
         }
-    }
-
-    // TODO(simonhong): Make this static public with proper class.
-    private int dp2px(int dp) {
-        final float dpPerInchMdpi = 160f;
-        DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
-        float px = dp * (metrics.densityDpi / dpPerInchMdpi);
-        return Math.round(px);
     }
 
     @Override

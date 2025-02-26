@@ -24,11 +24,11 @@
 #include "brave/components/brave_ads/core/public/targeting/geographical/subdivision/supported_subdivisions.h"
 #include "brave/components/brave_ads/core/public/user_engagement/reactions/reactions_util.h"
 #include "brave/components/brave_news/common/pref_names.h"
-#include "brave/components/brave_rewards/browser/rewards_service.h"
-#include "brave/components/brave_rewards/browser/rewards_service_observer.h"
-#include "brave/components/brave_rewards/common/mojom/rewards.mojom.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
-#include "brave/components/brave_rewards/common/rewards_util.h"
+#include "brave/components/brave_rewards/content/rewards_service.h"
+#include "brave/components/brave_rewards/content/rewards_service_observer.h"
+#include "brave/components/brave_rewards/core/mojom/rewards.mojom.h"
+#include "brave/components/brave_rewards/core/pref_names.h"
+#include "brave/components/brave_rewards/core/rewards_util.h"
 #include "brave/components/constants/pref_names.h"
 #include "brave/components/l10n/common/country_code_util.h"
 #include "brave/components/ntp_background_images/common/pref_names.h"
@@ -185,7 +185,6 @@ class RewardsPageHandler::UpdateObserver
 };
 
 RewardsPageHandler::RewardsPageHandler(
-    mojo::PendingRemote<mojom::RewardsPage> page,
     mojo::PendingReceiver<mojom::RewardsPageHandler> receiver,
     std::unique_ptr<BubbleDelegate> bubble_delegate,
     RewardsService* rewards_service,
@@ -193,7 +192,6 @@ RewardsPageHandler::RewardsPageHandler(
     brave_adaptive_captcha::BraveAdaptiveCaptchaService* captcha_service,
     PrefService* prefs)
     : receiver_(this, std::move(receiver)),
-      page_(std::move(page)),
       bubble_delegate_(std::move(bubble_delegate)),
       rewards_service_(rewards_service),
       ads_service_(ads_service),
@@ -211,6 +209,12 @@ RewardsPageHandler::RewardsPageHandler(
 }
 
 RewardsPageHandler::~RewardsPageHandler() = default;
+
+void RewardsPageHandler::SetRewardsPage(
+    mojo::PendingRemote<mojom::RewardsPage> page) {
+  page_.reset();
+  page_.Bind(std::move(page));
+}
 
 void RewardsPageHandler::OnPageReady() {
   if (bubble_delegate_) {
@@ -326,6 +330,18 @@ void RewardsPageHandler::GetPublisherIdForActiveTab(
     return;
   }
   std::move(callback).Run(bubble_delegate_->GetPublisherIdForActiveTab());
+}
+
+void RewardsPageHandler::RefreshPublisher(const std::string& publisher_id,
+                                          RefreshPublisherCallback callback) {
+  if (publisher_id.empty()) {
+    std::move(callback).Run();
+    return;
+  }
+  rewards_service_->RefreshPublisher(
+      publisher_id,
+      base::IgnoreArgs<mojom::PublisherStatus, const std::string&>(
+          std::move(callback)));
 }
 
 void RewardsPageHandler::GetPublisherInfo(const std::string& publisher_id,
@@ -581,26 +597,21 @@ void RewardsPageHandler::GetRewardsNotifications(
   }
   std::vector<mojom::RewardsNotificationPtr> notifications;
   for (auto [_, value] : notification_service->GetAllNotifications()) {
-    std::optional<mojom::RewardsNotificationType> type;
+    auto type = mojom::RewardsNotificationType::kGeneral;
     switch (value.type_) {
       case RewardsNotificationService::REWARDS_NOTIFICATION_TIPS_PROCESSED:
         type = mojom::RewardsNotificationType::kTipsProcessed;
         break;
-      case RewardsNotificationService::REWARDS_NOTIFICATION_GENERAL:
-        type = mojom::RewardsNotificationType::kGeneral;
-        break;
       default:
         break;
     }
-    if (type) {
-      auto notification = mojom::RewardsNotification::New();
-      notification->id = value.id_;
-      notification->type = type.value();
-      notification->timestamp =
-          base::Time::FromSecondsSinceUnixEpoch(value.timestamp_);
-      notification->args = /* copy */ value.args_;
-      notifications.push_back(std::move(notification));
-    }
+    auto notification = mojom::RewardsNotification::New();
+    notification->id = value.id_;
+    notification->type = type;
+    notification->timestamp =
+        base::Time::FromSecondsSinceUnixEpoch(value.timestamp_);
+    notification->args = /* copy */ value.args_;
+    notifications.push_back(std::move(notification));
   }
   std::move(callback).Run(std::move(notifications));
 }
@@ -683,7 +694,9 @@ void RewardsPageHandler::ResetRewards(ResetRewardsCallback callback) {
 }
 
 void RewardsPageHandler::OnUpdate(UpdateSource update_source) {
-  page_->OnRewardsStateUpdated();
+  if (page_) {
+    page_->OnRewardsStateUpdated();
+  }
 }
 
 }  // namespace brave_rewards

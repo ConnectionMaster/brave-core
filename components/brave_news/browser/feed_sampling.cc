@@ -5,15 +5,14 @@
 
 #include "brave/components/brave_news/browser/feed_sampling.h"
 
+#include <algorithm>
 #include <numeric>
 #include <optional>
 #include <vector>
 
-#include "base/containers/contains.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback.h"
 #include "base/rand_util.h"
-#include "base/ranges/algorithm.h"
 #include "brave/components/brave_news/common/brave_news.mojom.h"
 
 namespace brave_news {
@@ -24,13 +23,13 @@ ArticleMetadata::ArticleMetadata(ArticleMetadata&&) = default;
 ArticleMetadata& ArticleMetadata::operator=(ArticleMetadata&&) = default;
 
 ContentGroup SampleContentGroup(
-    const std::vector<ContentGroup>& eligible_content_groups) {
+    base::span<const ContentGroup> eligible_content_groups) {
   ContentGroup sampled_content_group;
   if (eligible_content_groups.empty()) {
     return sampled_content_group;
   }
 
-  return PickRandom<ContentGroup>(eligible_content_groups);
+  return PickRandom(eligible_content_groups);
 }
 
 bool TossCoin() {
@@ -70,11 +69,11 @@ std::optional<size_t> PickFirstIndex(const ArticleInfos& articles) {
 std::optional<size_t> PickRouletteWithWeighting(const ArticleInfos& articles,
                                                 GetWeighting get_weighting) {
   std::vector<double> weights;
-  base::ranges::transform(articles, std::back_inserter(weights),
-                          [&get_weighting](const auto& article_info) {
-                            return get_weighting.Run(std::get<0>(article_info),
-                                                     std::get<1>(article_info));
-                          });
+  std::ranges::transform(articles, std::back_inserter(weights),
+                         [&get_weighting](const auto& article_info) {
+                           return get_weighting.Run(std::get<0>(article_info),
+                                                    std::get<1>(article_info));
+                         });
 
   // None of the items are eligible to be picked.
   const auto total_weight =
@@ -107,15 +106,14 @@ std::optional<size_t> PickRoulette(const ArticleInfos& articles) {
 std::optional<size_t> PickChannelRoulette(const std::string& channel,
                                           const ArticleInfos& articles) {
   return PickRouletteWithWeighting(
-      articles, base::BindRepeating(
-                    [](const std::string& channel,
-                       const mojom::FeedItemMetadataPtr& metadata,
-                       const ArticleMetadata& weight) {
-                      return base::Contains(weight.channels, channel)
-                                 ? weight.weighting
-                                 : 0.0;
-                    },
-                    channel));
+      articles,
+      base::BindRepeating(
+          [](const std::string& channel,
+             const mojom::FeedItemMetadataPtr& metadata,
+             const ArticleMetadata& weight) {
+            return weight.channels.contains(channel) ? weight.weighting : 0.0;
+          },
+          channel));
 }
 
 }  // namespace brave_news

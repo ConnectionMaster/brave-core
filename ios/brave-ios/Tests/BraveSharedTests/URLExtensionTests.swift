@@ -5,6 +5,7 @@
 
 import Foundation
 import Shared
+import WebKit
 import XCTest
 
 class URLExtensionTests: XCTestCase {
@@ -134,5 +135,143 @@ class URLExtensionTests: XCTestCase {
       embeddedURL.displayURL,
       embeddedURL
     )
+  }
+
+  // Test that `windowOriginURL` returns the same value as `window.origin`.
+  @MainActor func testWindowOriginURL() async {
+    let testURLs = [
+      // multiple subdomains
+      (URL(string: "https://one.two.three.example.com")!, "https://one.two.three.example.com"),
+      // trailing slash
+      (URL(string: "https://example.com/")!, "https://example.com"),
+      // query
+      (URL(string: "https://www.example.com/?v=1234567")!, "https://www.example.com"),
+      // match
+      (URL(string: "https://www.example.com")!, "https://www.example.com"),
+      // punycode
+      (URL(string: "http://Дом.ru/")!, "http://xn--d1aqf.ru"),
+      // punycode
+      (URL(string: "http://Дoм.ru/")!, "http://xn--o-gtbz.ru"),
+    ]
+
+    let webView = WKWebView()
+    for (value, expected) in testURLs {
+      do {
+        let expectation = XCTestExpectation(description: "didFinish")
+        let navigationDelegate = NavigationDelegate(didFinish: {
+          expectation.fulfill()
+        })
+        webView.navigationDelegate = navigationDelegate
+        webView.loadHTMLString("", baseURL: value)
+
+        // await load of html
+        await fulfillment(of: [expectation], timeout: 2)
+
+        guard let result = try await webView.evaluateJavaScript("window.origin") as? String else {
+          XCTFail("Expected a String result")
+          return
+        }
+        XCTAssertEqual(result, expected)
+        XCTAssertEqual(result, value.windowOriginURL.absoluteString)
+      } catch {
+        XCTFail("Expected a valid `window.origin`")
+      }
+    }
+  }
+
+  func testURLToShred() {
+    let testURL = URL(string: "https://brave.com")!
+
+    // Verify regular url
+    XCTAssertEqual(testURL, testURL.urlToShred)
+    XCTAssertTrue(testURL.isShredAvailable)
+
+    // Verify original url returned for reader mode
+    let readerModeTestURL = testURL.encodeEmbeddedInternalURL(for: .readermode, headers: [:])!
+    XCTAssertNotEqual(readerModeTestURL, testURL)
+    XCTAssertEqual(readerModeTestURL.urlToShred, testURL)
+    XCTAssertTrue(readerModeTestURL.isShredAvailable)
+
+    // Verify nil for other `InternalURL`s
+    let errorPageTestURL = testURL.encodeEmbeddedInternalURL(for: .errorpage)!
+    XCTAssertNil(errorPageTestURL.urlToShred)
+    XCTAssertFalse(errorPageTestURL.isShredAvailable)
+
+    let blockedTestURL = testURL.encodeEmbeddedInternalURL(for: .blocked)!
+    XCTAssertNil(blockedTestURL.urlToShred)
+    XCTAssertFalse(blockedTestURL.isShredAvailable)
+
+    // Verify nil for new tab page
+    let ntpTestURL = URL(string: "\(InternalURL.baseUrl)/about/home#panel=0")!
+    XCTAssertNil(ntpTestURL.urlToShred)
+    XCTAssertFalse(ntpTestURL.isShredAvailable)
+  }
+
+  func testBlobURLAuthStripping() {
+    var url = URL(string: "blob:https://brave.github.io/1945c9fb-9834-479b-bb3a-e67e3a9408cf")!
+    XCTAssertEqual(
+      url.strippingBlobURLAuth.absoluteString,
+      "blob:https://brave.github.io/1945c9fb-9834-479b-bb3a-e67e3a9408cf"
+    )
+
+    url = URL(
+      string:
+        "blob:https://some.malicious.domain.com@brave.github.io/1945c9fb-9834-479b-bb3a-e67e3a9408cf"
+    )!
+    XCTAssertEqual(
+      url.strippingBlobURLAuth.absoluteString,
+      "blob:https://brave.github.io/1945c9fb-9834-479b-bb3a-e67e3a9408cf"
+    )
+
+    url = URL(string: "blob:https://some.malicious.domain.com@brave.github.io/")!
+    XCTAssertEqual(url.strippingBlobURLAuth.absoluteString, "blob:https://brave.github.io/")
+
+    url = URL(string: "blob:https://some.malicious.domain.com@brave.github.io/?hello=world")!
+    XCTAssertEqual(
+      url.strippingBlobURLAuth.absoluteString,
+      "blob:https://brave.github.io/?hello=world"
+    )
+
+    url = URL(string: "blob:https://some.malicious.domain.com@brave.github.io/helloworld")!
+    XCTAssertEqual(
+      url.strippingBlobURLAuth.absoluteString,
+      "blob:https://brave.github.io/helloworld"
+    )
+
+    url = URL(string: "https://some.malicious.domain.com@brave.github.io/")!
+    XCTAssertEqual(
+      url.strippingBlobURLAuth.absoluteString,
+      "https://some.malicious.domain.com@brave.github.io/"
+    )
+
+    url = URL(string: "https://brave.github.io/")!
+    XCTAssertEqual(url.strippingBlobURLAuth.absoluteString, "https://brave.github.io/")
+  }
+
+  private func testURLComponentsEncoding() {
+    XCTAssertTrue(URL.isValidURLWithoutEncoding(text: "Дом.com"))
+    XCTAssertTrue(URL.isValidURLWithoutEncoding(text: "Дoм.com"))
+    XCTAssertTrue(URL.isValidURLWithoutEncoding(text: "https://Дом.com"))
+    XCTAssertTrue(URL.isValidURLWithoutEncoding(text: "https://Дoм.com"))
+    XCTAssertTrue(URL.isValidURLWithoutEncoding(text: "https://google.ca/"))
+    XCTAssertTrue(URL.isValidURLWithoutEncoding(text: "https://google.ca/search?q=hello"))
+    XCTAssertTrue(URL.isValidURLWithoutEncoding(text: "https://google.ca/search?q=hello%20world"))
+    XCTAssertTrue(URL.isValidURLWithoutEncoding(text: "https://google.ca/", scheme: "https"))
+    XCTAssertFalse(URL.isValidURLWithoutEncoding(text: "https://google.ca/", scheme: "blob"))
+    XCTAssertFalse(URL.isValidURLWithoutEncoding(text: "https://google.ca/search?q=hello + world"))
+    XCTAssertFalse(URL.isValidURLWithoutEncoding(text: "https://google.ca/search?q=hello world"))
+    XCTAssertFalse(URL.isValidURLWithoutEncoding(text: "hello world"))
+  }
+}
+
+private class NavigationDelegate: NSObject, WKNavigationDelegate {
+  private var didFinish: () -> Void
+
+  init(didFinish: @escaping () -> Void) {
+    self.didFinish = didFinish
+  }
+
+  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    didFinish()
   }
 }

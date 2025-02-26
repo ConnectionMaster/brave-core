@@ -53,6 +53,7 @@ OBJC_EXPORT
 @property(class, nonatomic, readonly) Feature* kBraveShredFeature;
 @property(class, nonatomic, readonly) Feature* kBraveShredCacheData;
 @property(class, nonatomic, readonly) Feature* kBraveIOSDebugAdblock;
+@property(class, nonatomic, readonly) Feature* kBraveIOSEnableFarblingPlugins;
 @property(class, nonatomic, readonly)
     Feature* kBraveShowStrictFingerprintingMode;
 @property(class, nonatomic, readonly) Feature* kBraveSync;
@@ -75,7 +76,6 @@ OBJC_EXPORT
 @property(class, nonatomic, readonly) Feature* kVerboseLoggingFeature;
 @property(class, nonatomic, readonly) Feature* kNewPlaylistUI;
 @property(class, nonatomic, readonly) Feature* kBraveHttpsByDefault;
-@property(class, nonatomic, readonly) Feature* kHttpsOnlyMode;
 @property(class, nonatomic, readonly) Feature* kBlockAllCookiesToggle;
 @property(class, nonatomic, readonly) Feature* kModernBrowserMenuEnabled;
 @end

@@ -5,6 +5,7 @@
 
 #include "brave/components/ai_chat/renderer/yt_util.h"
 
+#include <algorithm>
 #include <functional>
 #include <ios>
 #include <optional>
@@ -14,29 +15,25 @@
 #include "base/containers/checked_iterators.h"
 #include "base/json/json_reader.h"
 #include "base/logging.h"
-#include "base/ranges/algorithm.h"
 #include "base/values.h"
 
 namespace ai_chat {
 
 std::optional<std::string> ChooseCaptionTrackUrl(
-    const base::Value::List* caption_tracks) {
-  if (!caption_tracks || caption_tracks->empty()) {
-    return std::nullopt;
-  }
-  if (caption_tracks->empty()) {
+    const base::Value::List& caption_tracks) {
+  if (caption_tracks.empty()) {
     return std::nullopt;
   }
   const base::Value::Dict* track;
   // When only single track, use that
-  if (caption_tracks->size() == 1) {
-    track = caption_tracks->front().GetIfDict();
+  if (caption_tracks.size() == 1) {
+    track = caption_tracks.front().GetIfDict();
   } else {
     // When multiple tracks, favor english (due to ai_chat models), then first
     // english auto-generated track, then settle for anything.
     // TODO(petemill): Consider preferring user's language.
-    auto iter = base::ranges::find_if(
-        *caption_tracks, [](const base::Value& track_raw) {
+    auto iter =
+        std::ranges::find_if(caption_tracks, [](const base::Value& track_raw) {
           const base::Value::Dict* language_track = track_raw.GetIfDict();
           auto* kind = language_track->FindString("kind");
           if (kind && *kind == "asr") {
@@ -48,9 +45,9 @@ std::optional<std::string> ChooseCaptionTrackUrl(
           }
           return false;
         });
-    if (iter == caption_tracks->end()) {
-      iter = base::ranges::find_if(
-          *caption_tracks, [](const base::Value& track_raw) {
+    if (iter == caption_tracks.end()) {
+      iter = std::ranges::find_if(
+          caption_tracks, [](const base::Value& track_raw) {
             const base::Value::Dict* language_track = track_raw.GetIfDict();
             auto* lang = language_track->FindString("languageCode");
             if (lang && *lang == "en") {
@@ -59,8 +56,8 @@ std::optional<std::string> ChooseCaptionTrackUrl(
             return false;
           });
     }
-    if (iter == caption_tracks->end()) {
-      iter = caption_tracks->begin();
+    if (iter == caption_tracks.end()) {
+      iter = caption_tracks.begin();
     }
     track = iter->GetIfDict();
   }
@@ -99,7 +96,7 @@ std::optional<std::string> ParseAndChooseCaptionTrackUrl(
     return std::nullopt;
   }
 
-  return ChooseCaptionTrackUrl(caption_tracks);
+  return ChooseCaptionTrackUrl(*caption_tracks);
 }
 
 }  // namespace ai_chat

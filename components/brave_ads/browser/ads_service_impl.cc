@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_ads/browser/ads_service_impl.h"
 
+#include <algorithm>
 #include <optional>
 #include <utility>
 
@@ -21,13 +22,13 @@
 #include "base/logging.h"
 #include "base/metrics/histogram_macros.h"
 #include "base/notreached.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/task/sequenced_task_runner.h"
 #include "base/task/thread_pool.h"
 #include "base/time/time.h"
 #include "base/timer/timer.h"
+#include "base/trace_event/trace_event.h"
 #include "brave/components/brave_adaptive_captcha/pref_names.h"
 #include "brave/components/brave_ads/browser/ad_units/notification_ad/custom_notification_ad_feature.h"
 #include "brave/components/brave_ads/browser/analytics/p2a/p2a.h"
@@ -51,9 +52,9 @@
 #include "brave/components/brave_ads/core/public/user_attention/user_idle_detection/user_idle_detection_feature.h"
 #include "brave/components/brave_ads/resources/grit/bat_ads_resources.h"
 #include "brave/components/brave_news/common/pref_names.h"
-#include "brave/components/brave_rewards/browser/rewards_service.h"
-#include "brave/components/brave_rewards/common/mojom/rewards.mojom-forward.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
+#include "brave/components/brave_rewards/content/rewards_service.h"
+#include "brave/components/brave_rewards/core/mojom/rewards.mojom-forward.h"
+#include "brave/components/brave_rewards/core/pref_names.h"
 #include "brave/components/l10n/common/country_code_util.h"
 #include "brave/components/l10n/common/locale_util.h"
 #include "brave/components/l10n/common/prefs.h"
@@ -62,6 +63,7 @@
 #include "build/build_config.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_context.h"
+#include "content/public/browser/browser_thread.h"
 #include "mojo/public/cpp/bindings/callback_helpers.h"
 #include "net/base/network_change_notifier.h"
 #include "services/network/public/cpp/resource_request.h"
@@ -306,7 +308,13 @@ bool AdsServiceImpl::UserHasOptedInToSearchResultAds() const {
 void AdsServiceImpl::InitializeNotificationsForCurrentProfile() {
   delegate_->InitNotificationHelper();
 
-  RecordNotificationAdPositionMetric(ShouldShowCustomNotificationAds(), prefs_);
+  // Postpone recording P3A to make browser startup smoother.
+  content::GetUIThreadTaskRunner({base::TaskPriority::BEST_EFFORT})
+      ->PostDelayedTask(
+          FROM_HERE,
+          base::BindOnce(&AdsServiceImpl::DoRecordNotificationAdPositionMetric,
+                         weak_ptr_factory_.GetWeakPtr()),
+          base::Seconds(15));
 }
 
 void AdsServiceImpl::GetDeviceIdAndMaybeStartBatAdsService() {
@@ -465,6 +473,7 @@ void AdsServiceImpl::InitializeBatAds(
 }
 
 void AdsServiceImpl::InitializeBatAdsCallback(bool success) {
+  TRACE_EVENT1("brave.ads", "InitializeBatAdsCallback", "success", success);
   if (!success) {
     VLOG(1) << "Failed to initialize Bat Ads";
     return ShutdownAdsService();
@@ -714,8 +723,9 @@ void AdsServiceImpl::InitializeNotificationAdsPrefChangeRegistrar() {
       base::BindRepeating(&AdsServiceImpl::NotifyPrefChanged,
                           base::Unretained(this),
                           prefs::kMaximumNotificationAdsPerHour));
-  auto notification_ad_position_callback = base::BindRepeating(
-      &AdsServiceImpl::OnNotificationAdPositionChanged, base::Unretained(this));
+  auto notification_ad_position_callback =
+      base::BindRepeating(&AdsServiceImpl::DoRecordNotificationAdPositionMetric,
+                          base::Unretained(this));
   pref_change_registrar_.Add(prefs::kNotificationAdLastNormalizedCoordinateY,
                              notification_ad_position_callback);
 }
@@ -1060,11 +1070,16 @@ void AdsServiceImpl::SnoozeScheduledCaptchaCallback() {
   delegate_->SnoozeScheduledCaptcha();
 }
 
-void AdsServiceImpl::OnNotificationAdPositionChanged() {
+void AdsServiceImpl::DoRecordNotificationAdPositionMetric() {
+  if (!base::FeatureList::IsEnabled(kCustomNotificationAdFeature)) {
+    return;
+  }
+
   RecordNotificationAdPositionMetric(ShouldShowCustomNotificationAds(), prefs_);
 }
 
 void AdsServiceImpl::ShutdownAdsService() {
+  TRACE_EVENT("brave.ads", "AdsServiceImpl::ShutdownAdsService");
   if (is_bat_ads_initialized_) {
     SuspendP2AHistograms();
 
@@ -1281,6 +1296,19 @@ void AdsServiceImpl::OnFailedToPrefetchNewTabPageAd(
 
   PurgeOrphanedAdEventsForType(mojom::AdType::kNewTabPageAd,
                                /*intentional*/ base::DoNothing());
+}
+
+void AdsServiceImpl::ParseAndSaveCreativeNewTabPageAds(
+    const base::Value::Dict& data,
+    ParseAndSaveCreativeNewTabPageAdsCallback callback) {
+  if (!bat_ads_associated_remote_.is_bound()) {
+    return std::move(callback).Run(/*success*/ false);
+  }
+
+  // Since `data` contains small JSON from a CRX component, cloning it has
+  // no performance impact.
+  bat_ads_associated_remote_->ParseAndSaveCreativeNewTabPageAds(
+      data.Clone(), std::move(callback));
 }
 
 void AdsServiceImpl::TriggerNewTabPageAdEvent(
@@ -1586,9 +1614,9 @@ void AdsServiceImpl::GetSiteHistory(int max_count,
               site_history.push_back(result.url().GetWithEmptyPath());
             }
 
-            base::ranges::sort(site_history);
-            site_history.erase(base::ranges::unique(site_history),
-                               site_history.cend());
+            std::ranges::sort(site_history);
+            auto to_remove = std::ranges::unique(site_history);
+            site_history.erase(to_remove.begin(), to_remove.end());
             std::move(callback).Run(site_history);
           },
           std::move(callback)),

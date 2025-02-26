@@ -5,10 +5,12 @@
 
 #include "brave/components/ai_chat/core/browser/ai_chat_service.h"
 
+#include <algorithm>
 #include <array>
 #include <compare>
 #include <functional>
 #include <ios>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -24,7 +26,6 @@
 #include "base/logging.h"
 #include "base/notreached.h"
 #include "base/numerics/clamped_math.h"
-#include "base/ranges/algorithm.h"
 #include "base/task/task_traits.h"
 #include "base/task/thread_pool.h"
 #include "base/time/time.h"
@@ -37,6 +38,7 @@
 #include "brave/components/ai_chat/core/browser/conversation_handler.h"
 #include "brave/components/ai_chat/core/browser/model_service.h"
 #include "brave/components/ai_chat/core/browser/utils.h"
+#include "brave/components/ai_chat/core/common/constants.h"
 #include "brave/components/ai_chat/core/common/features.h"
 #include "brave/components/ai_chat/core/common/mojom/ai_chat.mojom-forward.h"
 #include "brave/components/ai_chat/core/common/mojom/ai_chat.mojom-shared.h"
@@ -57,9 +59,6 @@ namespace {
 constexpr base::FilePath::StringPieceType kDBFileName =
     FILE_PATH_LITERAL("AIChat");
 
-constexpr auto kAllowedSchemes = base::MakeFixedFlatSet<std::string_view>(
-    {url::kHttpsScheme, url::kHttpScheme, url::kFileScheme, url::kDataScheme});
-
 std::vector<mojom::Conversation*> FilterVisibleConversations(
     std::map<std::string, mojom::ConversationPtr, std::less<>>&
         conversations_map) {
@@ -72,8 +71,8 @@ std::vector<mojom::Conversation*> FilterVisibleConversations(
     }
     conversations.push_back(conversation.get());
   }
-  base::ranges::sort(conversations, std::greater<>(),
-                     &mojom::Conversation::updated_time);
+  std::ranges::sort(conversations, std::greater<>(),
+                    &mojom::Conversation::updated_time);
   return conversations;
 }
 
@@ -128,6 +127,9 @@ AIChatService::AIChatService(
                           weak_ptr_factory_.GetWeakPtr()));
 
   MaybeInitStorage();
+
+  // Get current premium status to report metrics
+  GetPremiumStatus(base::DoNothing());
 }
 
 AIChatService::~AIChatService() = default;
@@ -157,10 +159,7 @@ ConversationHandler* AIChatService::CreateConversation() {
   // Create the conversation metadata
   {
     mojom::ConversationPtr conversation = mojom::Conversation::New(
-        conversation_uuid, "", base::Time::Now(), false, std::nullopt,
-        mojom::SiteInfo::New(base::Uuid::GenerateRandomV4().AsLowercaseString(),
-                             mojom::ContentType::PageContent, std::nullopt,
-                             std::nullopt, std::nullopt, 0, false, false));
+        conversation_uuid, "", base::Time::Now(), false, std::nullopt, nullptr);
     conversations_.insert_or_assign(conversation_uuid, std::move(conversation));
   }
   mojom::Conversation* conversation =
@@ -543,7 +542,7 @@ void AIChatService::MaybeAssociateContentWithConversation(
     base::WeakPtr<ConversationHandler::AssociatedContentDelegate>
         associated_content) {
   if (associated_content &&
-      kAllowedSchemes.contains(associated_content->GetURL().scheme())) {
+      kAllowedContentSchemes.contains(associated_content->GetURL().scheme())) {
     conversation->SetAssociatedContentDelegate(associated_content);
   }
   // Record that this is the latest conversation for this content. Even
@@ -624,8 +623,9 @@ void AIChatService::OnPremiumStatusReceived(GetPremiumStatusCallback callback,
 #endif
 
   last_premium_status_ = status;
-  if (ai_chat::HasUserOptedIn(profile_prefs_) && ai_chat_metrics_ != nullptr) {
-    ai_chat_metrics_->OnPremiumStatusUpdated(false, status, info.Clone());
+  if (ai_chat_metrics_ != nullptr) {
+    ai_chat_metrics_->OnPremiumStatusUpdated(
+        ai_chat::HasUserOptedIn(profile_prefs_), false, status, info.Clone());
   }
   model_service_->OnPremiumStatus(status);
   std::move(callback).Run(status, std::move(info));
@@ -745,7 +745,7 @@ void AIChatService::HandleFirstEntry(
   DVLOG(1) << __func__ << " Conversation " << conversation->uuid
            << " being persisted for first time.";
   CHECK(entry->uuid.has_value());
-  CHECK(conversation->associated_content->uuid.has_value());
+
   // We can persist the conversation metadata for the first time as well as the
   // entry.
   if (ai_chat_db_) {
@@ -758,6 +758,7 @@ void AIChatService::HandleFirstEntry(
   if (ai_chat_metrics_ != nullptr) {
     if (handler->GetConversationHistory().size() == 1) {
       ai_chat_metrics_->RecordNewChat();
+      ai_chat_metrics_->RecordNewPrompt();
     }
   }
 }
@@ -780,7 +781,7 @@ void AIChatService::HandleNewEntry(
                   conversation->model_key, std::nullopt);
 
     if (associated_content_value.has_value() &&
-        conversation->associated_content->is_content_association_possible) {
+        conversation->associated_content) {
       ai_chat_db_
           .AsyncCall(
               base::IgnoreResult(&AIChatDatabase::AddOrUpdateAssociatedContent))
@@ -948,4 +949,21 @@ void AIChatService::OpenConversationWithStagedEntries(
   conversation->MaybeFetchOrClearContentStagedConversation();
 }
 
+void AIChatService::AssociateContent(
+    ConversationHandler::AssociatedContentDelegate* content,
+    const std::string& conversation_uuid) {
+  CHECK(content);
+
+  // Note: As we're using the non-async version of GetConversation, this will
+  // only work when the conversation is already loaded.
+  // If we ever need to associate content with a conversation that is not
+  // loaded, we'll need to use the async version of GetConversation.
+  auto* conversation = GetConversation(conversation_uuid);
+  if (!conversation) {
+    return;
+  }
+
+  MaybeAssociateContentWithConversation(conversation, content->GetContentId(),
+                                        content->GetWeakPtr());
+}
 }  // namespace ai_chat

@@ -32,7 +32,7 @@ brave_chrome_java_deps = [
   "//brave/browser/ui/android/theme:java",
   "//brave/components/ai_chat/core/common/mojom:mojom_java",
   "//brave/components/brave_news/common:mojom_java",
-  "//brave/components/brave_rewards/common/mojom:mojom_java",
+  "//brave/components/brave_rewards/core/mojom:mojom_java",
   "//brave/components/brave_shields/core/common:mojom_java",
   "//brave/components/brave_vpn/common/mojom:mojom_java",
   "//brave/components/brave_wallet/common:mojom_java",
@@ -50,12 +50,12 @@ brave_chrome_java_deps = [
   "//brave/third_party/android_deps:com_android_installreferrer_java",
   "//brave/third_party/android_deps:com_github_bumptech_glide_java",
   "//brave/third_party/android_deps:com_google_android_play_integrity_java",
+  "//brave/third_party/android_deps:com_google_code_gson_gson_java",
   "//brave/third_party/android_deps:com_wireguard_android_J__unpack_aar",
   "//brave/third_party/android_deps:com_wireguard_android_java",
   "//brave/third_party/android_deps:google_play_services_safetynet_java",
   "//brave/third_party/zxing:zxing_java",
   "//third_party/android_deps:com_android_support_support_annotations_java",
-  "//third_party/android_deps:com_google_code_gson_gson_java",
   "//third_party/android_deps:google_play_services_vision_common_java",
   "//third_party/android_deps:google_play_services_vision_java",
   "//third_party/android_deps:org_jetbrains_kotlinx_kotlinx_coroutines_android_java",
@@ -83,6 +83,7 @@ brave_chrome_java_srcjar_deps = [
   "//brave/android:brave_android_java_enums_srcjar",
   "//brave/android:brave_config_java",
   "//brave/browser/android/preferences:java_pref_names_srcjar",
+  "//brave/components/web_discovery/browser/android:java_pref_names_srcjar",
 ]
 
 brave_chrome_app_java_resources_deps = [
@@ -135,5 +136,4 @@ brave_jni_headers_sources = [
   "//brave/android/java/org/chromium/chrome/browser/vpn/BraveVpnServiceFactoryAndroid.java",
   "//brave/android/java/org/chromium/chrome/browser/webcompat_reporter/WebcompatReporterServiceFactory.java",
   "//brave/browser/brave_ads/android/java/org/chromium/chrome/browser/BraveAdsNativeHelper.java",
-  "//brave/components/safetynet/java/org/chromium/chrome/browser/util/SafetyNetCheck.java",
 ]

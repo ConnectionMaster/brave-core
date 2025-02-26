@@ -9,12 +9,13 @@
 
 #include "chrome/browser/download/bubble/download_display_controller.h"
 
+#include <algorithm>
+
 #include "base/command_line.h"
 #include "base/containers/adapters.h"
 #include "base/files/file_path.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/raw_ref.h"
-#include "base/ranges/algorithm.h"
 #include "base/time/time.h"
 #include "chrome/browser/download/bubble/download_bubble_display_info.h"
 #include "chrome/browser/download/bubble/download_bubble_ui_controller.h"
@@ -117,11 +118,6 @@ class FakeDownloadDisplay : public DownloadDisplay {
   void ShowDetails() override { detail_shown_ = true; }
   void HideDetails() override { detail_shown_ = false; }
   bool IsShowingDetails() const override { return detail_shown_; }
-  bool OpenMostSpecificDialog(
-      const offline_items_collection::ContentId& content_id) override {
-    detail_shown_ = true;
-    return true;
-  }
   bool IsFullscreenWithParentViewHidden() const override {
     return is_fullscreen_;
   }
@@ -254,8 +250,8 @@ class MockDownloadBubbleUpdateService : public DownloadBubbleUpdateService {
   void AddModel(ModelType type) { model_types_.push_back(type); }
 
   void RemoveLastDownload() {
-    auto it = base::ranges::find(base::Reversed(model_types_),
-                                 ModelType::kDownloadItem);
+    auto it = std::ranges::find(base::Reversed(model_types_),
+                                ModelType::kDownloadItem);
     if (it != model_types_.rend()) {
       model_types_.erase(std::prev(it.base()));
     }

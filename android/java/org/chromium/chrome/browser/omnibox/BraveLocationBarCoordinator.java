@@ -16,6 +16,7 @@ import org.chromium.base.Callback;
 import org.chromium.base.supplier.ObservableSupplier;
 import org.chromium.base.supplier.Supplier;
 import org.chromium.chrome.browser.back_press.BackPressManager;
+import org.chromium.chrome.browser.browser_controls.BrowserControlsStateProvider;
 import org.chromium.chrome.browser.browser_controls.BrowserStateBrowserControlsVisibilityDelegate;
 import org.chromium.chrome.browser.lifecycle.ActivityLifecycleDispatcher;
 import org.chromium.chrome.browser.merchant_viewer.MerchantTrustSignalsCoordinator;
@@ -89,7 +90,9 @@ public class BraveLocationBarCoordinator extends LocationBarCoordinator {
             LocationBarEmbedderUiOverrides uiOverrides,
             @Nullable View baseChromeLayout,
             Supplier<Integer> bottomWindowPaddingSupplier,
-            @Nullable OnLongClickListener onLongClickListener) {
+            @Nullable OnLongClickListener onLongClickListener,
+            @Nullable BrowserControlsStateProvider browserControlsStateProvider,
+            boolean isToolbarPositionCustomizationEnabled) {
         super(
                 locationBarLayout,
                 autocompleteAnchorView,
@@ -121,8 +124,12 @@ public class BraveLocationBarCoordinator extends LocationBarCoordinator {
                 baseChromeLayout,
                 () ->
                         bottomWindowPaddingSupplier.get()
-                                + (isBottomToolbarVisible() ? locationBarLayout.getHeight() : 0),
-                onLongClickListener);
+                                + (isBraveBottomControlsVisible()
+                                        ? locationBarLayout.getHeight()
+                                        : 0),
+                onLongClickListener,
+                browserControlsStateProvider,
+                isToolbarPositionCustomizationEnabled);
 
         if (mUrlBar != null) {
             ((UrlBar) mUrlBar).setSelectAllOnFocus(true);
@@ -144,8 +151,8 @@ public class BraveLocationBarCoordinator extends LocationBarCoordinator {
         }
     }
 
-    private static boolean isBottomToolbarVisible() {
-        return BottomToolbarConfiguration.isBottomToolbarEnabled()
+    private static boolean isBraveBottomControlsVisible() {
+        return BottomToolbarConfiguration.isBraveBottomControlsEnabled()
                 && BraveMenuButtonCoordinator.isMenuFromBottom();
     }
 }

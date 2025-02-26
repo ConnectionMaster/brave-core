@@ -15,6 +15,7 @@
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_util.h"
 #include "base/values.h"
+#include "brave/components/brave_wallet/common/eth_address.h"
 #include "brave/components/filecoin/rs/src/lib.rs.h"
 #include "brave/components/json/json_helper.h"
 
@@ -78,7 +79,11 @@ std::optional<FilTransaction> FilTransaction::FromTxData(
 
   auto address = FilAddress::FromAddress(tx_data->to);
   if (address.IsEmpty()) {
-    address = FilAddress::FromFEVMAddress(is_mainnet, tx_data->to);
+    auto eth_address = EthAddress::FromHex(tx_data->to);
+    if (!eth_address.IsValid()) {
+      return std::nullopt;
+    }
+    address = FilAddress::FromFEVMAddress(is_mainnet, eth_address);
     if (address.IsEmpty()) {
       return std::nullopt;
     }
@@ -240,13 +245,13 @@ std::optional<std::string> FilTransaction::ConvertSignedTxStringFieldsToInt64(
 }
 
 // static
-std::optional<base::Value> FilTransaction::DeserializeSignedTx(
+std::optional<base::Value::Dict> FilTransaction::DeserializeSignedTx(
     const std::string& signed_tx) {
   std::string json =
       json::convert_int64_value_to_string("/Message/GasLimit", signed_tx, true);
   json = json::convert_int64_value_to_string("/Message/Nonce", json, true);
   json = json::convert_int64_value_to_string("/Message/Method", json, true);
-  return base::JSONReader::Read(json);
+  return base::JSONReader::ReadDict(json);
 }
 
 // https://spec.filecoin.io/algorithms/crypto/signatures/#section-algorithms.crypto.signatures

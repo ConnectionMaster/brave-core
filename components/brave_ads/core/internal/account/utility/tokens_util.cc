@@ -8,6 +8,7 @@
 #include <string>
 
 #include "brave/components/brave_ads/core/internal/common/challenge_bypass_ristretto/batch_dleq_proof.h"
+#include "brave/components/brave_ads/core/internal/common/challenge_bypass_ristretto/blinded_token.h"
 #include "brave/components/brave_ads/core/internal/common/challenge_bypass_ristretto/public_key.h"
 #include "brave/components/brave_ads/core/internal/common/logging_util.h"
 
@@ -92,7 +93,7 @@ std::optional<cbr::UnblindedTokenList> ParseVerifyAndUnblindTokens(
     return std::nullopt;
   }
 
-  const std::optional<cbr::UnblindedTokenList> unblinded_tokens =
+  std::optional<cbr::UnblindedTokenList> unblinded_tokens =
       batch_dleq_proof.VerifyAndUnblind(tokens, blinded_tokens, *signed_tokens,
                                         public_key);
   if (!unblinded_tokens || unblinded_tokens->empty()) {
@@ -100,7 +101,7 @@ std::optional<cbr::UnblindedTokenList> ParseVerifyAndUnblindTokens(
     return std::nullopt;
   }
 
-  return *unblinded_tokens;
+  return unblinded_tokens;
 }
 
 }  // namespace brave_ads

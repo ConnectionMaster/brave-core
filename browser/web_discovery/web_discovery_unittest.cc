@@ -26,6 +26,8 @@
 #include "content/public/test/web_contents_tester.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
+namespace web_discovery {
+
 class WebDiscoveryCTATest : public testing::Test {
  public:
   WebDiscoveryCTATest() = default;
@@ -55,7 +57,7 @@ class WebDiscoveryCTATest : public testing::Test {
     std::unique_ptr<TemplateURL> brave = CreateTestTemplateURL(
         u"brave", "https://search.brave.com/", std::string(),
         base::Time::FromTimeT(100), false,
-        TemplateURLData::CreatedByPolicy::kNoPolicy,
+        TemplateURLData::PolicyOrigin::kNoPolicy,
         TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_BRAVE);
     service()->SetUserSelectedDefaultSearchProvider(brave.get());
     ASSERT_TRUE(IsBraveSearchDefault());
@@ -66,7 +68,7 @@ class WebDiscoveryCTATest : public testing::Test {
     std::unique_ptr<TemplateURL> google = CreateTestTemplateURL(
         u"google", "https://www.google.com/", std::string(),
         base::Time::FromTimeT(100), false,
-        TemplateURLData::CreatedByPolicy::kNoPolicy,
+        TemplateURLData::PolicyOrigin::kNoPolicy,
         TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_GOOGLE);
     service()->SetUserSelectedDefaultSearchProvider(google.get());
     ASSERT_FALSE(IsBraveSearchDefault());
@@ -172,3 +174,5 @@ TEST_F(WebDiscoveryCTATest, ShouldShowInfoBarTest) {
   GetWebDiscoveryCTAIDForTesting() = "v2";
   EXPECT_TRUE(ShouldShowWebDiscoveryInfoBar());
 }
+
+}  // namespace web_discovery

@@ -27,8 +27,11 @@
   <message name="IDS_CHAT_UI_ABOUT_DESCRIPTION_3" desc="Outlining the functioning of AIChat (paragraph 3 of 3)">
     Leo does not collect identifiers such as your IP address that can be linked to you. No data is used to train the AI models and no personal data is retained by the AI models (except for Anthropic that holds data for 30 days before deleting it). See the <ph name="LINK_BEFORE">$1</ph>privacy policy<ph name="LINK_AFTER">$2</ph> for more information.
   </message>
+  <message name="IDS_CHAT_UI_INITIAL_PLACEHOLDER_LABEL" desc="Placeholder text for the initial input box on a new chat">
+    How can I help you today?
+  </message>
   <message name="IDS_CHAT_UI_PLACEHOLDER_LABEL" desc="Placeholder text for an input box allowing users to send messages to the AI service">
-    Enter a prompt here
+    Ask follow up
   </message>
   <message name="IDS_CHAT_UI_SUGGEST_QUESTIONS_LABEL" desc="Button label to ask the AI Chat to suggest some related questions">
     Suggest questions…
@@ -69,6 +72,9 @@
   <message name="IDS_CHAT_UI_INTRO_MESSAGE_CHAT_BASIC" desc="AI Chat intro message for the default model">
     Hi, I'm Leo. I'm a fully hosted AI assistant by Brave. I'm powered by Llama 3.1 8B, a model created by Meta to be performant and applicable to many use cases. <ph name="LINK_BEFORE">$1</ph>Learn more<ph name="LINK_AFTER">$2</ph>
   </message>
+  <message name="IDS_CHAT_UI_INTRO_MESSAGE_CHAT_QWEN" desc="AI Chat intro message for the qwen model">
+    Hi, I'm Leo. I'm a fully hosted AI assistant by Brave. I'm powered by Qwen 14B, a model created by Alibaba Cloud to be performant and applicable to many use cases. <ph name="LINK_BEFORE">$1</ph>Learn more<ph name="LINK_AFTER">$2</ph>
+  </message>
   <message name="IDS_CHAT_UI_INTRO_MESSAGE_CHAT_LEO_EXPANDED" desc="AI Chat intro message for the expanded model">
     Hi, I'm Leo. I'm a fully hosted AI assistant by Brave. I'm powered by Mixtral 8x7B, a model created by Mistral AI to handle advanced tasks. <ph name="LINK_BEFORE">$1</ph>Learn more<ph name="LINK_AFTER">$2</ph>
   </message>
@@ -76,10 +82,10 @@
     Hi, I'm Leo. I'm proxied by Brave and powered by Claude Instant, a model created by Anthropic to power conversational and text processing tasks. <ph name="LINK_BEFORE">$1</ph>Learn more<ph name="LINK_AFTER">$2</ph>
   </message>
   <message name="IDS_CHAT_UI_INTRO_MESSAGE_CHAT_LEO_CLAUDE_HAIKU" desc="AI Chat intro message for the Claude Haiku model">
-    Hi, I'm Leo. I'm proxied by Brave and powered by Claude 3 Haiku, a model created by Anthropic to power conversational and text processing tasks. <ph name="LINK_BEFORE">$1</ph>Learn more<ph name="LINK_AFTER">$2</ph>
+    Hi, I'm Leo. I'm proxied by Brave and powered by Claude Haiku, a model created by Anthropic to power conversational and text processing tasks. <ph name="LINK_BEFORE">$1</ph>Learn more<ph name="LINK_AFTER">$2</ph>
   </message>
   <message name="IDS_CHAT_UI_INTRO_MESSAGE_CHAT_LEO_CLAUDE_SONNET" desc="AI Chat intro message for the Claude Sonnet model">
-    Hi, I'm Leo. I'm proxied by Brave and powered by Claude 3.5 Sonnet, a model created by Anthropic to power conversational and text processing tasks. <ph name="LINK_BEFORE">$1</ph>Learn more<ph name="LINK_AFTER">$2</ph>
+    Hi, I'm Leo. I'm proxied by Brave and powered by Claude Sonnet, a model created by Anthropic to power conversational and text processing tasks. <ph name="LINK_BEFORE">$1</ph>Learn more<ph name="LINK_AFTER">$2</ph>
   </message>
   <message name="IDS_CHAT_UI_MODEL_NAME_SYNTAX" desc="Sentence structure for model name">
     <ph name="MODEL_NAME">$1<ex>llama2-13b</ex></ph> by <ph name="COMPANY_NAME">$2<ex>Meta</ex></ph>
@@ -240,6 +246,12 @@
   <message name="IDS_CHAT_UI_EDIT_BUTTON_LABEL" desc="Button title to edit content">
     Edit
   </message>
+  <message name="IDS_CHAT_UI_EDIT_PROMPT_BUTTON_LABEL" desc="Button title to edit prompt content">
+    Edit prompt
+  </message>
+  <message name="IDS_CHAT_UI_COPY_PROMPT_BUTTON_LABEL" desc="Button title to copy prompt content">
+    Copy prompt
+  </message>
   <message name="IDS_CHAT_UI_EDIT_ANSWER_LABEL" desc="Button title to edit AI agent answer">
     Edit answer
   </message>
@@ -276,6 +288,18 @@
   <message name="IDS_CHAT_UI_MENU_DELETE_CONVERSATION" desc="Menu entry for removing a conversation">
     Delete conversation
   </message>
+  <message name="IDS_CHAT_UI_REASONING_LABEL" desc="A label shown while AI Assistant is reasoning the conversation response">
+    Reasoning...
+  </message>
+  <message name="IDS_CHAT_UI_REASONING_COMPLETE_LABEL" desc="A label show after the AI Assistant is done reasoning the conversation response">
+    Reasoning complete
+  </message>
+  <message name="IDS_CHAT_UI_HIDE_DETAILS_BUTTON_LABEL" desc="A button label to hide details of the AI Assistant reasoning">
+    Hide details
+  </message>
+  <message name="IDS_CHAT_UI_SHOW_DETAILS_BUTTON_LABEL" desc="A button label to show details of the AI Assistant reasoning">
+    Show details
+  </message>
   <message name="IDS_CHAT_UI_SEND_CHAT_BUTTON_LABEL" desc="A button label for sending a chat message">
     Send message to Leo
   </message>
@@ -303,11 +327,29 @@
   <message name="IDS_CHAT_UI_SEARCH_QUERIES" desc="AI Response status to indicate that search queries were used to enhance the response">
     Improved answer searching for <ph name="SEARCH_TERMS">$1<ex>"my first search engine query", "my second search engine query"</ex></ph>.
   </message>
+  <message name="IDS_CHAT_UI_SOURCES" desc="Heading for a list of website sources that were used to generate an AI chat response">
+    Sources
+  </message>
+  <message name="IDS_CHAT_UI_EXPAND_SOURCES" desc="Button to expand the list of sources and explains how many more sources are available">
+    <ph name="COUNT">$1<ex>3</ex></ph> more…
+  </message>
   <message name="IDS_CHAT_UI_LEARN_MORE" desc="Link text to learn more about a feature">
     Learn more
   </message>
   <message name="IDS_CHAT_UI_CLOSE_NOTICE" desc="Label for button which closes a notice">
     Close this notice
+  </message>
+  <message name="IDS_CHAT_UI_ATTACHMENTS_SEARCH_PLACEHOLDER" desc="Placeholder for the attachments search input">
+    Search tabs
+  </message>
+  <message name="IDS_CHAT_UI_ATTACHMENTS_TITLE" desc="Title for the attachments section">
+    Attachments
+  </message>
+  <message name="IDS_CHAT_UI_ATTACHMENTS_DESCRIPTION" desc="Description for the attachments section">
+    Add your browser tabs to give Leo more context for the conversation
+  </message>
+  <message name="IDS_CHAT_UI_ATTACHMENTS_BROWSER_TABS_TITLE" desc="Title for the browser tabs section">
+    Browser tabs
   </message>
   <message name="IDS_CHAT_UI_NOTICE_CONVERSATION_HISTORY_BODY" desc="Main text for the notice about conversation history">
     Leo will now remember your conversations so you can go back to them. They are stored encrypted on your device, and you can delete them any time.
@@ -338,6 +380,9 @@
   </message>
   <message name="IDS_CHAT_UI_CHAT_CLAUDE_SONNET_SUBTITLE" desc="A description for claude-3-sonnet model">
     Balanced speed and intelligence
+  </message>
+  <message name="IDS_CHAT_UI_CHAT_QWEN_SUBTITLE" desc="A description for qwen model">
+      General purpose chat, coding, and more
   </message>
   <message name="IDS_CHAT_UI_LEO_SETTINGS_TOOLTIP_LABEL" desc="A label for leo settings tooltip">
     Leo settings

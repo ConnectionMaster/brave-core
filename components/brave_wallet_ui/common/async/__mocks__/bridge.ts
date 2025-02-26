@@ -681,7 +681,8 @@ export class MockedWalletApiProxy {
       )
     },
     recordActiveWalletCount(count, coinType) {
-      console.log(`active wallet count: ${count} for ${coinType}`)
+      // Follow up issue to fix test via https://github.com/brave/brave-browser/issues/43583
+      // console.log(`active wallet count: ${count} for ${coinType}`)
     },
     recordNFTGalleryView(nftCount) {
       console.log(`viewing nft gallery with ${nftCount} nfts`)
@@ -1003,7 +1004,7 @@ export class MockedWalletApiProxy {
         errorMessage: ''
       }
     },
-    getNftBalances: async (walletAddress, nftIdentifiers, coin) => {
+    getNftBalances: async (walletAddress, nftIdentifiers) => {
       const account = this.accountInfos.find((a) => a.address === walletAddress)
 
       if (!account) {
@@ -1018,16 +1019,20 @@ export class MockedWalletApiProxy {
               getAssetIdKey(t) ===
               getAssetIdKey({
                 ...id,
+                chainId: t.chainId,
                 coin: account.accountId.coin,
-                isShielded: false })
+                isShielded: false
+              })
           ) ||
           this.userAssets.find(
             (t) =>
               getAssetIdKey(t) ===
               getAssetIdKey({
                 ...id,
+                chainId: t.chainId,
                 coin: account.accountId.coin,
-                isShielded: false })
+                isShielded: false
+              })
           )
 
         if (!token) {
@@ -1036,11 +1041,11 @@ export class MockedWalletApiProxy {
 
         const amount = getBalanceFromRegistry({
           accountUniqueId,
-          chainId: id.chainId,
+          chainId: id.chainId.chainId,
           contractAddress: id.contractAddress,
           registry: this.tokenBalancesRegistry,
           tokenId: id.tokenId,
-          coin,
+          coin: id.chainId.coin,
           isShielded: false
         })
 
@@ -1124,7 +1129,7 @@ export class MockedWalletApiProxy {
         } as CommonNftMetadata)
       }
     },
-    getNftMetadatas: async (coin, nftIdentifiers) => {
+    getNftMetadatas: async (nftIdentifiers) => {
       const metadatas: BraveWallet.NftMetadata[] = nftIdentifiers.map((id) => {
         const mockedMetadata = mockNFTMetadata.find((d) => {
           return (
@@ -1261,7 +1266,9 @@ export class MockedWalletApiProxy {
       const accountUniqueId = account.accountId.uniqueKey
 
       const tokens = this.userAssets.filter(
-        (t) => t.coin === account.accountId.coin && chainIds.includes(t.chainId)
+        (t) =>
+          t.coin === account.accountId.coin &&
+          chainIds.some((c) => c.chainId === t.chainId)
       )
 
       const balances: BraveWallet.AnkrAssetBalance[] = tokens.map((token) => {
@@ -1286,6 +1293,13 @@ export class MockedWalletApiProxy {
 
       return {
         balances,
+        error: 0,
+        errorMessage: ''
+      }
+    },
+    getCode: async (address, coin, chain) => {
+      return {
+        bytecode: '',
         error: 0,
         errorMessage: ''
       }
@@ -1320,12 +1334,21 @@ export class MockedWalletApiProxy {
           isBitcoinImportEnabled: true,
           isBitcoinLedgerEnabled: true,
           isZCashEnabled: true,
+          isCardanoEnabled: true,
           isWalletBackedUp: true,
           isWalletCreated: true,
           isWalletLocked: false,
           isAnkrBalancesFeatureEnabled: false,
           isTransactionSimulationsFeatureEnabled: true,
-          isZCashShieldedTransactionsEnabled: false
+          isZCashShieldedTransactionsEnabled: false,
+          enabledCoins: [
+            BraveWallet.CoinType.BTC,
+            BraveWallet.CoinType.ZEC,
+            BraveWallet.CoinType.ETH,
+            BraveWallet.CoinType.FIL,
+            BraveWallet.CoinType.SOL,
+            BraveWallet.CoinType.ADA
+          ]
         }
       }
     }
@@ -1385,16 +1408,14 @@ export class MockedWalletApiProxy {
       return {
         errorResponse: '',
         errorString: '',
-        response: this
-          .evmSimulationResponse as BraveWallet.EVMSimulationResponse
+        response: this.evmSimulationResponse
       }
     },
     scanSolanaTransaction: async (request, language) => {
       return {
         errorResponse: '',
         errorString: '',
-        response: this
-          .svmSimulationResponse as BraveWallet.SolanaSimulationResponse
+        response: this.svmSimulationResponse
       }
     }
   }
@@ -1405,6 +1426,20 @@ export class MockedWalletApiProxy {
     translateToGatewayURL: async function (url: string) {
       return {
         translatedUrl: url
+      }
+    }
+  }
+
+  zcashWalletService: Partial<
+    InstanceType<typeof BraveWallet.ZCashWalletServiceInterface>
+  > = {
+    getChainTipStatus: async (_accountId) => {
+      return {
+        status: {
+          chainTip: 7687104,
+          latestScannedBlock: 2687104
+        },
+        errorMessage: null
       }
     }
   }

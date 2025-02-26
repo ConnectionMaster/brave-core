@@ -12,14 +12,17 @@
 
 #include "base/containers/fixed_flat_set.h"
 #include "base/i18n/timezone.h"
+#include "base/json/values_util.h"
 #include "base/logging.h"
 #include "base/strings/strcat.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
+#include "base/strings/stringprintf.h"
 #include "brave/components/brave_stats/browser/brave_stats_updater_util.h"
 #include "brave/components/l10n/common/locale_util.h"
 #include "brave/components/p3a/metric_config.h"
+#include "brave/components/p3a/pref_names.h"
 #include "brave/components/p3a/region.h"
 #include "brave/components/p3a/uploader.h"
 #include "brave/components/version_info/version_info.h"
@@ -44,6 +47,8 @@ constexpr char kWosAttributeName[] = "wos";
 constexpr char kMosAttributeName[] = "mos";
 constexpr char kWoiAttributeName[] = "woi";
 constexpr char kYoiAttributeName[] = "yoi";
+constexpr char kDateOfInstallAttributeName[] = "dtoi";
+constexpr char kDateOfActivationAttributeName[] = "dtoa";
 constexpr char kCountryCodeAttributeName[] = "country_code";
 constexpr char kVersionAttributeName[] = "version";
 constexpr char kRegionAttributeName[] = "region";
@@ -56,7 +61,7 @@ constexpr char kTypicalCadence[] = "typical";
 constexpr char kExpressCadence[] = "express";
 
 constexpr char kOrganicRefPrefix[] = "BRV";
-constexpr char kRefNone[] = "none";
+constexpr char kNone[] = "none";
 constexpr char kRefOther[] = "other";
 
 constexpr auto kLinuxCountries = base::MakeFixedFlatSet<std::string_view>(
@@ -67,6 +72,19 @@ constexpr auto kNotableCountries = base::MakeFixedFlatSet<std::string_view>(
     {"US", "FR", "PH", "GB", "IN", "DE", "BR", "CA", "IT", "ES",
      "NL", "MX", "AU", "RU", "JP", "PL", "ID", "KR", "AR", "AT"});
 
+constexpr base::TimeDelta kDateOmissionThreshold = base::Days(30);
+
+std::string FormatUTCDateFromExploded(const base::Time::Exploded& exploded) {
+  return base::StringPrintf("%d-%02d-%02d", exploded.year, exploded.month,
+                            exploded.day_of_month);
+}
+
+std::string FormatUTCDateFromTime(const base::Time& time) {
+  base::Time::Exploded exploded;
+  time.UTCExplode(&exploded);
+  return FormatUTCDateFromExploded(exploded);
+}
+
 std::vector<std::array<std::string, 2>> PopulateConstellationAttributes(
     const std::string_view metric_name,
     const uint64_t metric_value,
@@ -74,9 +92,9 @@ std::vector<std::array<std::string, 2>> PopulateConstellationAttributes(
     const std::optional<MetricConfig>& metric_config,
     const std::vector<MetricAttribute>& attributes_to_load,
     bool is_creative) {
-  base::Time::Exploded exploded;
-  meta.date_of_install().LocalExplode(&exploded);
-  DCHECK_GE(exploded.year, 999);
+  base::Time::Exploded dtoi_exploded;
+  meta.date_of_install().UTCExplode(&dtoi_exploded);
+  DCHECK_GE(dtoi_exploded.year, 999);
 
   std::vector<std::array<std::string, 2>> attributes;
   if (metric_config && metric_config->nebula) {
@@ -87,7 +105,10 @@ std::vector<std::array<std::string, 2>> PopulateConstellationAttributes(
   } else {
     attributes = {{kMetricNameAttributeName, std::string(metric_name)}};
   }
-  std::string country_code;
+  std::string attribute_value;
+  std::string_view activation_metric_name;
+  std::optional<base::Time> activation_date;
+
   for (const auto& attribute : attributes_to_load) {
     switch (attribute) {
       case MetricAttribute::kAnswerIndex:
@@ -108,7 +129,7 @@ std::vector<std::array<std::string, 2>> PopulateConstellationAttributes(
           continue;
         }
         attributes.push_back(
-            {kYoiAttributeName, base::NumberToString(exploded.year)});
+            {kYoiAttributeName, base::NumberToString(dtoi_exploded.year)});
         break;
       case MetricAttribute::kChannel:
         attributes.push_back({kChannelAttributeName, meta.channel()});
@@ -118,12 +139,12 @@ std::vector<std::array<std::string, 2>> PopulateConstellationAttributes(
         break;
       case MetricAttribute::kCountryCode:
         if (is_creative) {
-          country_code = meta.country_code_from_locale_raw();
+          attribute_value = meta.country_code_from_locale_raw();
         } else {
-          country_code = meta.GetCountryCodeForNormalMetrics(
+          attribute_value = meta.GetCountryCodeForNormalMetrics(
               metric_config && metric_config->disable_country_strip);
         }
-        attributes.push_back({kCountryCodeAttributeName, country_code});
+        attributes.push_back({kCountryCodeAttributeName, attribute_value});
         break;
       case MetricAttribute::kWoi:
         if (is_creative) {
@@ -131,6 +152,28 @@ std::vector<std::array<std::string, 2>> PopulateConstellationAttributes(
         }
         attributes.push_back(
             {kWoiAttributeName, base::NumberToString(meta.woi())});
+        break;
+      case MetricAttribute::kDateOfInstall:
+        attribute_value = kNone;
+        if ((base::Time::Now() - meta.date_of_install()) <
+            kDateOmissionThreshold) {
+          attribute_value = FormatUTCDateFromExploded(dtoi_exploded);
+        }
+        attributes.push_back({kDateOfInstallAttributeName, attribute_value});
+        break;
+      case MetricAttribute::kDateOfActivation:
+        activation_metric_name = metric_name;
+        if (metric_config &&
+            metric_config->activation_metric_name.has_value()) {
+          activation_metric_name = *metric_config->activation_metric_name;
+        }
+        attribute_value = kNone;
+        activation_date = meta.GetActivationDate(activation_metric_name);
+        if (activation_date &&
+            (base::Time::Now() - *activation_date) < kDateOmissionThreshold) {
+          attribute_value = FormatUTCDateFromTime(*activation_date);
+        }
+        attributes.push_back({kDateOfActivationAttributeName, attribute_value});
         break;
       case MetricAttribute::kGeneralPlatform:
         attributes.push_back(
@@ -273,7 +316,7 @@ std::string GenerateP3AConstellationMessage(
 
 void MessageMetainfo::Init(PrefService* local_state,
                            std::string brave_channel,
-                           std::string week_of_install) {
+                           base::Time first_run_time) {
   local_state_ = local_state;
   platform_ = brave_stats::GetPlatformIdentifier();
   general_platform_ = brave_stats::GetGeneralPlatformIdentifier();
@@ -281,11 +324,7 @@ void MessageMetainfo::Init(PrefService* local_state,
   InitVersion();
   InitRef();
 
-  if (!week_of_install.empty()) {
-    date_of_install_ = brave_stats::GetYMDAsDate(week_of_install);
-  } else {
-    date_of_install_ = base::Time::Now();
-  }
+  date_of_install_ = first_run_time;
   woi_ = brave_stats::GetIsoWeekNumber(date_of_install_);
 
   country_code_from_timezone_raw_ =
@@ -332,7 +371,7 @@ void MessageMetainfo::InitRef() {
   }
 #endif  // !BUILDFLAG(IS_IOS)
   if (referral_code.empty()) {
-    ref_ = kRefNone;
+    ref_ = kNone;
   } else if (referral_code.starts_with(kOrganicRefPrefix)) {
     ref_ = referral_code;
   } else {
@@ -374,6 +413,19 @@ const std::string& MessageMetainfo::GetCountryCodeForNormalMetrics(
   }
   return country_code_from_timezone_;
 #endif  // BUILDFLAG(IS_IOS)
+}
+
+std::optional<base::Time> MessageMetainfo::GetActivationDate(
+    std::string_view histogram_name) const {
+  const auto& activation_dates =
+      local_state_->GetDict(kActivationDatesDictPref);
+
+  const auto* time_val = activation_dates.Find(histogram_name);
+  if (!time_val) {
+    return std::nullopt;
+  }
+
+  return base::ValueToTime(*time_val);
 }
 
 }  // namespace p3a

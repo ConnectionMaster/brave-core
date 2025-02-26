@@ -35,8 +35,8 @@ public class BraveToolbarManagerClassAdapter extends BraveClassVisitor {
         deleteField(sBraveToolbarManagerClassName, "mAppThemeColorProvider");
         makeProtectedField(sToolbarManagerClassName, "mAppThemeColorProvider");
 
-        deleteField(sBraveToolbarManagerClassName, "mScrimCoordinator");
-        makeProtectedField(sToolbarManagerClassName, "mScrimCoordinator");
+        deleteField(sBraveToolbarManagerClassName, "mScrimManager");
+        makeProtectedField(sToolbarManagerClassName, "mScrimManager");
 
         deleteField(sBraveToolbarManagerClassName, "mMenuButtonCoordinator");
         makeProtectedField(sToolbarManagerClassName, "mMenuButtonCoordinator");
@@ -91,6 +91,9 @@ public class BraveToolbarManagerClassAdapter extends BraveClassVisitor {
 
         deleteField(sBraveToolbarManagerClassName, "mTopUiThemeColorProvider");
         makeProtectedField(sToolbarManagerClassName, "mTopUiThemeColorProvider");
+
+        deleteField(sBraveToolbarManagerClassName, "mCurrentOrientation");
+        makeProtectedField(sToolbarManagerClassName, "mCurrentOrientation");
 
         makePublicMethod(sToolbarManagerClassName, "onOrientationChange");
         addMethodAnnotation(

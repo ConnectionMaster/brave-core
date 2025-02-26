@@ -5,6 +5,8 @@
 
 #include "brave/components/brave_wallet/browser/internal/orchard_block_scanner.h"
 
+#include <algorithm>
+
 #include "brave/components/brave_wallet/browser/internal/hd_key_zip32.h"
 #include "brave/components/brave_wallet/browser/zcash/zcash_test_utils.h"
 #include "brave/components/brave_wallet/common/buildflags.h"
@@ -174,6 +176,7 @@ TEST(OrchardBlockScannerTest, DiscoverNewNotes) {
     block->vtx.push_back(std::move(tx));
 
     block->height = 11u;
+    block->hash = {0xaa, 0xbb};
     blocks.push_back(std::move(block));
   }
 
@@ -188,6 +191,8 @@ TEST(OrchardBlockScannerTest, DiscoverNewNotes) {
   EXPECT_EQ(result.value().discovered_notes[2].amount, 1881904414u);
   EXPECT_EQ(result.value().discovered_notes[3].block_id, 11u);
   EXPECT_EQ(result.value().discovered_notes[3].amount, 2549979667u);
+  EXPECT_EQ(result.value().latest_scanned_block_id, 11u);
+  EXPECT_EQ(result.value().latest_scanned_block_hash, "0xaabb");
 
   EXPECT_EQ(result.value().found_spends.size(), 5u);
 }
@@ -376,6 +381,13 @@ TEST(OrchardBlockScannerTest, WrongInput) {
     auto result = scanner.ScanBlocks({}, std::move(blocks));
     EXPECT_FALSE(result.has_value());
   }
+
+  // Empty blocks list
+  {
+    std::vector<zcash::mojom::CompactBlockPtr> blocks;
+    auto result = scanner.ScanBlocks({}, std::move(blocks));
+    EXPECT_FALSE(result.has_value());
+  }
 }
 
 // Case when note is spent in the same scanning batch where it is was received
@@ -502,7 +514,7 @@ TEST(OrchardBlockScanner, FoundKnownNullifiers) {
           "0x1b32edbbe4d18f28876de262518ad31122701f8c0a52e98047a337876e7eea19")
           .value();
   OrchardNoteSpend spend;
-  base::ranges::copy(nullifier_bytes, spend.nullifier.begin());
+  std::ranges::copy(nullifier_bytes, spend.nullifier.begin());
   spend.block_id = 10;
 
   action->nullifier = nullifier_bytes;
@@ -521,7 +533,7 @@ TEST(OrchardBlockScanner, FoundKnownNullifiers) {
   std::vector<OrchardNote> notes;
   OrchardNote note;
   note.block_id = 10;
-  base::ranges::copy(nullifier_bytes, note.nullifier.begin());
+  std::ranges::copy(nullifier_bytes, note.nullifier.begin());
   note.amount = 1;
 
   notes.push_back(note);

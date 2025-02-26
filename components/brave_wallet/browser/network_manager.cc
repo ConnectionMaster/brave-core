@@ -5,7 +5,6 @@
 
 #include "brave/components/brave_wallet/browser/network_manager.h"
 
-#include <cstdlib>
 #include <optional>
 #include <string_view>
 #include <utility>
@@ -23,11 +22,9 @@
 #include "brave/components/brave_wallet/browser/brave_wallet_constants.h"
 #include "brave/components/brave_wallet/browser/pref_names.h"
 #include "brave/components/brave_wallet/common/brave_wallet.mojom.h"
-#include "brave/components/brave_wallet/common/buildflags.h"
 #include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/brave_wallet/common/switches.h"
 #include "brave/components/brave_wallet/common/value_conversion_utils.h"
-#include "brave/components/constants/brave_services_key.h"
 #include "components/prefs/pref_service.h"
 #include "components/prefs/scoped_user_pref_update.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
@@ -507,6 +504,26 @@ GURL ZCashTestnetRpcUrl() {
   return GURL("https://testnet.lightwalletd.com:9067/");
 }
 
+GURL CardanoMainnetRpcUrl() {
+  auto switch_url =
+      GURL(base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kCardanoMainnetRpcUrl));
+  if (switch_url.is_valid()) {
+    return switch_url;
+  }
+  return GURL();
+}
+
+GURL CardanoTestnetRpcUrl() {
+  auto switch_url =
+      GURL(base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kCardanoTestnetRpcUrl));
+  if (switch_url.is_valid()) {
+    return switch_url;
+  }
+  return GURL();
+}
+
 const mojom::NetworkInfo* GetBitcoinMainnet() {
   const auto coin = mojom::CoinType::BTC;
   const auto* chain_id = mojom::kBitcoinMainnet;
@@ -583,14 +600,43 @@ const mojom::NetworkInfo* GetZCashTestnet() {
   return network_info.get();
 }
 
-const std::vector<const mojom::NetworkInfo*>& GetKnownZCashNetworks() {
-  static base::NoDestructor<std::vector<const mojom::NetworkInfo*>> networks({
-      // clang-format off
-      GetZCashMainnet(),
-      GetZCashTestnet(),
-      // clang-format on
-  });
-  return *networks.get();
+// TODO(apaymyshev): Cardano. Fill the gaps.
+const mojom::NetworkInfo* GetCardanoMainnet() {
+  const auto coin = mojom::CoinType::ADA;
+  const auto* chain_id = mojom::kCardanoMainnet;
+
+  static base::NoDestructor<mojom::NetworkInfo> network_info(
+      {chain_id,
+       "Cardano Mainnet",
+       {""},
+       {},
+       0,
+       {CardanoMainnetRpcUrl()},
+       "ADA",
+       "Cardano",
+       6,
+       coin,
+       GetSupportedKeyringsForNetwork(coin, chain_id)});
+  return network_info.get();
+}
+
+const mojom::NetworkInfo* GetCardanoTestnet() {
+  const auto coin = mojom::CoinType::ADA;
+  const auto* chain_id = mojom::kCardanoTestnet;
+
+  static base::NoDestructor<mojom::NetworkInfo> network_info(
+      {chain_id,
+       "Cardano Testnet",
+       {""},
+       {},
+       0,
+       {CardanoTestnetRpcUrl()},
+       "ADA",
+       "Cardano",
+       6,
+       coin,
+       GetSupportedKeyringsForNetwork(coin, chain_id)});
+  return network_info.get();
 }
 
 const std::vector<const mojom::NetworkInfo*>& GetKnownBitcoinNetworks() {
@@ -603,32 +649,25 @@ const std::vector<const mojom::NetworkInfo*>& GetKnownBitcoinNetworks() {
   return *networks.get();
 }
 
-// DEPRECATED 01/2024.
-const base::flat_map<std::string, std::string> kInfuraSubdomains = {
-    {brave_wallet::mojom::kMainnetChainId, "mainnet"},
-    {"0x5", "goerli"},
-    {brave_wallet::mojom::kSepoliaChainId, "sepolia"}};
+const std::vector<const mojom::NetworkInfo*>& GetKnownZCashNetworks() {
+  static base::NoDestructor<std::vector<const mojom::NetworkInfo*>> networks({
+      // clang-format off
+      GetZCashMainnet(),
+      GetZCashTestnet(),
+      // clang-format on
+  });
+  return *networks.get();
+}
 
-// DEPRECATED 01/2024. For migration only.
-const base::flat_map<std::string, std::string> kSolanaSubdomains = {
-    {brave_wallet::mojom::kSolanaMainnet, "mainnet"},
-    {brave_wallet::mojom::kSolanaTestnet, "testnet"},
-    {brave_wallet::mojom::kSolanaDevnet, "devnet"}};
-
-// DEPRECATED 01/2024. For migration only.
-const base::flat_map<std::string, std::string> kFilecoinSubdomains = {
-    {brave_wallet::mojom::kFilecoinMainnet, "mainnet"},
-    {brave_wallet::mojom::kFilecoinTestnet, "testnet"}};
-
-// DEPRECATED 01/2024. For migration only.
-const base::flat_map<std::string, std::string> kBitcoinSubdomains = {
-    {mojom::kBitcoinMainnet, "mainnet"},
-    {mojom::kBitcoinTestnet, "testnet"}};
-
-// DEPRECATED 01/2024. For migration only.
-const base::flat_map<std::string, std::string> kZCashSubdomains = {
-    {mojom::kZCashMainnet, "mainnet"},
-    {mojom::kZCashTestnet, "testnet"}};
+const std::vector<const mojom::NetworkInfo*>& GetKnownCardanoNetworks() {
+  static base::NoDestructor<std::vector<const mojom::NetworkInfo*>> networks({
+      // clang-format off
+      GetCardanoMainnet(),
+      GetCardanoTestnet(),
+      // clang-format on
+  });
+  return *networks.get();
+}
 
 std::string GetPrefKeyForCoinType(mojom::CoinType coin) {
   switch (coin) {
@@ -642,6 +681,8 @@ std::string GetPrefKeyForCoinType(mojom::CoinType coin) {
       return kFilecoinPrefKey;
     case mojom::CoinType::SOL:
       return kSolanaPrefKey;
+    case mojom::CoinType::ADA:
+      return kCardanoPrefKey;
   }
   NOTREACHED() << coin;
 }
@@ -771,6 +812,15 @@ mojom::NetworkInfoPtr NetworkManager::GetKnownChain(std::string_view chain_id,
     return nullptr;
   }
 
+  if (coin == mojom::CoinType::ADA) {
+    for (const auto* network : GetKnownCardanoNetworks()) {
+      if (base::EqualsCaseInsensitiveASCII(network->chain_id, chain_id)) {
+        return network->Clone();
+      }
+    }
+    return nullptr;
+  }
+
   NOTREACHED() << coin;
 }
 
@@ -806,51 +856,6 @@ mojom::NetworkInfoPtr NetworkManager::GetChain(std::string_view chain_id,
   }
 
   return nullptr;
-}
-
-// DEPRECATED 04/2024
-std::string GetInfuraSubdomainForKnownChainId(std::string_view chain_id) {
-  std::string chain_id_lower = base::ToLowerASCII(chain_id);
-  if (kInfuraSubdomains.contains(chain_id_lower)) {
-    return kInfuraSubdomains.at(chain_id_lower);
-  }
-  return std::string();
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetSolanaSubdomainForKnownChainId(std::string_view chain_id) {
-  std::string chain_id_lower = base::ToLowerASCII(chain_id);
-  if (kSolanaSubdomains.contains(chain_id_lower)) {
-    return kSolanaSubdomains.at(chain_id_lower);
-  }
-  return std::string();
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetFilecoinSubdomainForKnownChainId(std::string_view chain_id) {
-  std::string chain_id_lower = base::ToLowerASCII(chain_id);
-  if (kFilecoinSubdomains.contains(chain_id_lower)) {
-    return kFilecoinSubdomains.at(chain_id_lower);
-  }
-  return std::string();
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetBitcoinSubdomainForKnownChainId(std::string_view chain_id) {
-  std::string chain_id_lower = base::ToLowerASCII(chain_id);
-  if (kBitcoinSubdomains.contains(chain_id_lower)) {
-    return kBitcoinSubdomains.at(chain_id_lower);
-  }
-  return std::string();
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetZCashSubdomainForKnownChainId(std::string_view chain_id) {
-  std::string chain_id_lower = base::ToLowerASCII(chain_id);
-  if (kZCashSubdomains.contains(chain_id_lower)) {
-    return kZCashSubdomains.at(chain_id_lower);
-  }
-  return std::string();
 }
 
 std::vector<mojom::NetworkInfoPtr> NetworkManager::GetAllCustomChains(
@@ -900,6 +905,12 @@ bool NetworkManager::KnownChainExists(std::string_view chain_id,
     }
   } else if (coin == mojom::CoinType::ZEC) {
     for (const auto* network : GetKnownZCashNetworks()) {
+      if (base::CompareCaseInsensitiveASCII(network->chain_id, chain_id) == 0) {
+        return true;
+      }
+    }
+  } else if (coin == mojom::CoinType::ADA) {
+    for (const auto* network : GetKnownCardanoNetworks()) {
       if (base::CompareCaseInsensitiveASCII(network->chain_id, chain_id) == 0) {
         return true;
       }
@@ -1013,6 +1024,13 @@ std::vector<mojom::NetworkInfoPtr> NetworkManager::GetAllKnownChains(
     return result;
   }
 
+  if (coin == mojom::CoinType::ADA) {
+    for (const auto* network : GetKnownCardanoNetworks()) {
+      result.push_back(network->Clone());
+    }
+    return result;
+  }
+
   NOTREACHED() << coin;
 }
 
@@ -1033,153 +1051,11 @@ GURL NetworkManager::GetNetworkURL(mojom::CoinType coin,
 
 std::vector<mojom::NetworkInfoPtr> NetworkManager::GetAllChains() {
   std::vector<mojom::NetworkInfoPtr> result;
-  for (auto coin : GetSupportedCoins()) {
+  for (auto coin : GetEnabledCoins()) {
     base::Extend(result, MergeKnownAndCustomChains(GetAllKnownChains(coin),
                                                    GetAllCustomChains(coin)));
   }
   return result;
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetKnownEthNetworkId(std::string_view chain_id) {
-  auto subdomain = GetInfuraSubdomainForKnownChainId(chain_id);
-  if (!subdomain.empty()) {
-    return subdomain;
-  }
-
-  // For known networks not in kInfuraSubdomains:
-  //   localhost: Use the first RPC URL.
-  //   other: Use chain ID like other custom networks.
-  for (const auto* network : GetKnownEthNetworks()) {
-    if (base::CompareCaseInsensitiveASCII(network->chain_id, chain_id) != 0) {
-      continue;
-    }
-    if (base::CompareCaseInsensitiveASCII(chain_id, mojom::kLocalhostChainId) ==
-        0) {
-      return network->rpc_endpoints.front().spec();
-    }
-    return base::ToLowerASCII(chain_id);
-  }
-
-  return "";
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetKnownSolNetworkId(std::string_view chain_id) {
-  auto subdomain = GetSolanaSubdomainForKnownChainId(chain_id);
-  if (!subdomain.empty()) {
-    return subdomain;
-  }
-
-  // Separate check for localhost in known networks as it is predefined but
-  // does not have predefined subdomain.
-  if (base::CompareCaseInsensitiveASCII(chain_id, mojom::kLocalhostChainId) ==
-      0) {
-    for (const auto* network : GetKnownSolNetworks()) {
-      if (base::CompareCaseInsensitiveASCII(network->chain_id, chain_id) == 0) {
-        return network->rpc_endpoints.front().spec();
-      }
-    }
-  }
-
-  return "";
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetKnownFilNetworkId(std::string_view chain_id) {
-  auto subdomain = GetFilecoinSubdomainForKnownChainId(chain_id);
-  if (!subdomain.empty()) {
-    return subdomain;
-  }
-
-  // Separate check for localhost in known networks as it is predefined but
-  // does not have predefined subdomain.
-  if (base::CompareCaseInsensitiveASCII(chain_id, mojom::kLocalhostChainId) ==
-      0) {
-    for (const auto* network : GetKnownFilNetworks()) {
-      if (base::CompareCaseInsensitiveASCII(network->chain_id, chain_id) == 0) {
-        return network->rpc_endpoints.front().spec();
-      }
-    }
-  }
-
-  return "";
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetKnownBtcNetworkId(std::string_view chain_id) {
-  auto subdomain = GetBitcoinSubdomainForKnownChainId(chain_id);
-  if (!subdomain.empty()) {
-    return subdomain;
-  }
-
-  return "";
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetKnownZecNetworkId(std::string_view chain_id) {
-  auto subdomain = GetZCashSubdomainForKnownChainId(chain_id);
-  if (!subdomain.empty()) {
-    return subdomain;
-  }
-
-  return "";
-}
-
-// DEPRECATED 01/2024. For migration only.
-std::string GetKnownNetworkId(mojom::CoinType coin, std::string_view chain_id) {
-  if (coin == mojom::CoinType::ETH) {
-    return GetKnownEthNetworkId(chain_id);
-  }
-  if (coin == mojom::CoinType::SOL) {
-    return GetKnownSolNetworkId(chain_id);
-  }
-  if (coin == mojom::CoinType::FIL) {
-    return GetKnownFilNetworkId(chain_id);
-  }
-  if (coin == mojom::CoinType::BTC) {
-    return GetKnownBtcNetworkId(chain_id);
-  }
-  if (coin == mojom::CoinType::ZEC) {
-    return GetKnownZecNetworkId(chain_id);
-  }
-  return "";
-}
-
-// DEPRECATED 01/2024. For migration only.
-// static
-std::string NetworkManager::GetNetworkId_DEPRECATED(mojom::CoinType coin,
-                                                    std::string_view chain_id) {
-  if (chain_id.empty()) {
-    return "";
-  }
-
-  std::string id = GetKnownNetworkId(coin, chain_id);
-  if (!id.empty()) {
-    return id;
-  }
-
-  if (coin == mojom::CoinType::ETH) {
-    return std::string(chain_id);
-  }
-
-  return "";
-}
-
-// DEPRECATED 01/2024. For migration only.
-// static
-std::optional<std::string> NetworkManager::GetChainIdByNetworkId_DEPRECATED(
-    const mojom::CoinType& coin,
-    std::string_view network_id) {
-  if (network_id.empty()) {
-    return std::nullopt;
-  }
-  for (const auto& network : GetAllKnownChains(coin)) {
-    if (network_id == GetNetworkId_DEPRECATED(coin, network->chain_id)) {
-      return network->chain_id;
-    }
-  }
-  return base::ToLowerASCII(network_id);
 }
 
 std::optional<bool> NetworkManager::IsEip1559Chain(
@@ -1298,6 +1174,8 @@ std::string NetworkManager::GetCurrentChainId(
       return mojom::kBitcoinMainnet;
     case mojom::CoinType::ZEC:
       return mojom::kZCashMainnet;
+    case mojom::CoinType::ADA:
+      return mojom::kCardanoMainnet;
   }
   NOTREACHED() << coin;
 }

@@ -4,7 +4,8 @@
     "browser-type": "chromium",
     "profile": "chrome-typical-win",
     "extra-browser-args": [
-      "--disable-features=CalculateNativeWinOcclusion",
+      "--disable-component-update",
+      "--disable-backgrounding-occluded-windows",
     ],
     "extra-benchmark-args": [
       "--also-run-disabled-tests"

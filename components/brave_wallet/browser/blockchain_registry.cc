@@ -12,7 +12,6 @@
 #include "base/containers/flat_set.h"
 #include "base/files/file_path.h"
 #include "base/no_destructor.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/stringprintf.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_constants.h"
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
@@ -123,17 +122,14 @@ void DoParseCoingeckoIdsMap(const base::FilePath& dir, ParseListsResult& out) {
   out.coingecko_ids_map = std::move(*coingecko_ids_map);
 }
 
-void HandleParseTokenList(const base::FilePath& dir,
-                          const std::string& filename,
-                          mojom::CoinType coin_type,
-                          ParseListsResult& out) {
-  auto result = ParseJsonFile(dir, filename);
+void DoParseTokenList(const base::FilePath& dir, ParseListsResult& out) {
+  auto result = ParseJsonFile(dir, "coingecko.json");
   if (!result) {
     return;
   }
 
   TokenListMap lists;
-  if (!ParseTokenList(*result, &lists, coin_type)) {
+  if (!ParseTokenList(*result, &lists)) {
     VLOG(1) << "Can't parse token list.";
     return;
   }
@@ -141,13 +137,6 @@ void HandleParseTokenList(const base::FilePath& dir,
   for (auto& list_pair : lists) {
     out.token_list_map[list_pair.first] = std::move(list_pair.second);
   }
-}
-
-void DoParseTokenList(const base::FilePath& dir, ParseListsResult& out) {
-  HandleParseTokenList(dir, "contract-map.json", mojom::CoinType::ETH, out);
-  HandleParseTokenList(dir, "evm-contract-map.json", mojom::CoinType::ETH, out);
-  HandleParseTokenList(dir, "solana-contract-map.json", mojom::CoinType::SOL,
-                       out);
 }
 
 void DoParseChainList(const base::FilePath& dir, ParseListsResult& out) {
@@ -326,7 +315,7 @@ mojom::BlockchainTokenPtr BlockchainRegistry::GetTokenByAddress(
   }
 
   const auto& tokens = token_list_map_[key];
-  auto token_it = base::ranges::find_if(
+  auto token_it = std::ranges::find_if(
       tokens, [&](const mojom::BlockchainTokenPtr& current_token) {
         return current_token->contract_address == address;
       });
@@ -343,7 +332,7 @@ void BlockchainRegistry::GetTokenBySymbol(const std::string& chain_id,
     return;
   }
   const auto& tokens = token_list_map_[key];
-  auto token_it = base::ranges::find_if(
+  auto token_it = std::ranges::find_if(
       tokens, [&](const mojom::BlockchainTokenPtr& current_token) {
         return current_token->symbol == symbol;
       });

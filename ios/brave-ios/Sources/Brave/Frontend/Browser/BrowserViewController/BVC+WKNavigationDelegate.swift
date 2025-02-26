@@ -99,8 +99,9 @@ extension BrowserViewController: WKNavigationDelegate {
 
     hideToastsOnNavigationStartIfNeeded(tabManager)
 
-    // If we are going to navigate to a new page, hide the translate button.
-    topToolbar.updateTranslateButtonState(.unavailable)
+    // If we are going to navigate to a new page, refresh the translate status.
+    topToolbar.updateTranslateButtonState(tabManager.selectedTab?.translationState ?? .unavailable)
+
     resetRedirectChain(webView)
 
     // Append source URL to redirect chain
@@ -1022,6 +1023,11 @@ extension BrowserViewController: WKNavigationDelegate {
     tab.nightMode = Preferences.General.nightModeEnabled.value
     tab.clearSolanaConnectedAccounts()
 
+    // Dismiss any alerts that are showing on page navigation.
+    if let alert = tab.shownPromptAlert {
+      alert.dismiss(animated: false)
+    }
+
     // Providers need re-initialized when changing origin to align with desktop in
     // `BraveContentBrowserClient::RegisterBrowserInterfaceBindersForFrame`
     // https://github.com/brave/brave-core/blob/1.52.x/browser/brave_content_browser_client.cc#L608
@@ -1042,8 +1048,6 @@ extension BrowserViewController: WKNavigationDelegate {
       tab.walletSolProvider = provider
       tab.walletSolProvider?.initialize(eventsListener: tab)
     }
-
-    rewards.reportTabNavigation(tabId: tab.rewardsId)
 
     // Notify of tab changes after navigation completes but before notifying that
     // the tab has loaded, so that any listeners can process the tab changes
@@ -1225,7 +1229,7 @@ extension BrowserViewController {
   }
 
   private func tab(for webView: WKWebView) -> Tab? {
-    tabManager[webView] ?? (webView as? TabWebView)?.tab
+    tabManager[webView]
   }
 
   private func handleExternalURL(
@@ -1417,6 +1421,9 @@ extension BrowserViewController: WKUIDelegate {
         _ = observation  // Silence write but not read warning
         observation = nil
         guard let self = self, let tab = self.tabManager[webView] else { return }
+
+        // When a child tab is being selected, dismiss any popups on the parent tab
+        tab.parent?.shownPromptAlert?.dismiss(animated: false)
         self.tabManager.selectTab(tab)
       }
     )
@@ -1437,6 +1444,11 @@ extension BrowserViewController: WKUIDelegate {
     type: WKMediaCaptureType,
     decisionHandler: @escaping (WKPermissionDecision) -> Void
   ) {
+    if frame.securityOrigin.protocol.isEmpty || frame.securityOrigin.host.isEmpty {
+      decisionHandler(.deny)
+      return
+    }
+
     let presentAlert = { [weak self] in
       guard let self = self else { return }
 
@@ -1479,6 +1491,9 @@ extension BrowserViewController: WKUIDelegate {
       alertController.dismissedWithoutAction = {
         decisionHandler(.prompt)
       }
+
+      tabManager.tabForWebView(webView)?.shownPromptAlert = alertController
+
       if webView.fullscreenState == .inFullscreen || webView.fullscreenState == .enteringFullscreen
       {
         webView.closeAllMediaPresentations {
@@ -1516,7 +1531,7 @@ extension BrowserViewController: WKUIDelegate {
       completionHandler: completionHandler,
       suppressHandler: nil
     )
-    handleAlert(webView: webView, alert: &messageAlert) {
+    handleAlert(webView: webView, frame: frame, alert: &messageAlert) {
       completionHandler()
     }
   }
@@ -1533,7 +1548,7 @@ extension BrowserViewController: WKUIDelegate {
       completionHandler: completionHandler,
       suppressHandler: nil
     )
-    handleAlert(webView: webView, alert: &confirmAlert) {
+    handleAlert(webView: webView, frame: frame, alert: &confirmAlert) {
       completionHandler(false)
     }
   }
@@ -1552,7 +1567,7 @@ extension BrowserViewController: WKUIDelegate {
       defaultText: defaultText,
       suppressHandler: nil
     )
-    handleAlert(webView: webView, alert: &textInputAlert) {
+    handleAlert(webView: webView, frame: frame, alert: &textInputAlert) {
       completionHandler(nil)
     }
   }
@@ -1571,17 +1586,25 @@ extension BrowserViewController: WKUIDelegate {
 
   func handleAlert<T: JSAlertInfo>(
     webView: WKWebView,
+    frame: WKFrameInfo,
     alert: inout T,
     completionHandler: @escaping () -> Void
   ) {
+    if frame.securityOrigin.protocol.isEmpty || frame.securityOrigin.host.isEmpty {
+      completionHandler()
+      return
+    }
+
     guard let promptingTab = tabManager[webView], !promptingTab.blockAllAlerts else {
       suppressJSAlerts(webView: webView)
       tabManager[webView]?.cancelQueuedAlerts()
       completionHandler()
       return
     }
+
     promptingTab.alertShownCount += 1
-    let suppressBlock: JSAlertInfo.SuppressHandler = { [unowned self] suppress in
+    let suppressBlock: JSAlertInfo.SuppressHandler = { [unowned self, weak promptingTab] suppress in
+      guard let promptingTab else { return }
       if suppress {
         func suppressDialogues(_: UIAlertAction) {
           self.suppressJSAlerts(webView: webView)
@@ -1623,6 +1646,8 @@ extension BrowserViewController: WKUIDelegate {
           )
           popoverController.permittedArrowDirections = []
         }
+
+        promptingTab.shownPromptAlert = suppressSheet
         self.present(suppressSheet, animated: true)
       } else {
         completionHandler()
@@ -1632,6 +1657,8 @@ extension BrowserViewController: WKUIDelegate {
     if shouldDisplayJSAlertForWebView(webView) {
       let controller = alert.alertController()
       controller.delegate = self
+      promptingTab.shownPromptAlert = controller
+
       present(controller, animated: true)
     } else {
       promptingTab.queueJavascriptAlertPrompt(alert)
@@ -1750,7 +1777,7 @@ extension BrowserViewController: WKUIDelegate {
         copyCleanLinkAction.accessibilityLabel = "linkContextMenu.copyCleanLink"
         actions.append(copyCleanLinkAction)
 
-        if let braveWebView = webView as? BraveWebView {
+        if let braveWebView = webView as? TabWebView {
           let shareAction = UIAction(
             title: Strings.shareLinkActionTitle,
             image: UIImage(systemName: "square.and.arrow.up")
@@ -1989,7 +2016,7 @@ extension BrowserViewController: WKUIDelegate {
       return nil
     }
 
-    if FeatureList.kHttpsOnlyMode.enabled, ShieldPreferences.httpsUpgradeLevel.isStrict,
+    if ShieldPreferences.httpsUpgradeLevel.isStrict,
       let url = originalURL.encodeEmbeddedInternalURL(for: .httpBlocked)
     {
       Self.log.debug(

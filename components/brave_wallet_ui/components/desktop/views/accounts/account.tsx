@@ -25,7 +25,9 @@ import {
   AccountModalTypes,
   AccountPageTabs,
   SupportedTestNetworks,
-  BitcoinTestnetKeyringIds
+  BitcoinTestnetKeyringIds,
+  ZCashTestnetKeyringIds,
+  CardanoTestnetKeyringIds
 } from '../../../../constants/types'
 
 // utils
@@ -130,7 +132,8 @@ import { useAccountsQuery } from '../../../../common/slices/api.slice.extra'
 const INDIVIDUAL_TESTNET_ACCOUNT_KEYRING_IDS = [
   ...BitcoinTestnetKeyringIds,
   BraveWallet.KeyringId.kFilecoinTestnet,
-  BraveWallet.KeyringId.kZCashTestnet
+  ...ZCashTestnetKeyringIds,
+  ...CardanoTestnetKeyringIds
 ]
 
 const removedNFTsRouteOptions = AccountDetailsOptions.filter(
@@ -229,7 +232,7 @@ export const Account = () => {
 
   const showSyncWarning =
     isShieldedAccount &&
-    (blocksBehind > 1000 || chainTipStatus === null) &&
+    (blocksBehind > 0 || chainTipStatus === null) &&
     !syncWarningDismissed
 
   // custom hooks & memos
@@ -578,16 +581,19 @@ export const Account = () => {
                 ? 'error'
                 : blocksBehind > 3000
                 ? 'warning'
-                : 'info'
+                : blocksBehind > 1000
+                ? 'info'
+                : 'notice'
             }
           >
             <div slot='title'>
               {!chainTipStatus
                 ? getLocale('braveWalletOutOfSyncTitle')
-                : getLocale('braveWalletOutOfSyncBlocksBehindTitle').replace(
-                    '$1',
-                    blocksBehind.toLocaleString()
-                  )}
+                : getLocale(
+                    blocksBehind < 1000
+                      ? 'braveWalletBlocksBehind'
+                      : 'braveWalletOutOfSyncBlocksBehindTitle'
+                  ).replace('$1', blocksBehind.toLocaleString())}
             </div>
             {getLocale('braveWalletOutOfSyncDescription')}
             <Row

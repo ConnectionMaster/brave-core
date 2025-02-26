@@ -424,6 +424,9 @@ provideStrings({
   braveWalletCreateAccountBitcoinTestnetDescription: 'Store BTC Testnet assets',
   braveWalletCreateAccountZCashDescription: 'Store ZEC assets',
   braveWalletCreateAccountZCashTestnetDescription: 'Store ZEC Testnet assets',
+  braveWalletCreateAccountCardanoDescription: 'Store Cardano assets',
+  braveWalletCreateAccountCardanoTestnetDescription:
+    'Store Cardano Testnet assets',
   braveWalletCreateAccountFilecoinDescription: 'Store FIL asset',
   braveWalletCreateAccountFilecoinTestnetDescription: 'Store FIL Testnet asset',
   braveWalletFilecoinPrivateKeyProtocol: 'Private key $1',
@@ -1219,6 +1222,8 @@ provideStrings({
   braveWalletBTCTestnetAccountDescription: 'Bitcoin Testnet',
   braveWalletZECAccountDescription: 'Zcash Mainnet',
   braveWalletZECTestnetAccountDescription: 'Zcash Testnet',
+  braveWalletCardanoAccountDescription: 'Cardano Mainnet',
+  braveWalletCardanoTestnetAccountDescription: 'Cardano Testnet',
   braveWalletShowNetworkLogoOnNftsTitle: 'Network Logo',
   braveWalletShowNetworkLogoOnNftsDescription: 'Show network logo on NFTs',
   braveWalletShowSpamNftsTitle: 'Spam NFTs',
@@ -1545,5 +1550,11 @@ provideStrings({
     'Sync complete. You may now close this window.',
   braveWalletSyncStartedMessage:
     'Please don’t close this window until sync finishes.',
-  braveWalletContinueUsingWallet: 'Continue using wallet in a new tab'
+  braveWalletContinueUsingWallet: 'Continue using wallet in a new tab',
+  braveWalletShieldedAccountBirthdayBlock: 'Shielded account birthday block',
+  braveWalletAccountBirthdayTooLow: 'Account birthday must be greater than $1',
+  braveWalletAccountBirthdayTooHigh: 'Account birthday must be less than $1',
+  braveWalletBlocksBehind: '$1 blocks behind',
+  braveWalletAccountIsSyncing: 'Account is syncing',
+  braveWalletSyncing: 'Syncing'
 })

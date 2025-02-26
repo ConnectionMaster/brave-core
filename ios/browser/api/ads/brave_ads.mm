@@ -40,9 +40,9 @@
 #include "brave/components/brave_ads/core/public/flags/flags_util.h"
 #include "brave/components/brave_ads/core/public/prefs/pref_names.h"
 #include "brave/components/brave_news/common/pref_names.h"
-#include "brave/components/brave_rewards/common/pref_names.h"
-#include "brave/components/brave_rewards/common/pref_registry.h"
-#include "brave/components/brave_rewards/common/rewards_flags.h"
+#include "brave/components/brave_rewards/core/pref_names.h"
+#include "brave/components/brave_rewards/core/pref_registry.h"
+#include "brave/components/brave_rewards/core/rewards_flags.h"
 #include "brave/components/l10n/common/country_code_util.h"
 #include "brave/components/l10n/common/locale_util.h"
 #include "brave/components/l10n/common/prefs.h"
@@ -243,7 +243,7 @@ constexpr NSString* kAdsResourceComponentMetadataVersion = @".v1";
 
   // This will always be the regular profile (not private/OTR).
   ProfileIOS* profile = [self getLastUsedProfile];
-  adsService = brave_ads::AdsServiceFactoryIOS::GetForBrowserState(profile);
+  adsService = brave_ads::AdsServiceFactoryIOS::GetForProfile(profile);
   CHECK(adsService);
 
   adsService->InitializeAds(
@@ -1601,31 +1601,28 @@ constexpr NSString* kAdsResourceComponentMetadataVersion = @".v1";
 
         strongSelf->adsService->TriggerSearchResultAdEvent(
             std::move(ad), brave_ads::mojom::SearchResultAdEventType::kClicked,
-            base::BindOnce(completion));
+            base::BindOnce(^(const bool success) {
+              if (success) {
+                self.profilePrefService->SetBoolean(
+                    brave_ads::prefs::kShouldShowSearchResultAdClickedInfoBar,
+                    false);
+              }
+              completion(success);
+            }));
       }));
 }
 
-- (void)triggerSearchResultAdEvent:
+- (void)triggerSearchResultAdViewedEvent:
             (BraveAdsCreativeSearchResultAdInfo*)searchResultAd
-                         eventType:(BraveAdsSearchResultAdEventType)eventType
-                        completion:(void (^)(BOOL success))completion {
+                              completion:(void (^)(BOOL success))completion {
   if (![self isServiceRunning] || !searchResultAd) {
     return completion(/*success=*/false);
   }
 
-  const auto mojom_event_type =
-      static_cast<brave_ads::mojom::SearchResultAdEventType>(eventType);
   adsService->TriggerSearchResultAdEvent(
-      searchResultAd.cppObjPtr, mojom_event_type,
-      base::BindOnce(^(const bool success) {
-        if (success &&
-            mojom_event_type ==
-                brave_ads::mojom::SearchResultAdEventType::kClicked) {
-          self.profilePrefService->SetBoolean(
-              brave_ads::prefs::kShouldShowSearchResultAdClickedInfoBar, false);
-        }
-        completion(success);
-      }));
+      searchResultAd.cppObjPtr,
+      brave_ads::mojom::SearchResultAdEventType::kViewedImpression,
+      base::BindOnce(completion));
 }
 
 - (void)purgeOrphanedAdEventsForType:(BraveAdsAdType)adType

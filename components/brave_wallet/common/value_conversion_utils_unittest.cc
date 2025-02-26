@@ -209,7 +209,7 @@ TEST(ValueConversionUtilsUnitTest, NetworkInfoToValueTest) {
             chain.decimals);
   auto* rpc_urls = value.FindList("rpcUrls");
   for (const auto& entry : *rpc_urls) {
-    ASSERT_TRUE(base::Contains(chain.rpc_endpoints, entry.GetString()));
+    ASSERT_TRUE(base::Contains(chain.rpc_endpoints, GURL(entry.GetString())));
   }
 
   for (const auto& entry : *value.FindList("iconUrls")) {
@@ -231,7 +231,7 @@ TEST(ValueConversionUtilsUnitTest, NetworkInfoToValueTest) {
       EXPECT_EQ(network_value.FindInt("coin"), static_cast<int>(coin));
     }
 
-    EXPECT_TRUE(AllCoinsTested());
+    static_assert(AllCoinsTested<6>());
   }
 
   {
@@ -273,7 +273,13 @@ TEST(ValueConversionUtilsUnitTest, NetworkInfoToValueTest) {
     EXPECT_THAT(value_network->supported_keyrings,
                 ElementsAreArray({mojom::KeyringId::kZCashTestnet}));
 
-    EXPECT_TRUE(AllCoinsTested());
+    data_value.GetDict().Set("coin", static_cast<int>(mojom::CoinType::ADA));
+    value_network = ValueToNetworkInfo(data_value);
+    EXPECT_EQ(value_network->coin, mojom::CoinType::ADA);
+    EXPECT_THAT(value_network->supported_keyrings,
+                ElementsAreArray({mojom::KeyringId::kCardanoTestnet}));
+
+    static_assert(AllCoinsTested<6>());
   }
 }
 

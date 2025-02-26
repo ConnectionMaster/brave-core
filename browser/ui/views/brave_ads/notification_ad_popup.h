@@ -76,7 +76,6 @@ class NotificationAdPopup : public views::WidgetDelegateView,
                                uint32_t changed_metrics) override;
 
   // views::WidgetDelegateView:
-  void GetAccessibleNodeData(ui::AXNodeData* node_data) override;
   void OnDisplayChanged() override;
   void OnWorkAreaChanged() override;
   void OnPaintBackground(gfx::Canvas* canvas) override;
@@ -90,7 +89,7 @@ class NotificationAdPopup : public views::WidgetDelegateView,
   void OnWidgetBoundsChanged(views::Widget* widget,
                              const gfx::Rect& new_bounds) override;
 
-  // AnimationDelegate:
+  // gfx::AnimationDelegate:
   void AnimationEnded(const gfx::Animation* animation) override;
   void AnimationProgressed(const gfx::Animation* animation) override;
   void AnimationCanceled(const gfx::Animation* animation) override;

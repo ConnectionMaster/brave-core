@@ -37,6 +37,10 @@ std::string MessageConversationEntryEvents(
         message = base::StrCat({message, "\n - search event"});
         break;
       }
+      case mojom::ConversationEntryEvent::Tag::kSourcesEvent: {
+        message = base::StrCat({message, "\n - sources event"});
+        break;
+      }
       case mojom::ConversationEntryEvent::Tag::kConversationTitleEvent: {
         message = base::StrCat({message, "\n - title: ",
                                 event->get_conversation_title_event()->title});
@@ -73,8 +77,8 @@ void ExpectConversationEquals(base::Location location,
 }
 
 void ExpectAssociatedContentEquals(base::Location location,
-                                   const mojom::SiteInfoPtr& a,
-                                   const mojom::SiteInfoPtr& b) {
+                                   const mojom::AssociatedContentPtr& a,
+                                   const mojom::AssociatedContentPtr& b) {
   SCOPED_TRACE(testing::Message() << location.ToString());
   if (!a || !b) {
     EXPECT_EQ(a, b);  // Both should be null or neither
@@ -86,8 +90,6 @@ void ExpectAssociatedContentEquals(base::Location location,
   EXPECT_EQ(a->content_type, b->content_type);
   EXPECT_EQ(a->content_used_percentage, b->content_used_percentage);
   EXPECT_EQ(a->is_content_refined, b->is_content_refined);
-  EXPECT_EQ(a->is_content_association_possible,
-            b->is_content_association_possible);
 }
 
 void ExpectConversationHistoryEquals(
@@ -143,6 +145,19 @@ void ExpectConversationEntryEquals(base::Location location,
         case mojom::ConversationEntryEvent::Tag::kSearchQueriesEvent: {
           EXPECT_EQ(a_event->get_search_queries_event()->search_queries,
                     b_event->get_search_queries_event()->search_queries);
+          break;
+        }
+        case mojom::ConversationEntryEvent::Tag::kSourcesEvent: {
+          auto& a_sources = a_event->get_sources_event();
+          auto& b_sources = b_event->get_sources_event();
+          EXPECT_EQ(a_sources->sources.size(), b_sources->sources.size());
+          for (auto j = 0u; j < a_sources->sources.size(); j++) {
+            SCOPED_TRACE(testing::Message()
+                         << "Comparing sources at index " << j);
+            EXPECT_EQ(a_sources->sources[j]->url, b_sources->sources[j]->url);
+            EXPECT_EQ(a_sources->sources[j]->title,
+                      b_sources->sources[j]->title);
+          }
           break;
         }
         default:

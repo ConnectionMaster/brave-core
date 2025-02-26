@@ -11,38 +11,46 @@
 
 #include "base/files/file_path.h"
 #include "base/values.h"
-#include "ui/gfx/geometry/point.h"
-#include "ui/gfx/geometry/rect.h"
 
 namespace ntp_background_images {
 
 struct Background {
-  base::FilePath image_file;
-
-  std::string author;
-  std::string link;
-
   Background();
+
   // For unit test.
   Background(const base::FilePath& image_file_path,
              const std::string& author,
              const std::string& link);
+
   Background(const Background&);
+  Background& operator=(const Background&);
+
+  Background(Background&& other);
+  Background& operator=(Background&& other);
 
   ~Background();
+
+  base::FilePath file_path;
+  std::string author;
+  std::string link;
 };
 
 struct NTPBackgroundImagesData {
   NTPBackgroundImagesData();
   NTPBackgroundImagesData(const std::string& json_string,
                           const base::FilePath& installed_dir);
-  NTPBackgroundImagesData(const NTPBackgroundImagesData& data);
-  NTPBackgroundImagesData& operator=(const NTPBackgroundImagesData& data);
+
+  NTPBackgroundImagesData(const NTPBackgroundImagesData&);
+  NTPBackgroundImagesData& operator=(const NTPBackgroundImagesData&);
+
+  NTPBackgroundImagesData(NTPBackgroundImagesData&& other);
+  NTPBackgroundImagesData& operator=(NTPBackgroundImagesData&& other);
+
   ~NTPBackgroundImagesData();
 
-  bool IsValid() const;
-  // Generate Value with background image at |index|.
-  base::Value::Dict GetBackgroundAt(size_t index);
+  [[nodiscard]] bool IsValid() const;
+
+  base::Value::Dict GetBackgroundAt(size_t index) const;
 
   std::vector<Background> backgrounds;
   std::string url_prefix;

@@ -140,7 +140,7 @@ NTPBackgroundImagesBridge::CreateWallpaper(const base::Value::Dict& data) {
   JNIEnv* env = AttachCurrentThread();
 
   auto* image_path =
-      data.FindString(ntp_background_images::kWallpaperImagePathKey);
+      data.FindString(ntp_background_images::kWallpaperFilePathKey);
   auto* author = data.FindString(ntp_background_images::kImageAuthorKey);
   auto* link = data.FindString(ntp_background_images::kImageLinkKey);
 
@@ -156,7 +156,7 @@ NTPBackgroundImagesBridge::CreateBrandedWallpaper(
   JNIEnv* env = AttachCurrentThread();
 
   auto* image_path =
-      data.FindString(ntp_background_images::kWallpaperImagePathKey);
+      data.FindString(ntp_background_images::kWallpaperFilePathKey);
   auto* logo_image_path =
       data.FindStringByDottedPath(ntp_background_images::kLogoImagePath);
   if (!image_path || !logo_image_path)
@@ -266,20 +266,18 @@ NTPBackgroundImagesBridge::GetCurrentWallpaper(
   }
 }
 
-void NTPBackgroundImagesBridge::OnUpdated(NTPBackgroundImagesData* data) {
+void NTPBackgroundImagesBridge::OnBackgroundImagesDataDidUpdate(
+    NTPBackgroundImagesData* data) {
   JNIEnv* env = AttachCurrentThread();
   Java_NTPBackgroundImagesBridge_onUpdated(env, java_object_);
 }
 
-void NTPBackgroundImagesBridge::OnUpdated(NTPSponsoredImagesData* data) {
+void NTPBackgroundImagesBridge::OnSponsoredImagesDataDidUpdate(
+    NTPSponsoredImagesData* data) {
   // Don't have interest about in-effective component data update.
   if (data != view_counter_service_->GetCurrentBrandedWallpaperData())
     return;
 
   JNIEnv* env = AttachCurrentThread();
   Java_NTPBackgroundImagesBridge_onUpdated(env, java_object_);
-}
-
-void NTPBackgroundImagesBridge::OnSuperReferralEnded() {
-  // Android doesn't need to get this update.
 }

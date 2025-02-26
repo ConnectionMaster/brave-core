@@ -112,6 +112,10 @@ BASE_FEATURE(kBraveShredCacheData,
 BASE_FEATURE(kBraveIOSDebugAdblock,
              "BraveIOSDebugAdblock",
              base::FEATURE_DISABLED_BY_DEFAULT);
+// When enabled, will farble navigator.plugins.
+BASE_FEATURE(kBraveIOSEnableFarblingPlugins,
+             "kBraveIOSEnableFarblingPlugins",
+             base::FEATURE_ENABLED_BY_DEFAULT);
 // When enabled, show Strict (aggressive) fingerprinting mode in Brave Shields.
 BASE_FEATURE(kBraveShowStrictFingerprintingMode,
              "BraveShowStrictFingerprintingMode",
@@ -150,7 +154,7 @@ BASE_FEATURE(kCosmeticFilteringJsPerformance,
 
 BASE_FEATURE(kCosmeticFilteringCustomScriptlets,
              "CosmeticFilteringCustomScriptlets",
-             base::FEATURE_DISABLED_BY_DEFAULT);
+             base::FEATURE_ENABLED_BY_DEFAULT);
 
 constexpr base::FeatureParam<int> kComponentUpdateCheckIntervalMins{
     &kAdBlockDefaultResourceUpdateInterval, "update_interval_mins", 100};

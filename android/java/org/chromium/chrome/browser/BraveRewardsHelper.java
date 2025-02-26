@@ -32,12 +32,14 @@ import androidx.annotation.Nullable;
 
 import org.jni_zero.CalledByNative;
 
+import org.chromium.base.BraveFeatureList;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.supplier.ObservableSupplier;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.app.BraveActivity;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
+import org.chromium.chrome.browser.flags.ChromeFeatureList;
 import org.chromium.chrome.browser.preferences.ChromeSharedPreferences;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.profiles.ProfileManager;
@@ -46,7 +48,7 @@ import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.components.browser_ui.widget.RoundedIconGenerator;
 import org.chromium.components.favicon.IconType;
 import org.chromium.components.favicon.LargeIconBridge;
-import org.chromium.ui.text.NoUnderlineClickableSpan;
+import org.chromium.ui.text.ChromeClickableSpan;
 import org.chromium.url.GURL;
 
 import java.math.BigDecimal;
@@ -245,17 +247,8 @@ public class BraveRewardsHelper implements LargeIconBridge.LargeIconCallback {
         }
     }
 
-    /** we don't destroy sLargeIconBridge sisnce it's static */
-    private void destroy() {
-        if (sLargeIconBridge != null) {
-            sLargeIconBridge.destroy();
-            sLargeIconBridge = null;
-        }
-        mCallback =  null;
-    }
-
     public void detach() {
-        mCallback =  null;
+        mCallback = null;
     }
 
     public void retrieveLargeIcon(String favIconURL, LargeIconReadyCallback callback) {
@@ -579,19 +572,34 @@ public class BraveRewardsHelper implements LargeIconBridge.LargeIconCallback {
         Spanned textSpanned = spannedFromHtmlString(text);
         SpannableString textSpannableString = new SpannableString(textSpanned.toString());
 
-        NoUnderlineClickableSpan termsOfServiceClickableSpan =
-                new NoUnderlineClickableSpan(context, colorRes, (textView) -> {
-                    CustomTabActivity.showInfoPage(context, BraveActivity.BRAVE_TERMS_PAGE);
-                });
+        ChromeClickableSpan termsOfServiceClickableSpan =
+                new ChromeClickableSpan(
+                        context,
+                        colorRes,
+                        (textView) -> {
+                            CustomTabActivity.showInfoPage(context, BraveActivity.BRAVE_TERMS_PAGE);
+                        });
 
-        NoUnderlineClickableSpan privacyPolicyClickableSpan =
-                new NoUnderlineClickableSpan(context, colorRes, (textView) -> {
-                    CustomTabActivity.showInfoPage(context, BraveActivity.BRAVE_PRIVACY_POLICY);
-                });
+        ChromeClickableSpan privacyPolicyClickableSpan =
+                new ChromeClickableSpan(
+                        context,
+                        colorRes,
+                        (textView) -> {
+                            CustomTabActivity.showInfoPage(
+                                    context, BraveActivity.BRAVE_PRIVACY_POLICY);
+                        });
 
-        setSpan(context, text, textSpannableString, R.string.terms_of_service,
+        setSpan(
+                context,
+                text,
+                textSpannableString,
+                R.string.terms_of_service,
                 termsOfServiceClickableSpan); // terms of service
-        setSpan(context, text, textSpannableString, R.string.privacy_policy,
+        setSpan(
+                context,
+                text,
+                textSpannableString,
+                R.string.privacy_policy,
                 privacyPolicyClickableSpan); // privacy policy
         return textSpannableString;
     }
@@ -605,8 +613,8 @@ public class BraveRewardsHelper implements LargeIconBridge.LargeIconCallback {
         Spanned textSpanned = spannedFromHtmlString(text);
         SpannableString textSpannableString = new SpannableString(textSpanned.toString());
 
-        NoUnderlineClickableSpan substringClickableSpan =
-                new NoUnderlineClickableSpan(
+        ChromeClickableSpan substringClickableSpan =
+                new ChromeClickableSpan(
                         context,
                         colorRes,
                         (textView) -> {
@@ -634,7 +642,14 @@ public class BraveRewardsHelper implements LargeIconBridge.LargeIconCallback {
         tosTextSS.setSpan(
                 clickableSpan, index, index + spanLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         Typeface typeface = Typeface.create("sans-serif", Typeface.NORMAL);
-        tosTextSS.setSpan(new StyleSpan(typeface.getStyle()), index, index + spanLength,
+        tosTextSS.setSpan(
+                new StyleSpan(typeface.getStyle()),
+                index,
+                index + spanLength,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    public static boolean shouldShowNewRewardsUI() {
+        return ChromeFeatureList.isEnabled(BraveFeatureList.NEW_REWARDS_UI_FEATURE);
     }
 }

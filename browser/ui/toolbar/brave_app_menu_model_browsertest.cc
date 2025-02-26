@@ -179,7 +179,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_RECENT_TABS_MENU,
       IDC_BOOKMARKS_MENU,
       IDC_SHOW_DOWNLOADS,
-      IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS,
+      IDC_EXTENSIONS_SUBMENU,
       IDC_CLEAR_BROWSING_DATA,
       IDC_ZOOM_MENU,
       IDC_PRINT,
@@ -209,7 +209,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
 
   std::vector<int> more_tools_in_order = {
       IDC_ADD_NEW_PROFILE, IDC_OPEN_GUEST_PROFILE, IDC_SHOW_BRAVE_SYNC,
-      IDC_SHOW_APPS_PAGE,  IDC_DEV_TOOLS,          IDC_TASK_MANAGER,
+      IDC_SHOW_APPS_PAGE,  IDC_DEV_TOOLS,          IDC_TASK_MANAGER_APP_MENU,
   };
 
   if (!syncer::IsSyncAllowedByFlag()) {
@@ -236,7 +236,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
 #endif
       IDC_BOOKMARKS_MENU,
       IDC_SHOW_DOWNLOADS,
-      IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS,
+      IDC_EXTENSIONS_SUBMENU,
       IDC_ZOOM_MENU,
       IDC_PRINT,
       IDC_FIND_AND_EDIT_MENU,
@@ -303,7 +303,6 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
 #endif
       IDC_RECENT_TABS_MENU,
       IDC_BOOKMARKS_MENU,
-      IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS,
   };
 
   CheckCommandsAreDisabledInMenuModel(guest_browser,
@@ -312,7 +311,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
 
   std::vector<int> more_tools_in_order_for_guest_profile = {
       IDC_DEV_TOOLS,
-      IDC_TASK_MANAGER,
+      IDC_TASK_MANAGER_APP_MENU,
   };
   CheckMoreToolsCommandsAreInOrderInMenuModel(
       guest_browser, more_tools_in_order_for_guest_profile);
@@ -341,7 +340,7 @@ IN_PROC_BROWSER_TEST_F(BraveAppMenuModelBrowserTest, MenuOrderTest) {
       IDC_SHOW_BRAVE_WALLET,
       IDC_BOOKMARKS_MENU,
       IDC_SHOW_DOWNLOADS,
-      IDC_EXTENSIONS_SUBMENU_MANAGE_EXTENSIONS,
+      IDC_EXTENSIONS_SUBMENU,
       IDC_ZOOM_MENU,
       IDC_PRINT,
       IDC_FIND_AND_EDIT_MENU,

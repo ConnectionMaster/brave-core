@@ -9,19 +9,16 @@
 #include "brave/components/brave_ads/core/internal/creatives/creative_ad_info.h"
 #include "brave/components/brave_ads/core/internal/creatives/creative_ad_test_util.h"
 #include "brave/components/brave_ads/core/internal/creatives/new_tab_page_ads/creative_new_tab_page_ad_info.h"
-#include "brave/components/brave_ads/core/internal/creatives/new_tab_page_ads/creative_new_tab_page_ad_wallpaper_focal_point_info.h"
-#include "brave/components/brave_ads/core/internal/creatives/new_tab_page_ads/creative_new_tab_page_ad_wallpaper_info.h"
 #include "brave/components/brave_ads/core/internal/segments/segment_test_constants.h"
-#include "url/gurl.h"
 
 namespace brave_ads::test {
 
-CreativeNewTabPageAdList BuildCreativeNewTabPageAds(int count) {
-  CHECK_GT(count, 0);
+CreativeNewTabPageAdList BuildCreativeNewTabPageAds(size_t count) {
+  CHECK_GT(count, 0U);
 
   CreativeNewTabPageAdList creative_ads;
 
-  for (int i = 0; i < count; ++i) {
+  for (size_t i = 0; i < count; ++i) {
     CreativeNewTabPageAdInfo creative_ad =
         BuildCreativeNewTabPageAd(/*should_generate_random_uuids=*/true);
     creative_ad.segment = kSegments[i % kSegments.size()];
@@ -39,16 +36,7 @@ CreativeNewTabPageAdInfo BuildCreativeNewTabPageAd(
   CreativeNewTabPageAdInfo creative_new_tab_page_ad(creative_ad);
 
   creative_new_tab_page_ad.company_name = "Test Ad Company Name";
-  creative_new_tab_page_ad.image_url = GURL("https://brave.com/image");
   creative_new_tab_page_ad.alt = "Test Ad Alt";
-
-  CreativeNewTabPageAdWallpaperInfo wallpaper;
-  wallpaper.image_url = GURL("https://brave.com/wallpaper_image");
-  CreativeNewTabPageAdWallpaperFocalPointInfo wallpaper_focal_point;
-  wallpaper_focal_point.x = 1280;
-  wallpaper_focal_point.y = 720;
-  wallpaper.focal_point = wallpaper_focal_point;
-  creative_new_tab_page_ad.wallpapers.push_back(wallpaper);
 
   return creative_new_tab_page_ad;
 }

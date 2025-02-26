@@ -7,12 +7,12 @@
 
 #include "brave/browser/ui/views/brave_ads/insets_util.h"
 #include "brave/browser/ui/views/brave_ads/spacer_view.h"
-#include "ui/accessibility/ax_node_data.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/gfx/font_list.h"
 #include "ui/gfx/geometry/insets.h"
 #include "ui/gfx/geometry/size.h"
 #include "ui/native_theme/native_theme.h"
+#include "ui/views/accessibility/view_accessibility.h"
 #include "ui/views/border.h"
 #include "ui/views/controls/label.h"
 #include "ui/views/layout/flex_layout.h"
@@ -47,6 +47,8 @@ constexpr auto kTitleBorderInsets = gfx::Insets::TLBR(0, 10, 3, 0);
 
 NotificationAdHeaderView::NotificationAdHeaderView() {
   CreateView();
+
+  GetViewAccessibility().SetRole(ax::mojom::Role::kGenericContainer);
 }
 
 NotificationAdHeaderView::~NotificationAdHeaderView() = default;
@@ -56,6 +58,8 @@ void NotificationAdHeaderView::SetTitle(const std::u16string& text) {
   title_label_->SetText(text);
 
   NotifyAccessibilityEvent(ax::mojom::Event::kTextChanged, true);
+
+  UpdateAccessibleName();
 }
 
 void NotificationAdHeaderView::SetTitleElideBehavior(
@@ -64,19 +68,8 @@ void NotificationAdHeaderView::SetTitleElideBehavior(
   title_label_->SetElideBehavior(elide_behavior);
 }
 
-void NotificationAdHeaderView::GetAccessibleNodeData(
-    ui::AXNodeData* node_data) {
-  node_data->role = ax::mojom::Role::kGenericContainer;
-
-  CHECK(title_label_);
-  node_data->SetName(title_label_->GetText());
-}
-
 void NotificationAdHeaderView::UpdateContent() {
   UpdateTitleLabel();
-
-  DeprecatedLayoutImmediately();
-  SchedulePaint();
 }
 
 void NotificationAdHeaderView::OnThemeChanged() {
@@ -143,6 +136,10 @@ void NotificationAdHeaderView::UpdateTitleLabel() {
   CHECK(title_label_);
   title_label_->SetEnabledColor(should_use_dark_colors ? kDarkModeTitleColor
                                                        : kLightModeTitleColor);
+}
+
+void NotificationAdHeaderView::UpdateAccessibleName() {
+  GetViewAccessibility().SetName(title_label_->GetText());
 }
 
 BEGIN_METADATA(NotificationAdHeaderView)

@@ -5,6 +5,7 @@
 
 #include "brave/components/brave_wallet/browser/brave_wallet_service.h"
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <optional>
@@ -12,7 +13,6 @@
 
 #include "base/containers/contains.h"
 #include "base/notreached.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/string_util.h"
 #include "base/values.h"
 #include "brave/components/brave_wallet/browser/account_discovery_manager.h"
@@ -32,6 +32,7 @@
 #include "brave/components/brave_wallet/common/brave_wallet_types.h"
 #include "brave/components/brave_wallet/common/common_utils.h"
 #include "brave/components/brave_wallet/common/encoding_utils.h"
+#include "brave/components/brave_wallet/common/eth_address.h"
 #include "brave/components/brave_wallet/common/fil_address.h"
 #include "brave/components/brave_wallet/common/solana_utils.h"
 #include "brave/components/brave_wallet/common/value_conversion_utils.h"
@@ -60,13 +61,14 @@ bool AccountMatchesCoinAndChain(const mojom::AccountId& account_id,
                         account_id.keyring_id);
 }
 
-// Ensure token list contains native tokens when appears empty. Only for BTC
-// and ZEC by now.
+// Ensure token list contains native tokens when appears empty. Only for BTC,
+// ZEC and ADA by now.
 std::vector<mojom::BlockchainTokenPtr> EnsureNativeTokens(
     const std::string& chain_id,
     mojom::CoinType coin,
     std::vector<mojom::BlockchainTokenPtr> tokens) {
-  if (coin != mojom::CoinType::BTC && coin != mojom::CoinType::ZEC) {
+  if (coin != mojom::CoinType::BTC && coin != mojom::CoinType::ZEC &&
+      coin != mojom::CoinType::ADA) {
     return tokens;
   }
 
@@ -80,6 +82,10 @@ std::vector<mojom::BlockchainTokenPtr> EnsureNativeTokens(
 
   if (coin == mojom::CoinType::ZEC && IsZCashNetwork(chain_id)) {
     tokens.push_back(GetZcashNativeToken(chain_id));
+  }
+
+  if (coin == mojom::CoinType::ADA && IsCardanoNetwork(chain_id)) {
+    tokens.push_back(GetCardanoNativeToken(chain_id));
   }
 
   return tokens;
@@ -132,6 +138,11 @@ BraveWalletService::BraveWalletService(
     zcash_wallet_service_ = std::make_unique<ZCashWalletService>(
         delegate_->GetWalletBaseDirectory().AppendASCII(kZCashDataFolderName),
         *keyring_service(), network_manager(), url_loader_factory);
+  }
+
+  if (IsCardanoEnabled()) {
+    cardano_wallet_service_ = std::make_unique<CardanoWalletService>(
+        *keyring_service(), *network_manager(), url_loader_factory);
   }
 
   tx_service_ = std::make_unique<TxService>(
@@ -240,6 +251,14 @@ void BraveWalletService::Bind(
 
 template <>
 void BraveWalletService::Bind(
+    mojo::PendingReceiver<mojom::CardanoWalletService> receiver) {
+  if (GetCardanoWalletService()) {
+    GetCardanoWalletService()->Bind(std::move(receiver));
+  }
+}
+
+template <>
+void BraveWalletService::Bind(
     mojo::PendingReceiver<mojom::KeyringService> receiver) {
   keyring_service()->Bind(std::move(receiver));
 }
@@ -332,13 +351,14 @@ void BraveWalletService::AddUserAsset(mojom::BlockchainTokenPtr token,
     return;
   } else if (token->is_nft && token->coin == mojom::CoinType::SOL) {
     auto nft_id = mojom::NftIdentifier::New();
-    nft_id->chain_id = token->chain_id;
+    nft_id->chain_id =
+        mojom::ChainId::New(mojom::CoinType::SOL, token->chain_id);
     nft_id->contract_address = token->contract_address;
     nft_id->token_id = token->token_id;
     std::vector<mojom::NftIdentifierPtr> nft_ids;
     nft_ids.push_back(std::move(nft_id));
     simple_hash_client_->GetNfts(
-        mojom::CoinType::SOL, std::move(nft_ids),
+        std::move(nft_ids),
         base::BindOnce(&BraveWalletService::OnGetNfts,
                        weak_ptr_factory_.GetWeakPtr(), std::move(callback)));
     return;
@@ -619,14 +639,14 @@ void BraveWalletService::SetNetworkForSelectedAccountOnActiveOrigin(
 
 bool BraveWalletService::HasPendingDecryptRequestForOrigin(
     const url::Origin& origin) const {
-  return base::ranges::any_of(pending_decrypt_requests_, [origin](auto& req) {
+  return std::ranges::any_of(pending_decrypt_requests_, [origin](auto& req) {
     return req.second.origin == origin;
   });
 }
 
 bool BraveWalletService::HasPendingGetEncryptionPublicKeyRequestForOrigin(
     const url::Origin& origin) const {
-  return base::ranges::any_of(
+  return std::ranges::any_of(
       pending_get_encryption_public_key_requests_,
       [origin](auto& req) { return req.second.origin == origin; });
 }
@@ -726,31 +746,6 @@ void BraveWalletService::ResetWebSitePermission(
     const std::string& formed_website,
     ResetWebSitePermissionCallback callback) {
   delegate_->ResetWebSitePermission(coin, formed_website, std::move(callback));
-}
-
-// static
-void BraveWalletService::MigrateHiddenNetworks(PrefService* prefs) {
-  auto previous_version_code =
-      prefs->GetInteger(kBraveWalletDefaultHiddenNetworksVersion);
-  if (previous_version_code >= 1) {
-    return;
-  }
-  {
-    // Default hidden networks
-    ScopedDictPrefUpdate update(prefs, kBraveWalletHiddenNetworks);
-    auto& hidden_networks_pref = update.Get();
-    base::Value::List* hidden_eth_networks =
-        hidden_networks_pref.EnsureList(kEthereumPrefKey);
-
-    auto value = base::Value(mojom::kFilecoinEthereumTestnetChainId);
-    if (std::find_if(hidden_eth_networks->begin(), hidden_eth_networks->end(),
-                     [&value](auto& v) { return value == v; }) ==
-        hidden_eth_networks->end()) {
-      hidden_eth_networks->Append(std::move(value));
-    }
-  }
-
-  prefs->SetInteger(kBraveWalletDefaultHiddenNetworksVersion, 1);
 }
 
 bool ShouldMigrateRemovedPreloadedNetwork(PrefService* prefs,
@@ -858,18 +853,6 @@ void BraveWalletService::MigrateDeadNetwork(
   prefs->SetBoolean(pref_key, true);
 }
 
-void BraveWalletService::MigrateFantomMainnetAsCustomNetwork(
-    PrefService* prefs) {
-  mojom::NetworkInfo network(
-      mojom::kFantomMainnetChainId, "Fantom Opera", {"https://ftmscan.com"}, {},
-      0, {GURL("https://rpc.ftm.tools")}, "FTM", "Fantom", 18,
-      mojom::CoinType::ETH,
-      GetSupportedKeyringsForNetwork(mojom::CoinType::ETH,
-                                     mojom::kFantomMainnetChainId));
-  MigrateAsCustomNetwork(prefs, network, true,
-                         kBraveWalletCustomNetworksFantomMainnetMigrated);
-}
-
 void BraveWalletService::MigrateGoerliNetwork(PrefService* prefs) {
   MigrateDeadNetwork(prefs, "0x5", mojom::kSepoliaChainId,
                      kBraveWalletGoerliNetworkMigrated);
@@ -885,49 +868,6 @@ void BraveWalletService::MigrateAuroraMainnetAsCustomNetwork(
                                      mojom::kAuroraMainnetChainId));
   MigrateAsCustomNetwork(prefs, network, false,
                          kBraveWalletAuroraMainnetMigrated);
-}
-
-void BraveWalletService::MigrateAssetsPrefToList(PrefService* prefs) {
-  if (!prefs->HasPrefPath(kBraveWalletUserAssetsDeprecated)) {
-    return;
-  }
-
-  base::Value::List assets_list;
-
-  const auto& user_assets_dict =
-      prefs->GetDict(kBraveWalletUserAssetsDeprecated);
-  for (auto coin_it : user_assets_dict) {
-    auto coin = GetCoinTypeFromPrefKey_DEPRECATED(coin_it.first);
-    if (!coin) {
-      continue;
-    }
-
-    for (auto network_it : coin_it.second.GetDict()) {
-      auto chain_id = NetworkManager::GetChainIdByNetworkId_DEPRECATED(
-          coin.value(), network_it.first);
-
-      if (!chain_id) {
-        continue;
-      }
-
-      for (const auto& item : network_it.second.GetList()) {
-        const auto* token_legacy = item.GetIfDict();
-        if (!token_legacy) {
-          continue;
-        }
-
-        auto token = token_legacy->Clone();
-        token.Set("chain_id", *chain_id);
-        token.Set("coin", static_cast<int>(*coin));
-
-        assets_list.Append(std::move(token));
-      }
-    }
-  }
-
-  prefs->SetList(kBraveWalletUserAssetsList, std::move(assets_list));
-
-  prefs->ClearPref(kBraveWalletUserAssetsDeprecated);
 }
 
 // static
@@ -982,7 +922,8 @@ void BraveWalletService::MaybeMigrateCompressedNfts() {
   for (auto& item : ::brave_wallet::GetAllUserAssets(profile_prefs_)) {
     if (item->coin == mojom::CoinType::SOL && item->is_nft) {
       auto nft_id = mojom::NftIdentifier::New();
-      nft_id->chain_id = item->chain_id;
+      nft_id->chain_id =
+          mojom::ChainId::New(mojom::CoinType::SOL, item->chain_id);
       nft_id->contract_address = item->contract_address;
       nft_id->token_id = item->token_id;
       nft_ids.push_back(std::move(nft_id));
@@ -990,7 +931,7 @@ void BraveWalletService::MaybeMigrateCompressedNfts() {
   }
 
   simple_hash_client_->GetNfts(
-      mojom::CoinType::SOL, std::move(nft_ids),
+      std::move(nft_ids),
       base::BindOnce(&BraveWalletService::OnGetNftsForCompressedMigration,
                      weak_ptr_factory_.GetWeakPtr()));
 }
@@ -1044,6 +985,10 @@ BitcoinWalletService* BraveWalletService::GetBitcoinWalletService() {
 
 ZCashWalletService* BraveWalletService::GetZcashWalletService() {
   return zcash_wallet_service_.get();
+}
+
+CardanoWalletService* BraveWalletService::GetCardanoWalletService() {
+  return cardano_wallet_service_.get();
 }
 
 void BraveWalletService::GetActiveOrigin(GetActiveOriginCallback callback) {
@@ -1542,25 +1487,21 @@ void BraveWalletService::Base58Encode(
 
 void BraveWalletService::DiscoverAssetsOnAllSupportedChains(
     bool bypass_rate_limit) {
-  std::map<mojom::CoinType, std::vector<std::string>> addresses;
   const auto& all_accounts = keyring_service_->GetAllAccountInfos();
 
-  std::vector<std::string> eth_account_addresses;
-  std::vector<std::string> sol_account_addresses;
+  std::vector<mojom::AccountIdPtr> accounts;
+
   for (auto& account_info : all_accounts) {
-    if (account_info->account_id->coin == mojom::CoinType::ETH) {
-      eth_account_addresses.push_back(account_info->address);
-    }
-    if (account_info->account_id->coin == mojom::CoinType::SOL) {
-      sol_account_addresses.push_back(account_info->address);
+    auto& account_id = account_info->account_id;
+    if (account_id->coin == mojom::CoinType::ETH ||
+        account_id->coin == mojom::CoinType::SOL) {
+      accounts.push_back(account_id.Clone());
     }
   }
-  addresses[mojom::CoinType::ETH] = std::move(eth_account_addresses);
-  addresses[mojom::CoinType::SOL] = std::move(sol_account_addresses);
 
   // Discover assets owned by the SOL and ETH addresses on all supported chains
   asset_discovery_manager_->DiscoverAssetsOnAllSupportedChains(
-      addresses, bypass_rate_limit);
+      std::move(accounts), bypass_rate_limit);
 }
 
 void BraveWalletService::GetNftDiscoveryEnabled(
@@ -1601,7 +1542,11 @@ void BraveWalletService::ConvertFEVMToFVMAddress(
     ConvertFEVMToFVMAddressCallback callback) {
   base::flat_map<std::string, std::string> result;
   for (const auto& fevm_address : fevm_addresses) {
-    auto address = FilAddress::FromFEVMAddress(is_mainnet, fevm_address);
+    auto eth_address = EthAddress::FromHex(fevm_address);
+    if (!eth_address.IsValid()) {
+      continue;
+    }
+    auto address = FilAddress::FromFEVMAddress(is_mainnet, eth_address);
     DCHECK(result.find(fevm_address) == result.end());
     if (!address.IsEmpty()) {
       result[fevm_address] = address.EncodeAsString();
@@ -1680,8 +1625,7 @@ void BraveWalletService::OnGenerateZecReceiveAddress(
 
 void BraveWalletService::GetSimpleHashSpamNFTs(
     const std::string& wallet_address,
-    const std::vector<std::string>& chain_ids,
-    mojom::CoinType coin,
+    std::vector<mojom::ChainIdPtr> chain_ids,
     const std::optional<std::string>& cursor,
     GetSimpleHashSpamNFTsCallback callback) {
   // Do not make requests to SimpleHash unless the user has
@@ -1691,7 +1635,7 @@ void BraveWalletService::GetSimpleHashSpamNFTs(
     return;
   }
   simple_hash_client_->FetchNFTsFromSimpleHash(
-      wallet_address, chain_ids, coin, cursor, false /* skip_spam */,
+      wallet_address, chain_ids, cursor, false /* skip_spam */,
       true /* only_spam */, std::move(callback));
 }
 
@@ -1780,6 +1724,9 @@ void BraveWalletService::Reset() {
   }
   if (zcash_wallet_service_) {
     zcash_wallet_service_->Reset();
+  }
+  if (cardano_wallet_service_) {
+    cardano_wallet_service_->Reset();
   }
 
   // Clear BraveWalletService

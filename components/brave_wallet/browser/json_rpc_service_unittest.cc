@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "base/base64.h"
-#include "base/containers/contains.h"
 #include "base/containers/span.h"
 #include "base/containers/span_writer.h"
 #include "base/functional/bind.h"
@@ -26,12 +25,12 @@
 #include "base/json/json_writer.h"
 #include "base/notreached.h"
 #include "base/numerics/byte_conversions.h"
-#include "base/ranges/algorithm.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/bind.h"
 #include "base/test/mock_callback.h"
 #include "base/test/scoped_feature_list.h"
 #include "base/test/task_environment.h"
+#include "base/test/values_test_util.h"
 #include "base/values.h"
 #include "brave/components/brave_wallet/browser/blockchain_list_parser.h"
 #include "brave/components/brave_wallet/browser/blockchain_registry.h"
@@ -89,22 +88,6 @@ MATCHER_P(MatchesCIDv1URL, ipfs_url, "") {
 namespace brave_wallet {
 
 namespace {
-
-// Compare two JSON strings, ignoring the order of the keys and other
-// insignificant whitespace differences.
-void CompareJSON(const std::string& response,
-                 const std::string& expected_response) {
-  auto response_val = base::JSONReader::Read(response);
-  auto expected_response_val = base::JSONReader::Read(expected_response);
-  EXPECT_EQ(response_val, expected_response_val);
-  if (response_val) {
-    // If the JSON is valid, compare the parsed values.
-    EXPECT_EQ(*response_val, *expected_response_val);
-  } else {
-    // If the JSON is invalid, compare the raw strings.
-    EXPECT_EQ(response, expected_response);
-  }
-}
 
 void GetErrorCodeMessage(base::Value formed_response,
                          mojom::ProviderError* error,
@@ -306,13 +289,14 @@ class TestJsonRpcServiceObserver
 constexpr char https_metadata_response[] =
     R"({"attributes":[{"trait_type":"Feet","value":"Green Shoes"},{"trait_type":"Legs","value":"Tan Pants"},{"trait_type":"Suspenders","value":"White Suspenders"},{"trait_type":"Upper Body","value":"Indigo Turtleneck"},{"trait_type":"Sleeves","value":"Long Sleeves"},{"trait_type":"Hat","value":"Yellow / Blue Pointy Beanie"},{"trait_type":"Eyes","value":"White Nerd Glasses"},{"trait_type":"Mouth","value":"Toothpick"},{"trait_type":"Ears","value":"Bing Bong Stick"},{"trait_type":"Right Arm","value":"Swinging"},{"trait_type":"Left Arm","value":"Diamond Hand"},{"trait_type":"Background","value":"Blue"}],"description":"5,000 animated Invisible Friends hiding in the metaverse. A collection by Markus Magnusson & Random Character Collective.","image":"https://rcc.mypinata.cloud/ipfs/QmXmuSenZRnofhGMz2NyT3Yc4Zrty1TypuiBKDcaBsNw9V/1817.gif","name":"Invisible Friends #1817"})";
 
-std::optional<base::Value> ToValue(const network::ResourceRequest& request) {
+std::optional<base::Value::Dict> ToValue(
+    const network::ResourceRequest& request) {
   std::string_view request_string(request.request_body->elements()
                                       ->at(0)
                                       .As<network::DataElementBytes>()
                                       .AsStringPiece());
-  return base::JSONReader::Read(request_string,
-                                base::JSONParserOptions::JSON_PARSE_RFC);
+  return base::JSONReader::ReadDict(request_string,
+                                    base::JSONParserOptions::JSON_PARSE_RFC);
 }
 
 class EthCallHandler {
@@ -333,7 +317,7 @@ class EthCallHandler {
         *eth_abi::ExtractFunctionSelectorAndArgsFromCall(call_data);
 
     for (const auto& s : selectors_) {
-      if (base::ranges::equal(s, selector)) {
+      if (std::ranges::equal(s, selector)) {
         return true;
       }
     }
@@ -682,8 +666,8 @@ class JsonRpcEndpointHandler {
     }
 
     auto value = ToValue(request);
-    if (value && value->is_dict()) {
-      auto response = HandleCall(value->GetDict());
+    if (value) {
+      auto response = HandleCall(*value);
       if (response) {
         return response;
       }
@@ -1899,7 +1883,12 @@ class JsonRpcServiceUnitTest : public testing::Test {
                                        const std::string& response,
                                        mojom::SolanaProviderError error,
                                        const std::string& error_message) {
-          CompareJSON(response, expected_response);
+          if (response.empty()) {
+            EXPECT_EQ(response, expected_response);
+          } else {
+            EXPECT_EQ(base::test::ParseJson(response),
+                      base::test::ParseJson(expected_response));
+          }
           EXPECT_EQ(error, expected_error);
           EXPECT_EQ(error_message, expected_error_message);
           loop.Quit();
@@ -1908,13 +1897,12 @@ class JsonRpcServiceUnitTest : public testing::Test {
   }
 
   void TestGetNftMetadatas(
-      mojom::CoinType coin,
       std::vector<mojom::NftIdentifierPtr> nft_identifiers,
       std::vector<mojom::NftMetadataPtr> expected_metadatas,
       const std::string& expected_error_message) {
     base::RunLoop run_loop;
     json_rpc_service_->GetNftMetadatas(
-        coin, std::move(nft_identifiers),
+        std::move(nft_identifiers),
         base::BindLambdaForTesting(
             [&](std::vector<mojom::NftMetadataPtr> metadatas,
                 const std::string& error_message) {
@@ -1927,12 +1915,11 @@ class JsonRpcServiceUnitTest : public testing::Test {
 
   void TestGetNftBalances(const std::string& wallet_address,
                           std::vector<mojom::NftIdentifierPtr> nft_identifiers,
-                          mojom::CoinType coin,
                           const std::vector<uint64_t>& expected_balances,
                           const std::string& expected_error_message) {
     base::RunLoop run_loop;
     json_rpc_service_->GetNftBalances(
-        wallet_address, std::move(nft_identifiers), coin,
+        wallet_address, std::move(nft_identifiers),
         base::BindLambdaForTesting([&](const std::vector<uint64_t>& balances,
                                        const std::string& error_message) {
           EXPECT_EQ(balances, expected_balances);
@@ -3166,7 +3153,7 @@ class UDGetManyCallHandler : public EthCallHandler {
     for (auto& key : *keys_array) {
       std::string result_value;
       for (auto& item : items_) {
-        if (base::ranges::equal(Namehash(item.domain), *namehash_bytes) &&
+        if (std::ranges::equal(Namehash(item.domain), *namehash_bytes) &&
             key == item.key) {
           result_value = item.value;
           break;
@@ -3966,7 +3953,11 @@ TEST_F(JsonRpcServiceUnitTest, GetWalletAddrInvalidCoin) {
   base::MockCallback<JsonRpcService::UnstoppableDomainsGetWalletAddrCallback>
       callback;
 
-  for (auto coin : {mojom::CoinType::BTC, mojom::CoinType::ZEC}) {
+  for (auto coin : {
+           mojom::CoinType::BTC,
+           mojom::CoinType::ZEC,
+           mojom::CoinType::ADA,
+       }) {
     auto token = mojom::BlockchainToken::New();
     token->coin = coin;
     EXPECT_CALL(callback, Run("", mojom::ProviderError::kSuccess, ""));
@@ -3975,7 +3966,7 @@ TEST_F(JsonRpcServiceUnitTest, GetWalletAddrInvalidCoin) {
     task_environment_.RunUntilIdle();
   }
 
-  EXPECT_TRUE(AllCoinsTested());
+  static_assert(AllCoinsTested<6>());
 }
 
 TEST_F(JsonRpcServiceUnitTest, IsValidEnsDomain) {
@@ -5598,7 +5589,7 @@ class EnsGetResolverHandler : public EthCallHandler {
     auto namehash_bytes = eth_abi::ExtractFixedBytesFromTuple<32>(args, 0);
     EXPECT_TRUE(namehash_bytes);
 
-    if (!base::ranges::equal(*namehash_bytes, Namehash(host_name_))) {
+    if (!std::ranges::equal(*namehash_bytes, Namehash(host_name_))) {
       return MakeJsonRpcTupleResponse(
           eth_abi::TupleEncoder().AddAddress(EthAddress::ZeroAddress()));
     }
@@ -5625,7 +5616,7 @@ class Ensip10SupportHandler : public EthCallHandler {
 
     auto arg_selector = eth_abi::ExtractFixedBytesFromTuple<4>(args, 0);
     EXPECT_TRUE(arg_selector);
-    EXPECT_TRUE(base::ranges::equal(*arg_selector, kResolveBytesBytesSelector));
+    EXPECT_TRUE(std::ranges::equal(*arg_selector, kResolveBytesBytesSelector));
 
     return MakeJsonRpcTupleResponse(
         eth_abi::TupleEncoder().AddUint256(uint256_t(result_value_)));
@@ -5678,7 +5669,7 @@ class EnsGetRecordHandler : public EthCallHandler {
     auto namehash_bytes = eth_abi::ExtractFixedBytesFromTuple<32>(args, 0);
     EXPECT_TRUE(namehash_bytes);
     bool host_matches =
-        base::ranges::equal(*namehash_bytes, Namehash(host_name_));
+        std::ranges::equal(*namehash_bytes, Namehash(host_name_));
 
     if (selector == GetFunctionHashBytes4("addr(bytes32)")) {
       auto eth_address = EthAddress::ZeroAddress();
@@ -5801,13 +5792,13 @@ class OffchainGatewayHandler {
     }
 
     auto payload = ToValue(request);
-    if (!payload || !payload->is_dict()) {
+    if (!payload) {
       return std::nullopt;
     }
-    auto* sender = payload->GetDict().FindString("sender");
+    auto* sender = payload->FindString("sender");
     EXPECT_EQ(EthAddress::FromHex(*sender), resolver_address_);
 
-    auto* data = payload->GetDict().FindString("data");
+    auto* data = payload->FindString("data");
     auto bytes = PrefixedHexStringToBytes(*data);
     if (!bytes) {
       NOTREACHED();
@@ -5838,25 +5829,25 @@ class OffchainGatewayHandler {
     EXPECT_TRUE(domain_namehash);
 
     std::vector<uint8_t> data_value;
-    if (base::ranges::equal(encoded_call_selector, kAddrBytes32Selector)) {
+    if (std::ranges::equal(encoded_call_selector, kAddrBytes32Selector)) {
       data_value = eth_abi::TupleEncoder()
                        .AddAddress(EthAddress::ZeroAddress())
                        .Encode();
       if (!respond_with_no_record_) {
         for (auto& [domain, address] : map_offchain_eth_address_) {
-          if (base::ranges::equal(*domain_namehash, Namehash(domain))) {
+          if (std::ranges::equal(*domain_namehash, Namehash(domain))) {
             data_value = eth_abi::TupleEncoder().AddAddress(address).Encode();
             break;
           }
         }
       }
-    } else if (base::ranges::equal(encoded_call_selector,
-                                   kContentHashBytes32Selector)) {
+    } else if (std::ranges::equal(encoded_call_selector,
+                                  kContentHashBytes32Selector)) {
       data_value =
           eth_abi::TupleEncoder().AddBytes(std::vector<uint8_t>()).Encode();
       if (!respond_with_no_record_) {
         for (auto& [domain, contenthash] : map_offchain_contenthash_) {
-          if (base::ranges::equal(*domain_namehash, Namehash(domain))) {
+          if (std::ranges::equal(*domain_namehash, Namehash(domain))) {
             data_value = eth_abi::TupleEncoder().AddBytes(contenthash).Encode();
             break;
           }
@@ -7675,7 +7666,8 @@ TEST_F(JsonRpcServiceUnitTest, AnkrGetAccountBalances) {
   base::RunLoop run_loop_1;
   json_rpc_service_->AnkrGetAccountBalances(
       "0xa92d461a9a988a7f11ec285d39783a637fdd6ba4",
-      {mojom::kPolygonMainnetChainId},
+      test::MakeVectorFromArgs(mojom::ChainId::New(
+          mojom::CoinType::ETH, mojom::kPolygonMainnetChainId)),
       base::BindLambdaForTesting(
           [&](std::vector<mojom::AnkrAssetBalancePtr> response,
               mojom::ProviderError error, const std::string& error_string) {
@@ -7773,7 +7765,8 @@ TEST_F(JsonRpcServiceUnitTest, AnkrGetAccountBalances) {
   base::RunLoop run_loop_2;
   json_rpc_service_->AnkrGetAccountBalances(
       "0xa92d461a9a988a7f11ec285d39783a637fdd6ba4",
-      {mojom::kPolygonMainnetChainId},
+      test::MakeVectorFromArgs(mojom::ChainId::New(
+          mojom::CoinType::ETH, mojom::kPolygonMainnetChainId)),
       base::BindLambdaForTesting(
           [&](std::vector<mojom::AnkrAssetBalancePtr> response,
               mojom::ProviderError error, const std::string& error_string) {
@@ -7842,7 +7835,8 @@ TEST_F(JsonRpcServiceUnitTest, AnkrGetAccountBalances) {
   base::RunLoop run_loop_3;
   json_rpc_service_->AnkrGetAccountBalances(
       "0xa92d461a9a988a7f11ec285d39783a637fdd6ba4",
-      {mojom::kPolygonMainnetChainId},
+      test::MakeVectorFromArgs(mojom::ChainId::New(
+          mojom::CoinType::ETH, mojom::kPolygonMainnetChainId)),
       base::BindLambdaForTesting(
           [&](std::vector<mojom::AnkrAssetBalancePtr> response,
               mojom::ProviderError error, const std::string& error_string) {
@@ -7865,7 +7859,8 @@ TEST_F(JsonRpcServiceUnitTest, AnkrGetAccountBalances) {
   base::RunLoop run_loop_4;
   json_rpc_service_->AnkrGetAccountBalances(
       "0xa92d461a9a988a7f11ec285d39783a637fdd6ba4",
-      {mojom::kPolygonMainnetChainId},
+      test::MakeVectorFromArgs(mojom::ChainId::New(
+          mojom::CoinType::ETH, mojom::kPolygonMainnetChainId)),
       base::BindLambdaForTesting(
           [&](std::vector<mojom::AnkrAssetBalancePtr> response,
               mojom::ProviderError error, const std::string& error_string) {
@@ -7896,29 +7891,28 @@ TEST_F(JsonRpcServiceUnitTest, GetSPLTokenProgramByMint) {
   // Setup registry with two assets.
   const char token_list_json[] = R"(
     {
-      "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ": {
-        "name": "Tesla Inc.",
-        "logo": "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ.png",
-        "erc20": false,
-        "symbol": "TSLA",
-        "decimals": 8,
-        "chainId": "0x65"
-      },
-      "2kMpEJCZL8vEDZe7YPLMCS9Y3WKSAMedXBn7xHPvsWvi": {
-        "name": "SolarMoon",
-        "logo": "2kMpEJCZL8vEDZe7YPLMCS9Y3WKSAMedXBn7xHPvsWvi.png",
-        "erc20": false,
-        "symbol": "MOON",
-        "decimals": 5,
-        "chainId": "0x65",
-        "token2022": true
+      "0x65": {
+        "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ": {
+          "name": "Tesla Inc.",
+          "logo": "2inRoG4DuMRRzZxAt913CCdNZCu2eGsDD9kZTrsj2DAZ.png",
+          "erc20": false,
+          "symbol": "TSLA",
+          "decimals": 8
+        },
+        "2kMpEJCZL8vEDZe7YPLMCS9Y3WKSAMedXBn7xHPvsWvi": {
+          "name": "SolarMoon",
+          "logo": "2kMpEJCZL8vEDZe7YPLMCS9Y3WKSAMedXBn7xHPvsWvi.png",
+          "erc20": false,
+          "symbol": "MOON",
+          "decimals": 5,
+          "token2022": true
+        }
       }
     })";
 
   auto* registry = BlockchainRegistry::GetInstance();
   TokenListMap token_list_map;
-  ASSERT_TRUE(
-      ParseTokenList(token_list_json, &token_list_map, mojom::CoinType::SOL));
+  ASSERT_TRUE(ParseTokenList(token_list_json, &token_list_map));
   registry->UpdateTokenList(std::move(token_list_map));
 
   // Setup two user assets.
@@ -8160,52 +8154,52 @@ TEST_F(JsonRpcServiceUnitTest, GetRecentSolanaPrioritizationFees) {
 TEST_F(JsonRpcServiceUnitTest, GetNftMetadatas) {
   // If there are no NFTs it returns invalid params.
   std::vector<mojom::NftIdentifierPtr> nft_identifiers;
-  TestGetNftMetadatas(mojom::CoinType::SOL, std::move(nft_identifiers), {},
+  TestGetNftMetadatas(std::move(nft_identifiers), {},
                       l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
   nft_identifiers = std::vector<mojom::NftIdentifierPtr>();
 
   // If there are duplicate NFTs it returns invalid params.
   auto duplicate_nft1 = mojom::NftIdentifier::New();
-  duplicate_nft1->chain_id = mojom::kMainnetChainId;
+  duplicate_nft1->chain_id = EthMainnetChainId();
   duplicate_nft1->contract_address =
       "0xed5af388653567af2f388e6224dc7c4b3241c544";
   duplicate_nft1->token_id = "0xacf";  // "2767"
   nft_identifiers.push_back(std::move(duplicate_nft1));
 
   auto duplicate_nft2 = mojom::NftIdentifier::New();
-  duplicate_nft2->chain_id = mojom::kMainnetChainId;
+  duplicate_nft2->chain_id = EthMainnetChainId();
   duplicate_nft2->contract_address =
       "0xed5af388653567af2f388e6224dc7c4b3241c544";
   duplicate_nft2->token_id = "0xacf";  // "2767"
   nft_identifiers.push_back(std::move(duplicate_nft2));
 
-  TestGetNftMetadatas(mojom::CoinType::ETH, std::move(nft_identifiers), {},
+  TestGetNftMetadatas(std::move(nft_identifiers), {},
                       l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
   nft_identifiers = std::vector<mojom::NftIdentifierPtr>();
 
   // If there are over 50 NFTs it returns invalid params.
   for (int i = 0; i < 51; i++) {
     auto nft_identifier = mojom::NftIdentifier::New();
-    nft_identifier->chain_id = mojom::kSolanaMainnet;
+    nft_identifier->chain_id = SolMainnetChainId();
     nft_identifier->contract_address =
         "BoSDWCAWmZEM7TQLg2gawt5wnurGyQu7c77tAcbtzfDG";
     nft_identifier->token_id = "";
     nft_identifiers.push_back(std::move(nft_identifier));
   }
-  TestGetNftMetadatas(mojom::CoinType::SOL, std::move(nft_identifiers), {},
+  TestGetNftMetadatas(std::move(nft_identifiers), {},
                       l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
   nft_identifiers = std::vector<mojom::NftIdentifierPtr>();
 
   // Add Ethereum NFT identifiers with non-checksum addresses
   auto eth_nft_identifier1 = mojom::NftIdentifier::New();
-  eth_nft_identifier1->chain_id = mojom::kMainnetChainId;
+  eth_nft_identifier1->chain_id = EthMainnetChainId();
   eth_nft_identifier1->contract_address =
       "0xed5af388653567af2f388e6224dc7c4b3241c544";
   eth_nft_identifier1->token_id = "0xacf";  // "2767";
   nft_identifiers.push_back(std::move(eth_nft_identifier1));
 
   auto eth_nft_identifier2 = mojom::NftIdentifier::New();
-  eth_nft_identifier2->chain_id = mojom::kMainnetChainId;
+  eth_nft_identifier2->chain_id = EthMainnetChainId();
   eth_nft_identifier2->contract_address =
       "0xabc1230000000000000000000000000000000000";
   eth_nft_identifier2->token_id = "0x4d2";  // "1234";
@@ -8295,20 +8289,20 @@ TEST_F(JsonRpcServiceUnitTest, GetNftMetadatas) {
   })";
 
   SetInterceptors(responses_eth);
-  TestGetNftMetadatas(mojom::CoinType::ETH, std::move(nft_identifiers),
+  TestGetNftMetadatas(std::move(nft_identifiers),
                       std::move(expected_eth_metadata), "");
 
   // Add Solana NFT identifiers
   std::vector<mojom::NftIdentifierPtr> sol_nft_identifiers;
   auto sol_nft_identifier1 = mojom::NftIdentifier::New();
-  sol_nft_identifier1->chain_id = mojom::kSolanaMainnet;
+  sol_nft_identifier1->chain_id = SolMainnetChainId();
   sol_nft_identifier1->contract_address =
       "2iZBbRGnLVEEZH6JDsaNsTo66s2uxx7DTchVWKU8oisR";
   sol_nft_identifier1->token_id = "";
   sol_nft_identifiers.push_back(std::move(sol_nft_identifier1));
 
   auto sol_nft_identifier2 = mojom::NftIdentifier::New();
-  sol_nft_identifier2->chain_id = mojom::kSolanaMainnet;
+  sol_nft_identifier2->chain_id = SolMainnetChainId();
   sol_nft_identifier2->contract_address =
       "3knghmwnuaMxkiuqXrqzjL7gLDuRw6DkkZcW7F4mvkK8";
   sol_nft_identifier2->token_id = "";
@@ -8442,38 +8436,37 @@ TEST_F(JsonRpcServiceUnitTest, GetNftMetadatas) {
 
   // First try with timeout response interceptor
   SetHTTPRequestTimeoutInterceptor();
-  TestGetNftMetadatas(mojom::CoinType::SOL, std::move(sol_nft_identifiers), {},
+  TestGetNftMetadatas(std::move(sol_nft_identifiers), {},
                       l10n_util::GetStringUTF8(IDS_WALLET_INTERNAL_ERROR));
 
   // Then try with the expected Solana metadata
   SetInterceptors(responses_sol);
   std::vector<mojom::NftIdentifierPtr> sol_nft_identifiers2;
   auto sol_nft_identifier3 = mojom::NftIdentifier::New();
-  sol_nft_identifier3->chain_id = mojom::kSolanaMainnet;
+  sol_nft_identifier3->chain_id = SolMainnetChainId();
   sol_nft_identifier3->contract_address =
       "2iZBbRGnLVEEZH6JDsaNsTo66s2uxx7DTchVWKU8oisR";
   sol_nft_identifier3->token_id = "";
   sol_nft_identifiers2.push_back(std::move(sol_nft_identifier3));
 
   auto sol_nft_identifier4 = mojom::NftIdentifier::New();
-  sol_nft_identifier4->chain_id = mojom::kSolanaMainnet;
+  sol_nft_identifier4->chain_id = SolMainnetChainId();
   sol_nft_identifier4->contract_address =
       "3knghmwnuaMxkiuqXrqzjL7gLDuRw6DkkZcW7F4mvkK8";
   sol_nft_identifier4->token_id = "";
   sol_nft_identifiers2.push_back(std::move(sol_nft_identifier4));
 
-  TestGetNftMetadatas(mojom::CoinType::SOL, std::move(sol_nft_identifiers2),
+  TestGetNftMetadatas(std::move(sol_nft_identifiers2),
                       std::move(expected_sol_metadata), "");
 }
 
 TEST_F(JsonRpcServiceUnitTest, GetNftBalances) {
   std::string wallet_address = "0x123";
   std::vector<mojom::NftIdentifierPtr> nft_identifiers;
-  mojom::CoinType coin = mojom::CoinType::SOL;
   std::vector<uint64_t> expected_balances;
 
   // Empty parameters yields invalid params
-  TestGetNftBalances(wallet_address, std::move(nft_identifiers), coin,
+  TestGetNftBalances(wallet_address, std::move(nft_identifiers),
                      expected_balances,
                      l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
   nft_identifiers = std::vector<mojom::NftIdentifierPtr>();
@@ -8481,12 +8474,12 @@ TEST_F(JsonRpcServiceUnitTest, GetNftBalances) {
   // More than 50 NFTs yields invalid params
   for (size_t i = 0; i < kSimpleHashMaxBatchSize + 1; i++) {
     auto nft_id = mojom::NftIdentifier::New();
-    nft_id->chain_id = mojom::kMainnetChainId;
+    nft_id->chain_id = EthMainnetChainId();
     nft_id->contract_address = "0x" + base::NumberToString(i);
     nft_id->token_id = "0x" + base::NumberToString(i);
     nft_identifiers.push_back(std::move(nft_id));
   }
-  TestGetNftBalances(wallet_address, std::move(nft_identifiers), coin,
+  TestGetNftBalances(wallet_address, std::move(nft_identifiers),
                      expected_balances,
                      l10n_util::GetStringUTF8(IDS_WALLET_INVALID_PARAMETERS));
   nft_identifiers = std::vector<mojom::NftIdentifierPtr>();
@@ -8529,14 +8522,14 @@ TEST_F(JsonRpcServiceUnitTest, GetNftBalances) {
 
   // Add the chain_id, contract, and token_id from simple hash response
   auto nft_identifier1 = mojom::NftIdentifier::New();
-  nft_identifier1->chain_id = mojom::kSolanaMainnet;
+  nft_identifier1->chain_id = SolMainnetChainId();
   nft_identifier1->contract_address =
       "3knghmwnuaMxkiuqXrqzjL7gLDuRw6DkkZcW7F4mvkK8";
   nft_identifier1->token_id = "";
   nft_identifiers.push_back(std::move(nft_identifier1));
 
   auto nft_identifier2 = mojom::NftIdentifier::New();
-  nft_identifier2->chain_id = mojom::kSolanaMainnet;
+  nft_identifier2->chain_id = SolMainnetChainId();
   nft_identifier2->contract_address =
       "2izbbrgnlveezh6jdsansto66s2uxx7dtchvwku8oisr";
   nft_identifier2->token_id = "";
@@ -8552,7 +8545,7 @@ TEST_F(JsonRpcServiceUnitTest, GetNftBalances) {
   expected_balances.push_back(999);
   expected_balances.push_back(0);
   SetInterceptors(responses);
-  TestGetNftBalances(wallet_address, std::move(nft_identifiers), coin,
+  TestGetNftBalances(wallet_address, std::move(nft_identifiers),
                      expected_balances, "");
 }
 

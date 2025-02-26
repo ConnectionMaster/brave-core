@@ -6,6 +6,7 @@
 module ai_chat.mojom;
 
 import "brave/components/ai_chat/core/common/mojom/untrusted_frame.mojom";
+import "brave/components/ai_chat/core/common/mojom/tab_tracker.mojom";
 import "mojo/public/mojom/base/time.mojom";
 import "url/mojom/url.mojom";
 
@@ -74,29 +75,24 @@ enum ContentType {
   VideoTranscript,
 };
 
-// A piece of content associated with a conversation.
-// TODO(petemill): Rename to AssociatedContent and have hostname/url/title be
-// part of a detail property (which would have different structure possibilities
-// depending on content type.
-struct SiteInfo {
-  string? uuid;
+// Represents the content that is associated with a conversation.
+struct AssociatedContent {
+  string uuid;
+
   ContentType content_type;
-  // Web page specific fields, if available and allowed
-  string? title;
-  string? hostname;
-  url.mojom.Url? url;
+  string title;
+
+  // This is the ID of the content currently loaded in the tab.
+  int32 content_id;
+
+  url.mojom.Url url;
 
   // Percentage of the content that has been utilized by remote LLM (0-100)
   int32 content_used_percentage;
+
   // Indicates content has been refined through extracting most relevant parts
   // from long page content
   bool is_content_refined;
-
-  // Indicates if the URL scheme is of a type that allows for
-  // content association.
-  // TODO(petemill): SiteInfo should just not exist if content-associated is
-  // not possible.
-  bool is_content_association_possible;
 };
 
 struct Conversation {
@@ -110,7 +106,7 @@ struct Conversation {
   // Model key, if different than default
   string? model_key;
 
-  SiteInfo associated_content;
+  AssociatedContent? associated_content;
 };
 
 struct ContentArchive {
@@ -166,6 +162,16 @@ struct SearchStatusEvent {
   bool is_searching = true;
 };
 
+struct WebSource {
+  string title;
+  url.mojom.Url url;
+  url.mojom.Url favicon_url;
+};
+
+struct WebSourcesEvent {
+  array<WebSource> sources;
+};
+
 struct CompletionEvent {
   string completion;
 };
@@ -184,6 +190,7 @@ union ConversationEntryEvent {
   PageContentRefineEvent page_content_refine_event;
   SearchQueriesEvent search_queries_event;
   SearchStatusEvent search_status_event;
+  WebSourcesEvent sources_event;
 
   // These events don't normally get added to the conversation entry
   // but are used in engine responses.
@@ -372,6 +379,7 @@ interface AIChatUIHandler {
   RefreshPremiumSession();
   ManagePremium();
   HandleVoiceRecognition(string conversation_uuid);
+  ShowSoftKeyboard();
 
   // This might be a no-op if the UI isn't closeable
   CloseUI();
@@ -386,6 +394,9 @@ interface AIChatUIHandler {
   BindRelatedConversation(
       pending_receiver<ConversationHandler> conversation,
       pending_remote<ConversationUI> conversation_ui);
+
+  // Associates an open tab with a conversation.
+  AssociateTab(TabData tab, string conversation_uuid);
 
   // Make a completely new conversation, which may
   // be bound to the associated conversation, if this UI has a target
@@ -413,7 +424,7 @@ struct ConversationState {
   string current_model_key;
   array<string> suggested_questions;
   SuggestionGenerationStatus suggestion_status;
-  SiteInfo associated_content_info;
+  AssociatedContent? associated_content;
   bool should_send_content;
   APIError error;
   // TODO(petemill): include conversation history, once
@@ -467,11 +478,10 @@ interface ConversationHandler {
   // the assistant.
   SubmitSuggestion(string suggestion);
 
-  // Get associated page information. If there is none then |site_info| will be
-  // |null|. If the reason for that is it's still being fetched, then
-  // |is_fetching| will be |true|.
+  // Get associated page information. If there is none then |associated_content|
+  // will be |null|.
   GetAssociatedContentInfo() => (
-      SiteInfo associated_content_info, bool should_send_content);
+      AssociatedContent? associated_content, bool should_send_content);
 
   SetShouldSendPageContents(bool should_send);
 
@@ -537,10 +547,9 @@ interface ConversationUI {
   // Browser window.
   OnSuggestedQuestionsChanged(
       array<string> questions, SuggestionGenerationStatus status);
-  // Associated page information has changed. If there is none then |site_info|
-  // will be |null|. If the reason for that is it's still being fetched, then
-  // |is_fetching| will be |true|.
-  OnAssociatedContentInfoChanged(SiteInfo info, bool should_send_page_contents);
+  // Associated page information has changed. If there is none then |associated_content|
+  // will be |null|.
+  OnAssociatedContentInfoChanged(AssociatedContent? associated_content, bool should_send_page_contents);
   OnFaviconImageDataChanged();
   OnConversationDeleted();
 };
@@ -548,4 +557,5 @@ interface ConversationUI {
 [EnableIf=is_android]
 interface IAPSubscription {
   GetPurchaseTokenOrderId() => (string token, string order_id);
+  SetLinkStatus(int32 status);
 };

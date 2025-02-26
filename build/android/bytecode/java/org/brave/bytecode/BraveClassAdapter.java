@@ -13,6 +13,7 @@ public class BraveClassAdapter {
         chain = new BraveActivityClassAdapter(chain);
         chain = new BraveAppHooksClassAdapter(chain);
         chain = new BraveAppMenuClassAdapter(chain);
+        chain = new BraveBaseCustomTabActivityClassAdapter(chain);
         chain = new BraveApplicationImplBaseClassAdapter(chain);
         chain = new BraveAutocompleteCoordinatorClassAdapter(chain);
         chain = new BraveAutocompleteEditTextClassAdapter(chain);
@@ -33,7 +34,7 @@ public class BraveClassAdapter {
         chain = new BraveBottomControlsMediatorClassAdapter(chain);
         chain = new BraveCachedFlagClassAdapter(chain);
         chain = new BraveChromeContextMenuPopulatorAdapter(chain);
-        chain = new BraveClearBrowsingDataFragmentAdvancedAdapter(chain);
+        chain = new BraveClearBrowsingDataFragmentAdapter(chain);
         chain = new BraveCommandLineInitUtilClassAdapter(chain);
         chain = new BraveContentSettingsResourcesClassAdapter(chain);
         chain = new BraveContentViewClassAdapter(chain);

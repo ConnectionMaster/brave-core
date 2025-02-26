@@ -10,7 +10,9 @@ import { getLocale } from '../../common/locale'
 import {
   BraveWallet,
   BitcoinMainnetKeyringIds,
-  BitcoinTestnetKeyringIds
+  BitcoinTestnetKeyringIds,
+  ZCashTestnetKeyringIds,
+  CardanoTestnetKeyringIds
 } from '../constants/types'
 
 // constants
@@ -43,7 +45,8 @@ export const groupAccountsById = (
 ) => {
   return accounts.reduce<Record<string, BraveWallet.AccountInfo[]>>(
     (result, obj) => {
-      ;(result[obj[key]] = result[obj[key]] || []).push(obj)
+      const resultKey: any = obj[key as keyof BraveWallet.AccountInfo]
+      ;(result[resultKey] = result[resultKey] || []).push(obj)
       return result
     },
     {}
@@ -100,10 +103,13 @@ export const getAddressLabel = (
   accounts?: EntityState<BraveWallet.AccountInfo>
 ): string => {
   if (!accounts) {
-    return registry[address.toLowerCase()] ?? reduceAddress(address)
+    return (
+      registry[address.toLowerCase() as keyof typeof registry] ??
+      reduceAddress(address)
+    )
   }
   return (
-    registry[address.toLowerCase()] ??
+    registry[address.toLowerCase() as keyof typeof registry] ??
     findAccountByAddress(address, accounts)?.name ??
     reduceAddress(address)
   )
@@ -165,10 +171,17 @@ export const keyringIdForNewAccount = (
     }
   }
 
+  if (coin === BraveWallet.CoinType.ADA) {
+    if (chainId === BraveWallet.CARDANO_MAINNET) {
+      return BraveWallet.KeyringId.kCardanoMainnet
+    }
+    if (chainId === BraveWallet.CARDANO_TESTNET) {
+      return BraveWallet.KeyringId.kCardanoTestnet
+    }
+  }
+
   assertNotReached(`Unknown coin ${coin} and chainId ${chainId}`)
 }
-
-const zcashTestnetKeyrings = [BraveWallet.KeyringId.kZCashTestnet]
 
 export const getAccountTypeDescription = (accountId: BraveWallet.AccountId) => {
   switch (accountId.coin) {
@@ -184,10 +197,15 @@ export const getAccountTypeDescription = (accountId: BraveWallet.AccountId) => {
       }
       return getLocale('braveWalletBTCMainnetAccountDescription')
     case BraveWallet.CoinType.ZEC:
-      if (zcashTestnetKeyrings.includes(accountId.keyringId)) {
+      if (ZCashTestnetKeyringIds.includes(accountId.keyringId)) {
         return getLocale('braveWalletZECTestnetAccountDescription')
       }
       return getLocale('braveWalletZECAccountDescription')
+    case BraveWallet.CoinType.ADA:
+      if (CardanoTestnetKeyringIds.includes(accountId.keyringId)) {
+        return getLocale('braveWalletCardanoTestnetAccountDescription')
+      }
+      return getLocale('braveWalletCardanoAccountDescription')
     default:
       assertNotReached(`Unknown coin ${accountId.coin}`)
   }

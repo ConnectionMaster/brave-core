@@ -8,6 +8,7 @@
 #include <libxml/tree.h>
 #include <signal.h>
 
+#include <algorithm>
 #include <climits>
 #include <iostream>
 #include <map>
@@ -27,7 +28,6 @@
 #include "base/json/json_string_value_serializer.h"
 #include "base/no_destructor.h"
 #include "base/notreached.h"
-#include "base/ranges/algorithm.h"
 #include "base/values.h"
 #include "brave/components/brave_page_graph/common/features.h"
 #include "brave/components/brave_shields/core/common/brave_shield_constants.h"
@@ -273,10 +273,10 @@ class V8PageGraphDelegate : public v8::page_graph::PageGraphDelegate {
         }
         return base::Value(arg);
       };
-      base::ranges::for_each(
-          args, [&arguments, &to_safe_base_value](const auto& arg) {
-            arguments.Append(to_safe_base_value(arg));
-          });
+      std::ranges::for_each(args,
+                            [&arguments, &to_safe_base_value](const auto& arg) {
+                              arguments.Append(to_safe_base_value(arg));
+                            });
       std::optional<blink::PageGraphValue> result_value;
       if (result) {
         result_value = to_safe_base_value(*result);
@@ -765,8 +765,8 @@ void PageGraph::RegisterPageGraphScriptCompilation(
     if (processed_js_urls_it != processed_js_urls_.end()) {
       auto& processed_js_urls = processed_js_urls_it->value;
       const auto& processed_js_url_it =
-          base::ranges::find(processed_js_urls, script_data.code,
-                             &ProcessedJavascriptURL::script_code);
+          std::ranges::find(processed_js_urls, script_data.code,
+                            &ProcessedJavascriptURL::script_code);
 
       if (processed_js_url_it != processed_js_urls.end()) {
         script_data.source.parent_script_id =
@@ -1182,7 +1182,11 @@ String PageGraph::ToGraphML() const {
   xmlChar* xml_string;
   int size;
   xmlDocDumpMemoryEnc(graphml_doc, &xml_string, &size, "UTF-8");
-  auto graphml_string = String::FromUTF8(xml_string, size);
+  // SAFETY: unfortunately xmlDocDumpMemoryEnc is a C api that
+  // manages the buffer internally, so we have to rely on it for the
+  // pointer/size pair.
+  auto graphml_string = String::FromUTF8(base::as_bytes(UNSAFE_BUFFERS(
+      base::span(xml_string, base::checked_cast<size_t>(size)))));
   DCHECK(!graphml_string.empty());
 
   xmlFree(xml_string);
